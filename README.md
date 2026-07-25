@@ -1,8 +1,13 @@
 # 🎉 NEXVENT – Event Management Platform
 
-NEXVENT is a full-stack event management platform designed to simplify the process of discovering, organizing, and booking events. The application provides a seamless experience for both users and event organizers through a secure and user-friendly interface.
+A modern **Event Management Platform** built with **Django**, **Python**, and **MySQL** that enables users to discover, organize, and book events through a secure and user-friendly web application.
 
----
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.x-092E20?style=for-the-badge&logo=django)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
 ## ✨ Features
 
