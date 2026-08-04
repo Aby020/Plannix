@@ -19,12 +19,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Environment variable initialise
 env = environ.Env()
 
+
 # Reading .env file
 env_path = BASE_DIR / ".env"
 print("BASE_DIR:", BASE_DIR)
 print("ENV FILE:", env_path)
 
 environ.Env.read_env(env_path)
+
+# Reading env file
+environ.Env.read_env()
+
 
 
 # Quick-start development settings - unsuitable for production
