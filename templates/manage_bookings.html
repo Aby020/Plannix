@@ -1,0 +1,91 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize %}
+
+{% block title %}Manage Bookings — Plannix{% endblock %}
+{% block page_title %}Manage Bookings{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <p class="text-muted-px mb-0">{{ bookings|length }} booking{{ bookings|length|pluralize }}
+    {% if active_status %}in “{{ active_status }}”{% endif %}</p>
+  <a class="btn btn-ghost btn-sm" href="{% url 'manage_bookings' %}"><i class="bi bi-arrow-counterclockwise me-1"></i>Clear filter</a>
+</div>
+
+<div class="px-filter mb-4 justify-content-start reveal">
+  <a href="{% url 'manage_bookings' %}" class="filter-pill {% if not active_status %}active{% endif %}">All</a>
+  {% for status in statuses %}
+  <a href="{% url 'manage_bookings' %}?status={{ status }}" class="filter-pill {% if active_status == status %}active{% endif %}">
+    {{ status|title }}
+  </a>
+  {% endfor %}
+</div>
+
+{% if bookings %}
+  <div class="px-card reveal">
+    <div class="px-table border-0 rounded-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+            <tr>
+              <td>
+                <strong class="d-block" style="color:var(--px-dark);">{{ b.event_company_name }}</strong>
+                <small class="text-muted-px">{{ b.event_type }} · {{ b.event_location }}</small>
+              </td>
+              <td>
+                <strong class="d-block" style="color:var(--px-dark);">{{ b.name }}</strong>
+                <small class="text-muted-px">{{ b.email }}</small>
+              </td>
+              <td>{{ b.event_booking_date }}</td>
+              <td>₹ {{ b.event_price|intcomma }}</td>
+              <td><span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span></td>
+              <td class="text-end">
+                <div class="d-inline-flex align-items-center gap-2">
+                  <form method="post" action="{% url 'update_booking_status' b.id %}" class="d-inline-flex align-items-center gap-2">
+                    {% csrf_token %}
+                    <select class="form-select form-select-sm" name="status" style="width:auto;">
+                      {% for status in statuses %}
+                      <option value="{{ status }}" {% if b.status == status %}selected{% endif %}>{{ status|title }}</option>
+                      {% endfor %}
+                    </select>
+                    <button class="btn btn-soft btn-sm" type="submit" title="Update status">
+                      <i class="bi bi-check2"></i>
+                    </button>
+                  </form>
+                  <form method="post" action="{% url 'delete_booking' b.id %}" class="d-inline"
+                        data-confirm="Delete this booking?">
+                    {% csrf_token %}
+                    <button class="btn btn-ghost btn-sm text-danger" type="submit" title="Delete"
+                            style="border-color:rgba(239,68,68,.3);">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="px-empty px-card reveal">
+    <div class="empty-icon"><i class="bi bi-journal-x"></i></div>
+    <h4>No bookings{% if active_status %} with status “{{ active_status }}”{% endif %}</h4>
+    <p>Bookings made by customers will appear here for you to review and update.</p>
+  </div>
+{% endif %}
+
+{% endblock %}

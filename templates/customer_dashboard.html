@@ -1,0 +1,119 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize %}
+
+{% block title %}My Dashboard — Plannix{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stat cards -->
+<div class="row g-4 mb-4">
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal">
+      <span class="stat-icon indigo"><i class="bi bi-calendar-check"></i></span>
+      <div>
+        <div class="stat-num" data-counter="{{ total_bookings }}">{{ total_bookings|intcomma }}</div>
+        <div class="stat-label">Total Bookings</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal reveal-delay-1">
+      <span class="stat-icon blue"><i class="bi bi-hourglass-split"></i></span>
+      <div>
+        <div class="stat-num" data-counter="{{ upcoming_count }}">{{ upcoming_count|intcomma }}</div>
+        <div class="stat-label">Upcoming Events</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal reveal-delay-2">
+      <span class="stat-icon green"><i class="bi bi-wallet2"></i></span>
+      <div>
+        <div class="stat-num">₹ {{ total_spent|intcomma }}</div>
+        <div class="stat-label">Total Spent</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal reveal-delay-3">
+      <span class="stat-icon amber"><i class="bi bi-stars"></i></span>
+      <div>
+        <div class="stat-num">{{ user.first_name|default:user.username }}</div>
+        <div class="stat-label">Welcome back 👋</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Upcoming bookings -->
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="px-card reveal">
+      <div class="d-flex align-items-center justify-content-between p-4 pb-3">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-calendar-week text-brand me-2"></i>Upcoming Bookings
+        </h2>
+        <a class="btn btn-soft btn-sm" href="{% url 'events' %}"><i class="bi bi-plus-lg me-1"></i>Book New</a>
+      </div>
+
+      {% if upcoming_bookings %}
+        <div class="list-group list-group-flush">
+          {% for b in upcoming_bookings %}
+          <div class="list-group-item d-flex flex-wrap align-items-center gap-3 px-4 py-3">
+            <span class="px-badge badge-primary"><i class="bi bi-calendar-event"></i>{{ b.event_booking_date }}</span>
+            <div class="flex-grow-1 min-w-0">
+              <strong class="d-block text-truncate" style="color:var(--px-dark);">{{ b.event_company_name }}</strong>
+              <small class="text-muted-px">{{ b.event_type }} · {{ b.event_location }}</small>
+            </div>
+            <span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span>
+          </div>
+          {% empty %}
+          <div class="px-empty">
+            <div class="empty-icon"><i class="bi bi-calendar-plus"></i></div>
+            <h4>No upcoming bookings</h4>
+            <p>Your upcoming events will appear here.</p>
+            <a class="btn btn-brand btn-sm" href="{% url 'events' %}">Browse Events</a>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="px-empty">
+          <div class="empty-icon"><i class="bi bi-calendar-plus"></i></div>
+          <h4>No upcoming bookings</h4>
+          <p>Your upcoming events will appear here.</p>
+          <a class="btn btn-brand btn-sm" href="{% url 'events' %}">Browse Events</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent bookings -->
+  <div class="col-lg-4">
+    <div class="px-card reveal reveal-delay-1">
+      <div class="d-flex align-items-center justify-content-between p-4 pb-3">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-clock-history text-brand me-2"></i>Recent Activity
+        </h2>
+        <a class="btn btn-ghost btn-sm" href="{% url 'my_bookings' %}">View All</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for b in recent_bookings %}
+        <div class="list-group-item px-4 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong class="text-truncate" style="color:var(--px-dark);">{{ b.event_company_name }}</strong>
+            <span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span>
+          </div>
+          <small class="text-muted-px">{{ b.event_booking_date }} · ₹ {{ b.event_price|intcomma }}</small>
+        </div>
+        {% empty %}
+        <div class="px-empty py-4">
+          <p class="mb-0">No activity yet — make your first booking!</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

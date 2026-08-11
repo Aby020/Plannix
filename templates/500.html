@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Something Went Wrong — Plannix{% endblock %}
+{% block body_class %}px-error-body{% endblock %}
+
+{% block content %}
+
+<section class="px-error">
+  <div class="px-error-card reveal">
+    <div class="px-error-code display-gradient">500</div>
+    <div class="empty-icon" style="background:rgba(239,68,68,.12);color:#EF4444;">
+      <i class="bi bi-cone-striped"></i>
+    </div>
+    <h1 class="px-section-title">Something went wrong on our side</h1>
+    <p class="text-muted-px">An unexpected error occurred while loading this page. Please try again in a moment.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+      <a class="btn btn-brand btn-lg" href="{% url 'index' %}"><i class="bi bi-house me-1"></i>Back to Home</a>
+      <a class="btn btn-ghost btn-lg" href="{% url 'events' %}"><i class="bi bi-calendar-heart me-1"></i>Browse Events</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

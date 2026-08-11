@@ -1,0 +1,70 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize %}
+
+{% block title %}My Bookings — Plannix{% endblock %}
+{% block page_title %}My Bookings{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <p class="text-muted-px mb-0">{{ bookings|length }} booking{{ bookings|length|pluralize }} in total</p>
+  <a class="btn btn-brand btn-sm" href="{% url 'events' %}"><i class="bi bi-plus-lg me-1"></i>New Booking</a>
+</div>
+
+{% if bookings %}
+  <div class="px-card reveal">
+    <div class="px-table border-0 rounded-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Date</th>
+              <th>Location</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+            <tr>
+              <td>
+                <strong class="d-block" style="color:var(--px-dark);">{{ b.event_company_name }}</strong>
+                <small class="text-muted-px">{{ b.event_type }}</small>
+              </td>
+              <td>{{ b.event_booking_date }}</td>
+              <td>{{ b.event_location }}</td>
+              <td>₹ {{ b.event_price|intcomma }}</td>
+              <td><span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span></td>
+              <td class="text-end">
+                {% if b.status != 'cancelled' %}
+                  <form method="post" action="{% url 'cancel_booking' b.id %}" class="d-inline"
+                        data-confirm="Cancel your booking for {{ b.event_company_name }}?">
+                    {% csrf_token %}
+                    <button class="btn btn-ghost btn-sm text-danger" type="submit"
+                            style="border-color:rgba(239,68,68,.3);">
+                      <i class="bi bi-x-circle me-1"></i>Cancel
+                    </button>
+                  </form>
+                {% else %}
+                  <span class="small text-muted-px">Cancelled</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="px-empty px-card reveal">
+    <div class="empty-icon"><i class="bi bi-ticket-perforated"></i></div>
+    <h4>No bookings yet</h4>
+    <p>When you book an event, it will show up here so you can track it.</p>
+    <a class="btn btn-brand" href="{% url 'events' %}"><i class="bi bi-calendar-heart me-1"></i>Browse Events</a>
+  </div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Plannix">
+  <defs>
+    <linearGradient id="plannix-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6D5EF7"/>
+      <stop offset="100%" stop-color="#9B6CF6"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="12.5" fill="url(#plannix-g)"/>
+  <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="10.5" y="13.5" width="27" height="4.5" rx="2.25" fill="#FFFFFF" stroke="none"/>
+    <path d="M19.5 23.5 25.5 30 36 18" stroke-width="3.6"/>
+  </g>
+</svg>

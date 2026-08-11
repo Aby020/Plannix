@@ -1,0 +1,170 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize %}
+
+{% block title %}Admin Dashboard — Plannix{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="row g-4 mb-4">
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal">
+      <span class="stat-icon indigo"><i class="bi bi-currency-rupee"></i></span>
+      <div>
+        <div class="stat-num">₹ {{ revenue|intcomma }}</div>
+        <div class="stat-label">Confirmed Revenue</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal reveal-delay-1">
+      <span class="stat-icon blue"><i class="bi bi-journal-check"></i></span>
+      <div>
+        <div class="stat-num" data-counter="{{ total_bookings }}">{{ total_bookings|intcomma }}</div>
+        <div class="stat-label">Total Bookings</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal reveal-delay-2">
+      <span class="stat-icon green"><i class="bi bi-people"></i></span>
+      <div>
+        <div class="stat-num" data-counter="{{ total_users }}">{{ total_users|intcomma }}</div>
+        <div class="stat-label">Registered Users</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal reveal-delay-3">
+      <span class="stat-icon amber"><i class="bi bi-calendar-event"></i></span>
+      <div>
+        <div class="stat-num" data-counter="{{ total_events }}">{{ total_events|intcomma }}</div>
+        <div class="stat-label">Event Packages</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Booking status breakdown -->
+  <div class="col-lg-5">
+    <div class="px-card p-4 reveal">
+      <h2 class="h5 mb-4" style="font-family:var(--px-font-display);color:var(--px-dark);">
+        <i class="bi bi-bar-chart-line text-brand me-2"></i>Booking Status Breakdown
+      </h2>
+      {% for status, count in status_counts.items %}
+      <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="px-badge badge-{{ status }}">{{ status|title }}</span>
+          <strong class="small" style="color:var(--px-dark);">{{ count }}</strong>
+        </div>
+        <div class="progress" style="height:8px;border-radius:99px;">
+          <div class="progress-bar" role="progressbar"
+               style="width:{% if total_bookings %}{{ count|floatformat:0 }}{% else %}0{% endif %}%;border-radius:99px;"
+               aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ total_bookings|default:1 }}"></div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-muted-px mb-0">No bookings yet.</p>
+      {% endfor %}
+
+      <div class="px-card px-card-hover p-3 bg-soft-brand mt-4" style="border:1px solid rgba(109,94,247,.2);">
+        <div class="d-flex align-items-center justify-content-between">
+          <span class="small text-muted-px">Staff members</span>
+          <strong style="color:var(--px-dark);">{{ staff_count }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event type distribution -->
+  <div class="col-lg-7">
+    <div class="px-card p-4 reveal reveal-delay-1">
+      <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-pie-chart text-brand me-2"></i>Popular Event Types
+        </h2>
+        <a class="btn btn-soft btn-sm" href="{% url 'manage_events' %}"><i class="bi bi-plus-lg me-1"></i>Manage Events</a>
+      </div>
+      {% if type_counts %}
+        <div class="row g-3">
+          {% for tc in type_counts %}
+          <div class="col-md-4 col-sm-6">
+            <div class="px-card px-card-hover p-3 text-center h-100">
+              <i class="bi bi-calendar2-heart text-brand fs-4 d-block mb-1"></i>
+              <div class="stat-num" style="font-size:1.3rem;">{{ tc.count }}</div>
+              <small class="text-muted-px text-capitalize">{{ tc.event_type }}</small>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="px-empty">
+          <p class="mb-0">No event types yet — add your first event.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <!-- Recent bookings -->
+  <div class="col-lg-7">
+    <div class="px-card reveal">
+      <div class="d-flex align-items-center justify-content-between p-4 pb-3">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-clock-history text-brand me-2"></i>Recent Bookings
+        </h2>
+        <a class="btn btn-ghost btn-sm" href="{% url 'manage_bookings' %}">Manage All</a>
+      </div>
+      <div class="px-table border-0 rounded-0">
+        <table class="table table-hover">
+          <thead>
+            <tr><th>Event</th><th>Customer</th><th>Date</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for b in recent_bookings %}
+            <tr>
+              <td class="text-truncate" style="max-width:170px;">{{ b.event_company_name }}</td>
+              <td>{{ b.name }}</td>
+              <td>{{ b.event_booking_date }}</td>
+              <td><span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted-px py-4">No bookings yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent feedback -->
+  <div class="col-lg-5">
+    <div class="px-card reveal reveal-delay-1">
+      <div class="d-flex align-items-center justify-content-between p-4 pb-3">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-chat-square-text text-brand me-2"></i>Recent Feedback
+        </h2>
+        <a class="btn btn-ghost btn-sm" href="{% url 'manage_feedback' %}">View All</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for f in recent_feedback %}
+        <div class="list-group-item px-4 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong style="color:var(--px-dark);">{{ f.name }}</strong>
+            <small class="text-muted-px">{{ f.created_at|date:"d M" }}</small>
+          </div>
+          <small class="text-muted-px d-block text-truncate">{{ f.message|truncatechars:90 }}</small>
+        </div>
+        {% empty %}
+        <div class="px-empty py-4">
+          <p class="mb-0">No feedback yet.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

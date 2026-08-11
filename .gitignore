@@ -2,6 +2,10 @@
 db.sqlite3
 *.venv
 
+# Local / tooling files that must never be committed
+.claude/
+product.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

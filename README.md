@@ -1,289 +1,385 @@
-# ⚙️ Nexvent
+# 🎉 Plannix — Premium Event Planning & Booking Platform
 
 <div align="center">
 
-### Professional Event Management & Booking Platform
+A modern full-stack **Django** web application for discovering event packages, booking them online, and managing the entire lifecycle — from a customer's first browse to the admin's final confirmation — through secure authentication, role-based dashboards, and a polished, responsive interface.
 
-A modern full-stack Django web application that streamlines event discovery, theme selection, online booking, and event management through secure authentication, role-based dashboards, and an intuitive user experience.
-
-![Python](https://img.shields.io/badge/Python-3.13-blue?logo=python&logoColor=white)
-![Django](https://img.shields.io/badge/Django-5.x-092E20?logo=django)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?logo=bootstrap)
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-6.0-092E20?logo=django)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 </div>
 
+## 🎬 Demo
+
+Watch the full journey — browse, filter, book, and manage — in a few seconds:
+
 <p align="center">
-  <img src="screenshots/home.png" alt="Nexvent Home Page" width="100%">
+  <img src="screenshots/plannix-hoem_page.gif" alt="Plannix home page demo" width="100%">
 </p>
 
-## 📖 Project Overview
+---
 
-Nexvent is a full-stack Django web application designed to simplify the planning, booking, and management of events through a centralized, user-friendly platform.
+## 📖 Overview
 
-The platform enables users to browse event packages, explore themes, book events online, and communicate with organizers while providing administrators and staff with powerful tools for managing bookings, customers, event packages, themes, and platform operations.
+**Plannix** is a complete event-management platform built with Django 6 and Bootstrap 5. It brings together everything needed to run an event-planning business online:
 
-Built with Django and Bootstrap, Nexvent focuses on usability, security, and maintainability while demonstrating practical implementation of authentication, CRUD operations, email notifications, role-based access control, and responsive web design.
+- **Customers** browse a curated catalogue of event packages, read full details, and book their event in a few clicks — then track and cancel bookings from their own dashboard.
+- **Staff** manage the catalogue and process bookings from a dedicated operational dashboard.
+- **Admins** get the full picture — revenue, booking health, user management, feedback moderation — plus a branded Django administration panel.
 
-Whether organizing weddings, corporate events, birthday celebrations, or private functions, Nexvent provides a streamlined digital solution for customers, staff members, and administrators.
+The project demonstrates production-minded Django: role-based access control, session timeout handling, custom error pages, a seeded demo dataset, and a complete automated test suite (60+ tests) — all wrapped in a custom design system with its own tokens, components, and animations.
+
+Whether it's a grand wedding, a corporate summit, or a sunset beach proposal, Plannix provides a streamlined digital workflow for customers, staff, and administrators.
+
+---
 
 ## ✨ Key Features
 
-### 👤 Authentication & User Management
+### 🔐 Authentication & Role-Based Access
+- Secure sign-up and sign-in with validation (duplicate usernames/emails, password mismatch, Django password validators)
+- Three roles — **Admin**, **Staff**, **Customer** — enforced at the view level via `login_required` and group checks
+- Session timeout after 30 minutes of inactivity, auto-expiry on browser close
+- Profile editing and password change with old-password verification
 
-- Secure user registration and login
-- Role-based access control (Admin, Staff, Customer)
-- Password reset functionality
-- Session management
-- Email verification and authentication support
+### 🎉 Event Catalogue & Booking
+- Browse a 20-package catalogue across 5 categories — Birthday, Catering, Corporate, DJ, and Wedding
+- Search by keyword and filter by event type
+- Rich event detail pages with description, pricing, location, and package inclusions
+- Online booking form with server-side validation: no past dates, 10-digit mobile numbers, and conflict detection for already-booked dates
+- Instant booking confirmation page
 
-### 🎉 Event Management
+### 🖥️ Role-Based Dashboards
+- **Customer dashboard** — upcoming bookings, spend summary, recent activity
+- **Staff dashboard** — operational overview and catalogue management
+- **Admin dashboard** — revenue, booking counts, user counts, event breakdowns, recent bookings, latest feedback
 
-- Browse event packages
-- Explore event themes
-- Online event booking
-- Event package filtering
-- Detailed package information
-- Booking confirmation workflow
+### 📊 Management Suite
+- **Events** — add, edit, delete event packages
+- **Bookings** — status filter, update status (pending → confirmed / completed / cancelled), delete
+- **Feedback** — review and moderate customer feedback
+- **Users** — activate/deactivate accounts, delete users (with self-protection guards)
 
-### 🎨 Theme Management
+### 📧 Feedback & Communication
+- Public feedback form
+- Feedback moderation in the admin dashboard
+- Email wiring via environment variables (console backend in development)
 
-- Wedding themes
-- Birthday themes
-- Corporate event themes
-- Decoration packages
-- Theme gallery
-- Theme customization support
-
-### 📊 Admin & Staff Dashboard
-
-- Centralized administration panel
-- Staff dashboard for operational management
-- Manage event packages
-- Manage themes
-- Customer booking management
-- Feedback management
-- User management
-
-### 📧 Communication & Notifications
-
-- Email confirmation
-- Customer feedback system
-- Contact support
-- Booking status communication
-
-### 🔒 Security Features
-
-- Django Authentication
-- Secure session management
-- Role-based authorization
-- Protected admin panel
-- Environment variable configuration
+### 🔒 Security
+- Django authentication + session management
+- Deny-by-default authorization (decorators and group checks on every protected route)
+- Environment-variable configuration — no secrets in code
+- Custom 404 / 403 / 500 error pages
+- Clickjacking, XSS, and content-type protections configured
 
 ### 🎨 User Experience
+- Custom design system: indigo → violet gradient, Inter + Sora typography, rounded glass cards
+- Scroll-reveal animations, hover lifts, and micro-interactions
+- Fully responsive — mobile sidebar with overlay, fluid grids, touch-friendly controls
+- Branded Jazzmin Django admin panel
 
-- Modern responsive interface
-- Mobile-friendly design
-- Bootstrap 5 components
-- Simple navigation
-- Clean booking workflow
+---
 
 ## 📸 Screenshots
 
-### 🏠 Home Page
+### 🏠 Catalogue & Browsing
 
-The landing page introduces Nexvent with featured event packages, popular themes, and an intuitive navigation experience for users.
+Browse the full catalogue, filter by event type, and learn about Plannix.
+
+**Event catalogue with the Birthday filter applied** — 4 packages, type pills, and keyword search:
 
 <p align="center">
-  <img src="screenshots/home.png" width="100%" alt="Home Page">
+  <img src="screenshots/01-events-birthday.png" width="100%" alt="Event catalogue filtered by Birthday">
+</p>
+
+**The complete catalogue** across all event types:
+
+<p align="center">
+  <img src="screenshots/05-events-all.png" width="100%" alt="All event packages">
+</p>
+
+**Our Mission section** — what Plannix stands for:
+
+<p align="center">
+  <img src="screenshots/02-about-mission.png" width="100%" alt="Plannix mission section">
+</p>
+
+**The About page**, end to end:
+
+<p align="center">
+  <img src="screenshots/04-about-page.png" width="100%" alt="About Plannix page">
 </p>
 
 ---
 
-### 🎉 Event Packages
+### 🛒 Booking Flow
 
-Browse a wide range of event packages including weddings, birthday celebrations, corporate events, catering, photography, and more.
+From a few clicks on the booking form to instant confirmation.
+
+**The booking form**, pre-filled for a signed-in customer:
 
 <p align="center">
-  <img src="screenshots/events.png" width="100%" alt="Event Packages">
+  <img src="screenshots/08-book-event.png" width="100%" alt="Event booking form">
+</p>
+
+**Booking confirmation** — instant feedback after submission:
+
+<p align="center">
+  <img src="screenshots/09-booking-success.png" width="100%" alt="Booking confirmation">
 </p>
 
 ---
 
-### 🔍 Filtered Event Packages
+### 🔐 Authentication
 
-Users can quickly filter event packages based on categories and themes to find the perfect event solution.
+Sign-in and sign-up with validation and a polished brand look:
 
 <p align="center">
-  <img src="screenshots/filtered-events.png" width="100%" alt="Filtered Event Packages">
+  <img src="screenshots/06-login.png" width="49%" alt="Sign in">
+  <img src="screenshots/07-register.png" width="49%" alt="Sign up">
 </p>
 
 ---
 
-### 💬 Feedback System
+### 💬 Feedback
 
-Customers can submit feedback and suggestions to improve the platform and overall event experience.
+Customers can share their experience through a clean form:
 
 <p align="center">
-  <img src="screenshots/feedback.png" width="100%" alt="Feedback">
+  <img src="screenshots/03-feedback-form.png" width="100%" alt="Feedback form">
 </p>
 
 ---
 
-### 👤 User Registration
+### 🖥️ Dashboards
 
-New users can create an account securely through a clean registration interface with authentication support.
+Each role gets its own operational view.
+
+**Customer dashboard** — upcoming bookings, spend, and recent activity:
 
 <p align="center">
-  <img src="screenshots/signup.png" width="100%" alt="User Registration">
+  <img src="screenshots/10-customer-dashboard.png" width="100%" alt="Customer dashboard">
+</p>
+
+**Staff dashboard** — the operational view staff use to keep the platform moving:
+
+<p align="center">
+  <img src="screenshots/11-staff-dashboard.png" width="100%" alt="Staff dashboard">
+</p>
+
+**Admin dashboard** — revenue, bookings, users, event types, and recent activity at a glance:
+
+<p align="center">
+  <img src="screenshots/12-admin-dashboard.png" width="100%" alt="Admin dashboard">
 </p>
 
 ---
 
-### 🛡️ Django Administration Panel
+### 🗂️ Management Suite
 
-Administrators can efficiently manage users, event packages, themes, bookings, and platform data through a customized Django admin interface.
+Moderate the platform — events and feedback, staffed by staff & admins.
+
+**Manage events** — add, edit, and remove packages:
 
 <p align="center">
-  <img src="screenshots/admin-dashboard.png" width="100%" alt="Admin Dashboard">
+  <img src="screenshots/13-manage-events.png" width="100%" alt="Manage events">
+</p>
+
+**Manage feedback** — review and moderate customer feedback:
+
+<p align="center">
+  <img src="screenshots/14-manage-feedback.png" width="100%" alt="Manage feedback">
 </p>
 
 ---
 
-### 👨‍💼 Staff Dashboard
+## 🧑‍🤝‍🧑 User Roles
 
-Staff members can manage event packages, customer bookings, and daily platform operations through a dedicated dashboard.
+| Capability | Customer | Staff | Admin |
+|------------|:--------:|:-----:|:-----:|
+| Browse catalogue & search | ✅ | ✅ | ✅ |
+| Book an event | ✅ | ✅ | ✅ |
+| View / cancel own bookings | ✅ | ✅ | ✅ |
+| Edit own profile / password | ✅ | ✅ | ✅ |
+| Manage event packages | — | ✅ | ✅ |
+| Update booking statuses | — | ✅ | ✅ |
+| Moderate feedback | — | ✅ | ✅ |
+| Manage users (activate / delete) | — | — | ✅ |
+| Revenue & platform overview | — | — | ✅ |
+| Django admin panel | — | — | ✅ |
 
-<p align="center">
-  <img src="screenshots/staff-dashboard.png" width="100%" alt="Staff Dashboard">
-</p>
+---
 
 ## 🛠️ Technology Stack
 
-| Category | Technologies |
-|-----------|--------------|
-| **Backend** | Python, Django 5.x |
-| **Frontend** | HTML5, CSS3, Bootstrap 5, JavaScript |
+| Category | Technology |
+|----------|-----------|
+| **Backend** | Python 3.13, Django 6.0.1 |
+| **Frontend** | HTML5, CSS3, Bootstrap 5.3.3, Bootstrap Icons, vanilla JavaScript |
 | **Database** | SQLite3 |
-| **Authentication** | Django Authentication |
-| **Email Services** | SMTP (Gmail) |
-| **Development Tools** | VS Code, Git, GitHub |
-| **Libraries** | Pillow, Django Browser Reload, Jazzmin |
-| **Deployment Ready** | Python Virtual Environment, Environment Variables (.env) |
+| **Authentication** | Django auth + group-based roles |
+| **Admin panel** | Django admin + Jazzmin (branded) |
+| **Email** | SMTP via environment variables (console backend in dev) |
+| **Sessions** | django-session-timeout (30 min inactivity expiry) |
+| **Media** | Pillow (image handling) |
+| **Config** | django-environ (`.env` file) |
+| **Quality** | 60+ Django tests, custom error handlers |
+
+---
+
+## 🏗️ Architecture
+
+```text
+                        Client Browser
+                              │
+                              ▼
+                     Bootstrap 5 + Custom CSS
+                              │
+                              ▼
+                      Django URL Routing
+                              │
+            ┌─────────────────┼─────────────────┐
+            ▼                 ▼                 ▼
+   account_manager        events             themes
+   (sign-up, sign-in,   (catalogue, booking,  (home, about,
+    profile, password)   dashboards, manage)   feedback)
+            │                 │                 │
+            └─────────────────┼─────────────────┘
+                              ▼
+                        SQLite Database
+                              │
+                        (models: User, Group,
+                    Event_Company, Event_Booking,
+                          Feedback)
+```
+
+---
 
 ## 📂 Project Structure
 
 ```text
-Nexvent/
+Plannix/
 │
-├── Nexvent/                 # Django project configuration
-├── account_manager/         # Authentication & user management
-├── events/                  # Event booking & management
-├── themes/                  # Theme & website pages
-├── templates/               # HTML templates
-├── static/                  # CSS, JavaScript & assets
+├── Plannix/                 # Django project configuration
+│   ├── settings.py          # apps, middleware, auth, jazzmin, security
+│   ├── urls.py              # root routing + custom error handlers
+│   └── context_processors.py# shared site-wide context
+│
+├── account_manager/         # Authentication & profile management
+│   ├── urls.py              # sign-up / sign-in / sign-out / profile / change-password
+│   ├── views.py
+│   └── tests.py             # 21 auth tests
+│
+├── events/                  # Core business module
+│   ├── models.py            # Event_Company, Event_Booking
+│   ├── urls.py              # catalogue, booking, dashboards, management
+│   ├── views.py
+│   ├── tests.py             # 48 tests
+│   └── management/commands/
+│       └── seed_demo.py     # idempotent demo-data seeder
+│
+├── themes/                  # Public pages & feedback
+│   ├── models.py            # Feedback
+│   ├── urls.py              # index / about / feedback / success / privacy-policy
+│   └── views.py
+│
+├── templates/               # Django templates (public + dashboard)
+├── static/                  # CSS, JS, fonts & imagery
+│   └── css/style.css        # full design system
 ├── media/                   # Uploaded event images
-├── screenshots/             # README screenshots
+├── event_images/            # Seed-source images by category
+├── screenshots/             # README screenshots & demo GIF
+├── scripts/                 # Tooling (screenshot capture, etc.)
 │
 ├── manage.py
 ├── requirements.txt
 ├── README.md
-└── .env
-```
-
-## 🏗️ System Architecture
-
-```text
-                    Client Browser
-                          │
-                          ▼
-                 Bootstrap 5 Interface
-                          │
-                          ▼
-                  Django URL Routing
-                          │
-                          ▼
-                 Django Views & Logic
-                          │
-          ┌───────────────┼───────────────┐
-          ▼               ▼               ▼
- Authentication     Event Management    Theme Module
-          │               │               │
-          └───────────────┼───────────────┘
-                          ▼
-                    SQLite Database
-                          │
-                          ▼
-                  Email Notifications
-```
-
-## ⚙️ Installation & Setup
-
-### 1️⃣ Clone the Repository
-
-```bash
-git clone https://github.com/Aby020/Nexvent.git
-cd Nexvent
+└── .env                     # local secrets — never committed
 ```
 
 ---
 
-### 2️⃣ Create a Virtual Environment
+## 🚀 Getting Started
 
-#### Windows
+### Prerequisites
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-```
+- **Python 3.12+** (developed on 3.13)
+- Git
 
-#### Linux / macOS
+### 1️⃣ Clone & enter the project
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+git clone https://github.com/Aby020/Plannix.git
+cd Plannix
 ```
 
----
+### 2️⃣ Create a virtual environment
 
-### 3️⃣ Install Dependencies
+**Windows**
+
+```powershell
+python -m venv venv
+venv\Scripts\activate
+```
+
+**Linux / macOS**
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3️⃣ Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
+### 4️⃣ Configure the environment
 
-### 4️⃣ Configure Environment Variables
-
-Create a `.env` file in the project root.
-
-Example:
+Create a `.env` file in the project root. Copy the shape below and fill in your own values — **never commit real credentials**.
 
 ```env
-SECRET_KEY=your_secret_key
+SECRET_KEY=your-long-random-secret-key
 DEBUG=True
+ALLOWED_HOSTS=127.0.0.1,localhost
 
+# SMTP — the app password stays in .env only
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your_email@gmail.com
-EMAIL_HOST_PASSWORD=your_app_password
-SERVER_EMAIL=your_email@gmail.com
+EMAIL_HOST_USER=you@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+SERVER_EMAIL=you@gmail.com
 ```
 
----
+> In development the email backend is `console.EmailBackend`, so outbound mail is printed to the terminal — no SMTP account is required to try the app.
 
-### 5️⃣ Apply Database Migrations
+### 5️⃣ Apply migrations
 
 ```bash
 python manage.py migrate
 ```
 
----
+### 6️⃣ (Optional) Seed demo data
 
-### 6️⃣ Create an Administrator Account
+Populates the app with 3 roles, 6 users, 20 event packages (5 categories × 4 events), 10 bookings, and 5 feedback entries — everything you need to explore every role immediately.
+
+```bash
+python manage.py seed_demo
+```
+
+Demo accounts:
+
+| Role | Username | Password |
+|------|----------|----------|
+| Admin | `admin` | set via `PLANNIX_ADMIN_PASSWORD` (random & printed if unset) |
+| Staff | `staff1` | `staffpass123` |
+| Customer | `priya` / `arjun` / `meera` / `rahul` | `customer123` |
+
+### 7️⃣ Create a superuser (if you skipped seeding)
 
 ```bash
 python manage.py createsuperuser
@@ -291,123 +387,137 @@ python manage.py createsuperuser
 
 ---
 
-### 7️⃣ Run the Development Server
+## 🧭 Running the App
 
 ```bash
-python manage.py runserver
+python manage.py runserver 8009
 ```
 
-Open your browser and visit:
+Then open:
 
-```
-http://127.0.0.1:8000/
-```
+| Destination | URL |
+|-------------|-----|
+| Public site | `http://127.0.0.1:8009/` |
+| Django admin | `http://127.0.0.1:8009/core-admin/` |
 
-Django Administration Panel:
+### Route Map
 
-```
-http://127.0.0.1:8000/admin/
-```
+**Public**
 
-## 📦 Core Dependencies
+| Route | View | Notes |
+|-------|------|-------|
+| `/` | index | Home page |
+| `/events` | events | Catalogue with type filter |
+| `/readmore/<id>` | readmore | Event detail |
+| `/search?q=` | searching_events | Keyword search |
+| `/about` | about | About Plannix |
+| `/feedback` | feedback | Public feedback form |
+| `/privacy-policy` | privacy_policy | Policy page |
 
-- Django 5.x
-- Django Browser Reload
-- Jazzmin
-- Pillow
-- SQLite3
-- Python-dotenv / Django Environ
+**Authentication**
 
-## 🔐 Environment Variables
+| Route | View | Notes |
+|-------|------|-------|
+| `/sign-up` | sign_up | Registration |
+| `/sign-in` | sign_in | Login |
+| `/sign-out` | sign_out | Logout |
+| `/profile` | profile | Edit profile (login required) |
+| `/change-password` | change_password | Change password (login required) |
 
-The application uses a `.env` file to securely manage configuration values.
+**Booking**
+
+| Route | View | Notes |
+|-------|------|-------|
+| `/event-booking-form/<id>` | selected_event | Booking form (login required) |
+| `/event-booking-form` | event_booking | Submit booking |
+| `/success` | success | Confirmation page |
+
+**Dashboards & customer area**
+
+| Route | View | Notes |
+|-------|------|-------|
+| `/dashboard` | dashboard | Role-aware redirect |
+| `/customer-dashboard` | customer_dashboard | Customer view |
+| `/staff-dashboard` | staff_dashboard | Staff only |
+| `/admin-dashboard` | admin_dashboard | Admin only |
+| `/my-bookings` | my_bookings | Own bookings only |
+| `/cancel-booking/<id>` | cancel_booking | Cancel own pending booking |
+
+**Management**
+
+| Route | View | Access |
+|-------|------|-------|
+| `/manage/events` (+ add / edit / delete) | manage suite | Staff + Admin |
+| `/manage/bookings` (+ status / delete) | manage suite | Staff + Admin |
+| `/manage/feedback` (+ delete) | manage suite | Staff + Admin |
+| `/manage/users` (+ toggle / delete) | manage suite | Admin only |
+| `/core-admin/` | Django admin | Staff (superuser) |
+
+---
+
+## 🔧 Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `SECRET_KEY` | Django secret key |
-| `DEBUG` | Enable or disable debug mode |
+| `SECRET_KEY` | Django secret key (required) |
+| `DEBUG` | `True` in development, `False` in production |
+| `ALLOWED_HOSTS` | Comma-separated allowed hosts |
 | `EMAIL_HOST` | SMTP server address |
 | `EMAIL_PORT` | SMTP server port |
-| `EMAIL_USE_TLS` | Enable TLS |
-| `EMAIL_HOST_USER` | SMTP email account |
+| `EMAIL_USE_TLS` | Enable TLS for SMTP |
+| `EMAIL_HOST_USER` | SMTP account |
 | `EMAIL_HOST_PASSWORD` | SMTP app password |
-| `SERVER_EMAIL` | Sender email address |
-
-## 📦 Project Modules
-
-### 👤 Account Manager
-
-Responsible for user authentication and account management.
-
-**Features**
-- User Registration
-- User Login
-- Password Reset
-- Session Management
-- Role-Based Authentication
+| `SERVER_EMAIL` | Sender address |
 
 ---
 
-### 🎉 Events Module
+## 🧪 Running the Tests
 
-Provides the core functionality of Nexvent.
+The project ships with a comprehensive test suite covering authentication, the public catalogue, the booking flow (validation & conflicts), customer dashboards, staff management, admin management, and the custom error handlers.
 
-**Features**
-- Browse Event Packages
-- Online Event Booking
-- Event Categories
-- Event Package Details
-- Booking Confirmation
-- Event Search & Filtering
+```bash
+python manage.py test
+```
 
----
+To run a single app:
 
-### 🎨 Themes Module
-
-Allows users to explore and select themes for different types of events.
-
-**Available Themes**
-- Wedding Themes
-- Birthday Decorations
-- Corporate Events
-- Anniversary Celebrations
-- Party Decorations
-- Custom Event Themes
+```bash
+python manage.py test account_manager
+python manage.py test events
+```
 
 ---
 
-### 📊 Administration Module
+## 🔮 Future Improvements
 
-Designed for administrators to efficiently manage platform operations.
+Planned enhancements for future releases:
 
-**Features**
-- User Management
-- Event Package Management
-- Theme Management
-- Booking Management
-- Feedback Management
-- Dashboard Overview
+- 💳 Online payment gateway integration
+- 📱 Real-time booking notifications (email/SMS)
+- 📅 Event calendar & availability view
+- ⭐ Customer ratings & reviews
+- 🗺️ Venue maps integration
+- 🤖 AI-based event recommendations
+- 🐳 Docker deployment
+- 🐘 PostgreSQL production database
+- 🌐 REST API (DRF) for mobile clients
 
-## 🚀 Future Enhancements
+---
 
-The following improvements are planned for future releases:
+## 🛡️ Security Notes
 
-- 💳 Online Payment Gateway Integration
-- 📱 Mobile Application (Android & iOS)
-- 🔔 Real-Time Booking Notifications
-- 📅 Event Calendar Integration
-- ⭐ Customer Ratings & Reviews
-- 📍 Google Maps Venue Integration
-- 🤖 AI-Based Event Recommendations
-- 🐳 Docker Deployment
-- 🐘 PostgreSQL Database Support
-- 🌐 REST API for Mobile Applications
+- Secrets are read from `.env` only; nothing is committed with real values.
+- `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, and `SECURE_SSL_REDIRECT` default to off for local development — flip them on behind TLS in production.
+- HSTS is pre-configured (1 year) — enable `SECURE_HSTS_PRELOAD` once you own the domain.
+- Authorization is deny-by-default: every protected view is guarded by `login_required` plus a role check; admin-only endpoints reject staff and customers.
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the **LICENSE** file for details.
 
-See the **LICENSE** file for more information.
+---
 
 ## 👨‍💻 Author
 
@@ -433,9 +543,8 @@ Passionate about building scalable backend systems, modern web applications, and
 
 </div>
 
+---
 
 ## ⭐ Support
 
-If you found this project helpful, please consider giving it a ⭐ on GitHub.
-
-Your support motivates me to continue building and improving open-source projects.
+If you found this project helpful, please consider giving it a ⭐ on GitHub. Your support motivates continued development and improvement.

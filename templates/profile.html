@@ -1,0 +1,73 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}My Profile — Plannix{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="px-card p-4 text-center reveal">
+      <span class="table-avatar d-inline-flex align-items-center justify-content-center text-uppercase"
+            style="width:88px;height:88px;border-radius:50%;font-size:2rem;font-weight:800;background:var(--px-gradient);color:#fff;">
+        {{ request.user.username|first }}
+      </span>
+      <h2 class="h5 mt-3 mb-1" style="font-family:var(--px-font-display);color:var(--px-dark);">
+        {{ request.user.get_full_name|default:request.user.username }}
+      </h2>
+      <p class="text-muted-px mb-0">@{{ request.user.username }}</p>
+
+      <div class="px-divider my-4"></div>
+
+      <div class="d-flex justify-content-between align-items-center py-1">
+        <span class="small text-muted-px">Email</span>
+        <strong class="small text-truncate" style="color:var(--px-dark);max-width:60%;">{{ request.user.email|default:"—" }}</strong>
+      </div>
+      <div class="d-flex justify-content-between align-items-center py-1">
+        <span class="small text-muted-px">Joined</span>
+        <strong class="small" style="color:var(--px-dark);">{{ request.user.date_joined|date:"d M Y" }}</strong>
+      </div>
+
+      <a class="btn btn-ghost btn-sm w-100 mt-4" href="{% url 'change_password' %}">
+        <i class="bi bi-key me-1"></i>Change password
+      </a>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="px-card p-4 p-lg-5 reveal reveal-delay-1">
+      <span class="px-eyebrow">Account</span>
+      <h2 class="px-section-title" style="font-size:1.4rem;">Edit profile</h2>
+      <p class="text-muted-px">Update your personal details. Your email is used for booking confirmations.</p>
+
+      <form method="post" action="{% url 'profile' %}" class="mt-4">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="f_first">First name</label>
+            <input type="text" class="form-control" id="f_first" name="first_name"
+                   value="{{ request.user.first_name }}" placeholder="Your first name">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="f_last">Last name</label>
+            <input type="text" class="form-control" id="f_last" name="last_name"
+                   value="{{ request.user.last_name }}" placeholder="Your last name">
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="f_email">Email address *</label>
+            <input type="email" class="form-control" id="f_email" name="email" required
+                   value="{{ request.user.email }}" placeholder="you@example.com">
+          </div>
+          <div class="col-12 d-flex flex-wrap gap-2 mt-4">
+            <button class="btn btn-brand btn-lg" type="submit">
+              <i class="bi bi-check2-circle me-1"></i>Save changes
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

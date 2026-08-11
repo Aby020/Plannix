@@ -1,0 +1,67 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}Manage Feedback — Plannix{% endblock %}
+{% block page_title %}Manage Feedback{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <p class="text-muted-px mb-0">{{ feedback_list|length }} feedback {{ feedback_list|length|pluralize:"entry,entries" }}</p>
+</div>
+
+{% if feedback_list %}
+  <div class="px-card reveal">
+    <div class="px-table border-0 rounded-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Contact</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in feedback_list %}
+            <tr>
+              <td>
+                <strong class="d-block" style="color:var(--px-dark);">{{ f.name }}</strong>
+              </td>
+              <td>
+                <strong class="d-block" style="color:var(--px-dark);">{{ f.email }}</strong>
+                <small class="text-muted-px">{{ f.number }}</small>
+              </td>
+              <td>
+                <span class="d-inline-block text-truncate" style="max-width:340px;color:var(--px-dark);"
+                      title="{{ f.message }}">{{ f.message|truncatechars:80 }}</span>
+              </td>
+              <td><span class="small text-muted-px">{{ f.created_at|date:"d M Y" }}</span></td>
+              <td class="text-end">
+                <form method="post" action="{% url 'delete_feedback' f.id %}" class="d-inline"
+                      data-confirm="Delete feedback from {{ f.name }}?">
+                  {% csrf_token %}
+                  <button class="btn btn-ghost btn-sm text-danger" type="submit" title="Delete"
+                          style="border-color:rgba(239,68,68,.3);">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="px-empty px-card reveal">
+    <div class="empty-icon"><i class="bi bi-chat-square-text"></i></div>
+    <h4>No feedback yet</h4>
+    <p>Feedback submitted by visitors through the site will appear here.</p>
+  </div>
+{% endif %}
+
+{% endblock %}

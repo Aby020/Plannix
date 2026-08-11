@@ -1,0 +1,108 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize %}
+
+{% block title %}Staff Dashboard — Plannix{% endblock %}
+{% block page_title %}Staff Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="row g-4 mb-4">
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal">
+      <span class="stat-icon indigo"><i class="bi bi-calendar-event"></i></span>
+      <div>
+        <div class="stat-num" data-counter="{{ total_events }}">{{ total_events|intcomma }}</div>
+        <div class="stat-label">Active Events</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal reveal-delay-1">
+      <span class="stat-icon blue"><i class="bi bi-journal-check"></i></span>
+      <div>
+        <div class="stat-num" data-counter="{{ total_bookings }}">{{ total_bookings|intcomma }}</div>
+        <div class="stat-label">Total Bookings</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal reveal-delay-2">
+      <span class="stat-icon amber"><i class="bi bi-hourglass-split"></i></span>
+      <div>
+        <div class="stat-num" data-counter="{{ pending_bookings }}">{{ pending_bookings|intcomma }}</div>
+        <div class="stat-label">Pending Approval</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-xl-3 col-md-6">
+    <div class="px-stat reveal reveal-delay-3">
+      <span class="stat-icon green"><i class="bi bi-chat-heart"></i></span>
+      <div>
+        <div class="stat-num" data-counter="{{ total_feedback }}">{{ total_feedback|intcomma }}</div>
+        <div class="stat-label">Feedback Received</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Pending bookings queue -->
+  <div class="col-lg-7">
+    <div class="px-card reveal">
+      <div class="d-flex align-items-center justify-content-between p-4 pb-3">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-inboxes text-brand me-2"></i>Bookings Needing Attention
+        </h2>
+        <a class="btn btn-ghost btn-sm" href="{% url 'manage_bookings' %}">Manage All</a>
+      </div>
+      <div class="px-table border-0 rounded-0">
+        <table class="table table-hover">
+          <thead>
+            <tr><th>Event</th><th>Customer</th><th>Date</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for b in recent_bookings %}
+            <tr>
+              <td class="text-truncate" style="max-width:180px;">{{ b.event_company_name }}</td>
+              <td>{{ b.name }}</td>
+              <td>{{ b.event_booking_date }}</td>
+              <td><span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted-px py-4">No bookings yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent feedback -->
+  <div class="col-lg-5">
+    <div class="px-card reveal reveal-delay-1">
+      <div class="d-flex align-items-center justify-content-between p-4 pb-3">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-chat-square-text text-brand me-2"></i>Recent Feedback
+        </h2>
+        <a class="btn btn-ghost btn-sm" href="{% url 'manage_feedback' %}">View All</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for f in recent_feedback %}
+        <div class="list-group-item px-4 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <strong style="color:var(--px-dark);">{{ f.name }}</strong>
+            <small class="text-muted-px">{{ f.created_at|date:"d M" }}</small>
+          </div>
+          <small class="text-muted-px d-block text-truncate">{{ f.message|truncatechars:90 }}</small>
+        </div>
+        {% empty %}
+        <div class="px-empty py-4">
+          <p class="mb-0">No feedback yet.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

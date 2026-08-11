@@ -1,0 +1,88 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize %}
+
+{% block title %}Manage Users — Plannix{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <p class="text-muted-px mb-0">{{ users_with_roles|length }} registered user{{ users_with_roles|length|pluralize }}</p>
+</div>
+
+{% if users_with_roles %}
+  <div class="px-card reveal">
+    <div class="px-table border-0 rounded-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user, role in users_with_roles %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-3">
+                  <span class="table-avatar d-inline-flex align-items-center justify-content-center text-uppercase"
+                        style="border-radius:50%;font-weight:700;">
+                    {{ user.username|first }}
+                  </span>
+                  <div class="min-w-0">
+                    <strong class="d-block text-truncate" style="color:var(--px-dark);">{{ user.username }}</strong>
+                    <small class="text-muted-px">
+                      {% if user.get_full_name %}{{ user.get_full_name }} · {% endif %}{{ user.email|default:"no email" }}
+                    </small>
+                  </div>
+                </div>
+              </td>
+              <td><span class="px-role {{ role }}">{{ role|title }}</span></td>
+              <td>
+                {% if user.is_active %}
+                  <span class="px-badge badge-completed">Active</span>
+                {% else %}
+                  <span class="px-badge badge-cancelled">Deactivated</span>
+                {% endif %}
+              </td>
+              <td><span class="small text-muted-px">{{ user.date_joined|date:"d M Y" }}</span></td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-2">
+                  <form method="post" action="{% url 'toggle_user_active' user.id %}" class="d-inline"
+                        data-confirm="{% if user.is_active %}Deactivate{% else %}Activate{% endif %} {{ user.username }}?">
+                    {% csrf_token %}
+                    <button class="btn btn-ghost btn-sm" type="submit" title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %}">
+                      <i class="bi {% if user.is_active %}bi-person-x{% else %}bi-person-check{% endif %} me-1"></i>
+                      {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
+                    </button>
+                  </form>
+                  <form method="post" action="{% url 'delete_user' user.id %}" class="d-inline"
+                        data-confirm="Delete {{ user.username }} and all their data? This cannot be undone.">
+                    {% csrf_token %}
+                    <button class="btn btn-ghost btn-sm text-danger" type="submit" title="Delete"
+                            style="border-color:rgba(239,68,68,.3);">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="px-empty px-card reveal">
+    <div class="empty-icon"><i class="bi bi-people"></i></div>
+    <h4>No users yet</h4>
+    <p>Accounts created through the sign-up page will appear here.</p>
+  </div>
+{% endif %}
+
+{% endblock %}

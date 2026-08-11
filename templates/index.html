@@ -1,562 +1,350 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="en">
+{% extends "base.html" %}
+{% load static humanize plannix_filters %}
 
-<head>
-    <meta charset="utf-8">
-    <title>Nexvent</title>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="" name="keywords">
-    <meta content="" name="description">
+{% block title %}Plannix — Premium Event Planning &amp; Management{% endblock %}
 
-    <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static "icon/apple-touch-icon.png" %}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static "icon/favicon-32x32.png" %}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static "icon/favicon-16x16.png" %}">
-    <link rel="manifest" href="{% static "icon/site.webmanifest" %}">
+{% block content %}
 
-    <!-- Google Web Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<!-- ============ Hero ============ -->
+<section class="px-hero">
+  <div class="container px-container">
+    <div class="px-hero-grid">
+      <div class="px-hero-copy">
+        <span class="px-hero-badge"><i class="bi bi-stars"></i> Premium event planning platform</span>
+        <h1>Plan it. Live it. <span class="display-gradient">Remember it forever.</span></h1>
+        <p class="lead-px">Discover events you love, book in seconds, and manage every detail from one beautiful dashboard. Plannix handles the magic — you make the memories.</p>
 
-    <!-- Icon Font Stylesheet -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+        <form class="px-hero-search" method="post" action="{% url 'searching_events' %}">
+          {% csrf_token %}
+          <div class="input-group">
+            <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+            <input class="form-control border-0" type="text" name="search_query" required
+                   placeholder="Search your event — wedding, birthday, corporate…"
+                   aria-label="Search events">
+            <button class="btn btn-brand" type="submit">Search</button>
+          </div>
+        </form>
 
-    <!-- Libraries Stylesheet -->
-    <link href="{% static "lib/animate/animate.min.css" %}" rel="stylesheet">
-    <link href="{% static "lib/owlcarousel/assets/owl.carousel.min.css" %}" rel="stylesheet">
-    <link href="{% static "lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" %}" rel="stylesheet" />
-
-    <!-- Customized Bootstrap Stylesheet -->
-    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
-
-    <!-- Template Stylesheet -->
-    <link href="{% static "css/style.css" %}" rel="stylesheet">
-</head>
-
-<body>
-    <!-- Spinner Start -->
-    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-            <span class="sr-only">Loading...</span>
+        <div class="px-hero-actions">
+          <a class="btn btn-brand btn-lg" href="{% url 'events' %}"><i class="bi bi-calendar-heart"></i>Browse Events</a>
+          <a class="btn btn-outline-light-px btn-lg" href="{% url 'about' %}">How it works</a>
         </div>
+
+        <div class="px-hero-stats">
+          <div class="stat">
+            <div class="stat-value" data-counter="{{ total_events }}">{{ total_events|intcomma }}</div>
+            <div class="stat-label">Events Listed</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" data-counter="{{ total_bookings }}">{{ total_bookings|intcomma }}</div>
+            <div class="stat-label">Bookings Made</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" data-counter="{{ happy_customers }}">{{ happy_customers|intcomma }}</div>
+            <div class="stat-label">Happy Clients</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="px-hero-visual reveal">
+        <div class="px-hero-card">
+          <h3><i class="bi bi-check-circle-fill text-brand me-2"></i>Everything planned, in one place</h3>
+          <div class="list-item">
+            <span class="list-icon"><i class="bi bi-calendar-check"></i></span>
+            <div>
+              <strong>Live event catalogue</strong><br>
+              <small>Fresh events, updated in real time</small>
+            </div>
+          </div>
+          <div class="list-item">
+            <span class="list-icon"><i class="bi bi-lightning-charge"></i></span>
+            <div>
+              <strong>Instant booking</strong><br>
+              <small>Confirm in seconds, manage anytime</small>
+            </div>
+          </div>
+          <div class="list-item">
+            <span class="list-icon"><i class="bi bi-people"></i></span>
+            <div>
+              <strong>Role-based dashboards</strong><br>
+              <small>For customers, staff and admins</small>
+            </div>
+          </div>
+          <div class="list-item">
+            <span class="list-icon"><i class="bi bi-shield-check"></i></span>
+            <div>
+              <strong>Trusted vendors</strong><br>
+              <small>Quality partners, verified services</small>
+            </div>
+          </div>
+        </div>
+        <div class="px-hero-float one">
+          <span class="float-icon"><i class="bi bi-check-lg"></i></span>
+          Booking confirmed
+        </div>
+        <div class="px-hero-float two">
+          <span class="float-icon"><i class="bi bi-star-fill" style="background:var(--px-warning-bg);color:var(--px-warning);"></i></span>
+          4.9 · client rating
+        </div>
+      </div>
     </div>
-    <!-- Spinner End -->
+  </div>
+</section>
 
-
-    <!-- Topbar Start -->
-    <div class="container-fluid bg-dark px-5 d-none d-lg-block">
-        <div class="row gx-0">
-            <div class="col-lg-8 text-center text-lg-start mb-2 mb-lg-0">
-                <div class="d-inline-flex align-items-center" style="height: 45px;">
-                    <small class="me-3 text-light"><i class="fa fa-map-marker-alt me-2"></i>Info Street, Banglore, India</small>
-                    <small class="me-3 text-light"><i class="fa fa-phone-alt me-2"></i>+91 9037656805</small>
-                    <small class="text-light"><i class="fa fa-envelope-open me-2"></i>nexventinfo@gmail.com</small>
-                </div>
-            </div>
-            <div class="col-lg-4 text-center text-lg-end">
-                <div class="d-inline-flex align-items-center" style="height: 45px;">
-                    <a class="btn btn-sm btn-outline-light btn-sm-square rounded-circle me-2" href=""><i class="fab fa-twitter fw-normal"></i></a>
-                    <a class="btn btn-sm btn-outline-light btn-sm-square rounded-circle me-2" href=""><i class="fab fa-facebook-f fw-normal"></i></a>
-                    <a class="btn btn-sm btn-outline-light btn-sm-square rounded-circle me-2" href=""><i class="fab fa-linkedin-in fw-normal"></i></a>
-                    <a class="btn btn-sm btn-outline-light btn-sm-square rounded-circle me-2" href=""><i class="fab fa-instagram fw-normal"></i></a>
-                    <a class="btn btn-sm btn-outline-light btn-sm-square rounded-circle" href=""><i class="fab fa-youtube fw-normal"></i></a>
-                </div>
-            </div>
+<!-- ============ About ============ -->
+<section class="px-section">
+  <div class="container px-container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 reveal">
+        <div class="position-relative">
+          <img src="{% static 'img/about.jpg' %}" alt="A beautifully arranged event" class="img-fluid rounded-px-lg shadow-brand" style="aspect-ratio:4/3;object-fit:cover;width:100%;">
+          <div class="px-hero-float two" style="left:1rem;bottom:1rem;animation:none;">
+            <span class="float-icon"><i class="bi bi-calendar-heart"></i></span>
+            Since 2024 · {# real events live here #}{{ total_events }} events
+          </div>
         </div>
+      </div>
+      <div class="col-lg-6 reveal reveal-delay-1">
+        <span class="px-eyebrow">About Plannix</span>
+        <h2 class="px-section-title">Welcome to <span class="display-gradient">Plannix</span></h2>
+        <p class="px-section-sub">Plannix is your all-in-one event planning and management platform, built to make planning simple, fast and stress-free. From weddings to corporate summits, we connect you with trusted services to create unforgettable experiences.</p>
+        <p class="mt-3 text-muted-px">We believe every event deserves precision, creativity and flawless execution. Book, manage and enjoy your events with confidence — only with Plannix.</p>
+        <div class="row gy-2 gx-4 mt-4">
+          <div class="col-sm-6">
+            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Easy online booking &amp; scheduling</p>
+          </div>
+          <div class="col-sm-6">
+            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Event tracking &amp; management tools</p>
+          </div>
+          <div class="col-sm-6">
+            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Secure confirmations &amp; updates</p>
+          </div>
+          <div class="col-sm-6">
+            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Support throughout the event lifecycle</p>
+          </div>
+        </div>
+        <a class="btn btn-brand mt-4" href="{% url 'events' %}">Explore Events <i class="bi bi-arrow-right ms-1"></i></a>
+      </div>
     </div>
-    <!-- Topbar End -->
+  </div>
+</section>
 
-
-    <!-- Navbar & Hero Start -->
-    <div class="container-fluid position-relative p-0">
-        <nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0">
-            <a href="" class="navbar-brand p-0">
-                <h1 class="text-primary m-0"><i class="fa fa fa-cog me-3"></i>Nexvent</h1>
-                <!-- <img src="img/logo.png" alt="Logo"> -->
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-                <span class="fa fa-bars"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarCollapse">
-                <div class="navbar-nav ms-auto py-0">
-                    {% if user.is_authenticated %}
-                    <a href="#" class="nav-item nav-link">Hi, {{user.username}}</a>
-                    {% else %}
-                    <a href="#" class="nav-item nav-link">Hello, I'm Nexvent</a>
-                    {% endif %}
-                    <a href="{% url "index" %}" class="nav-item nav-link active">Home</a>
-                    <a href="{% url "about" %}" class="nav-item nav-link">About</a>
-                    <a href="{% url "events" %}" class="nav-item nav-link">Events</a>
-                    <div class="nav-item dropdown">
-                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">Account</a>
-                        <div class="dropdown-menu m-0">
-                            <a href="{% url "sign_up" %}" class="dropdown-item">Sign Up</a>
-                            <a href="{% url "sign_in" %}" class="dropdown-item">Sign In</a>
-                            {% if user.is_authenticated %}
-                            <a href="{% url "sign_out" %}" class="dropdown-item">Sign Out</a>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <a href="{% url "feedback" %}" class="nav-item nav-link">Feedback</a>
-                </div>
-            </div>
-        </nav>
-
-        <div class="container-fluid bg-primary py-5 mb-5 hero-header">
-            <div class="container py-5">
-                <div class="row justify-content-center py-5">
-                    <div class="col-lg-10 pt-lg-5 mt-lg-5 text-center">
-                        <h1 class="display-3 text-white mb-3 animated slideInDown">Enjoy Your Event With Us</h1>
-                        <p class="fs-4 text-white mb-4 animated slideInDown">Nexvent, we do not just manage events — we help create experiences that last</p>
-                        <div class="position-relative w-75 mx-auto animated slideInDown">
-                            <form method="post" action="{% url "searching_events" %}" enctype="multipart/form-data">
-                                {% csrf_token %}
-                            <input class="form-control border-0 rounded-pill w-100 py-3 ps-4 pe-5" type="text" name="search_query" required placeholder="Search Your Events">
-                            <button type="submit" class="btn btn-primary rounded-pill py-2 px-4 position-absolute top-0 end-0 me-2" style="margin-top: 7px;">Search</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- ============ Event Types ============ -->
+<section class="px-section" style="background:var(--px-white);">
+  <div class="container px-container">
+    <div class="text-center mb-5 reveal">
+      <span class="px-eyebrow">Event Categories</span>
+      <h2 class="px-section-title">Find your perfect event</h2>
+      <p class="px-section-sub mx-auto">From intimate celebrations to grand corporate affairs — explore every kind of event, planned to perfection.</p>
     </div>
-    <!-- Navbar & Hero End -->
 
-
-    <!-- About Start -->
-    <div class="container-xxl py-5">
-        <div class="container">
-            <div class="row g-5">
-                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s" style="min-height: 400px;">
-                    <div class="position-relative h-100">
-                        <img class="img-fluid position-absolute w-100 h-100" src="{% static "img/about.jpg" %}" alt="" style="object-fit: cover;">
-                    </div>
-                </div>
-                <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.3s">
-                    <h6 class="section-title bg-white text-start text-primary pe-3">About Us</h6>
-                    <h1 class="mb-4">Welcome to <span class="text-primary">Nexvent</span></h1>
-                    <p class="mb-4">Nexvent is your all-in-one event management and booking platform, built to make planning events simple, fast, and stress-free. From corporate meetings to weddings and private celebrations, we connect you with trusted services to create unforgettable experiences. Book, manage, and enjoy your events with confidence — only with Nexvent.</p>
-                    <p class="mb-4">We believe that every event deserves precision, creativity, and flawless execution. Nexvent was created with the vision of making event booking effortless while maintaining the highest standards of quality and professionalism.</p>
-                    <div class="row gy-2 gx-4 mb-4">
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Easy online event booking and scheduling</p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Event tracking and management tools</p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Secure payments and confirmations</p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Vendor and service provider integration</p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>Customer support throughout the event lifecycle</p>
-                        </div>
-                        <div class="col-sm-6">
-                            <p class="mb-0"><i class="fa fa-arrow-right text-primary me-2"></i>24/7 Service</p>
-                        </div>
-                    </div>
-                </div>
+    {% if event_types %}
+      <div class="row g-4 reveal-stagger">
+        {% for etype in event_types %}
+        <div class="col-lg-3 col-sm-6">
+          <a href="{% url 'events' %}?type={{ etype|urlencode }}" class="d-block h-100 text-decoration-none">
+            <div class="px-feature">
+              <div class="px-feature-icon"><i class="bi bi-calendar2-heart"></i></div>
+              <h3 class="text-capitalize">{{ etype }}</h3>
+              <p>{{ type_counts|get_item:etype|default:0 }} event{{ type_counts|get_item:etype|default:0|pluralize }}</p>
             </div>
+          </a>
         </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="px-empty px-card">
+        <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
+        <h4>Events coming soon</h4>
+        <p>Our team is curating an amazing collection of events. Check back shortly!</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ============ Process ============ -->
+<section class="px-section">
+  <div class="container px-container">
+    <div class="text-center mb-5 reveal">
+      <span class="px-eyebrow">How it works</span>
+      <h2 class="px-section-title">Get planned in 3 easy steps</h2>
     </div>
-    <!-- About End -->
-
-
-    <!-- Service Start -->
-    <div class="container-xxl py-5">
-        <div class="container">
-            <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                <h6 class="section-title bg-white text-center text-primary px-3">Services</h6>
-                <h1 class="mb-5">Our Top Events</h1>
-            </div>
-            <div class="row g-4">
-                <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
-                    <div class="service-item rounded pt-3">
-                        <div class="p-4">
-                            <i class="fa fa-3x fa-globe text-primary mb-4"></i>
-                            <h5>Wedding</h5>
-                            <p>Make your special day truly unforgettable with Nexvent. From venue booking to decor and coordination, we help you plan your dream wedding with ease, elegance, and perfection.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="service-item rounded pt-3">
-                        <div class="p-4">
-                            <i class="fa fa-3x fa-cog text-primary mb-4"></i>
-                            <h5>Birthday</h5>
-                            <p>Make your birthday truly special with Nexvent. From theme decoration to entertainment and catering, we handle everything so you can enjoy your celebration stress-free.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.5s">
-                    <div class="service-item rounded pt-3">
-                        <div class="p-4">
-                            <i class="fa fa-3x fa-user text-primary mb-4"></i>
-                            <h5>Corporate</h5>
-                            <p>Nexvent delivers seamless corporate event planning for meetings, conferences, product launches, and business gatherings. Create memorable moments with ease.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
-                    <div class="service-item rounded pt-3">
-                        <div class="p-4">
-                            <i class="fa fa-3x fa-cog text-primary mb-4"></i>
-                            <h5>Catering</h5>
-                            <p>Delicious food, professionally served. Nexvent offers reliable catering solutions for all types of events, delivering quality cuisine and exceptional service to make your event truly memorable.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.1s">
-                    <div class="service-item rounded pt-3">
-                        <div class="p-4">
-                            <i class="fa fa-3x fa-globe text-primary mb-4"></i>
-                            <h5>Engagement</h5>
-                            <p>Make your engagement truly unforgettable with Nexvent.From elegant décor to seamless planning.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="service-item rounded pt-3">
-                        <div class="p-4">
-                            <i class="fa fa-3x fa-cog text-primary mb-4"></i>
-                            <h5>Music Event</h5>
-                            <p>Experience live music like never before. Nexvent brings you the best music events with seamless booking and unforgettable vibes.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.5s">
-                    <div class="service-item rounded pt-3">
-                        <div class="p-4">
-                            <i class="fa fa-3x fa-user text-primary mb-4"></i>
-                            <h5>DJ Party</h5>
-                            <p>Turn up the energy with top DJs and electrifying party events. Book your next DJ party effortlessly with Nexvent.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="0.7s">
-                    <div class="service-item rounded pt-3">
-                        <div class="p-4">
-                            <i class="fa fa-3x fa-cog text-primary mb-4"></i>
-                            <h5>Event Management</h5>
-                            <p>From planning to execution, Nexvent manages every detail so you can enjoy a flawless event experience.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="row g-4">
+      <div class="col-lg-4 reveal">
+        <div class="px-card px-card-hover p-4 text-center h-100">
+          <div class="px-feature-icon mx-auto" style="width:72px;height:72px;font-size:1.6rem;"><span>1</span></div>
+          <h3 class="mt-3">Choose an event</h3>
+          <p class="mb-0 text-muted-px">Browse our curated catalogue and pick the event that fits your moment.</p>
         </div>
+      </div>
+      <div class="col-lg-4 reveal reveal-delay-1">
+        <div class="px-card px-card-hover p-4 text-center h-100">
+          <div class="px-feature-icon mx-auto" style="width:72px;height:72px;font-size:1.6rem;"><span>2</span></div>
+          <h3 class="mt-3">Book instantly</h3>
+          <p class="mb-0 text-muted-px">Fill in your details, pick a date, and confirm your booking in seconds.</p>
+        </div>
+      </div>
+      <div class="col-lg-4 reveal reveal-delay-2">
+        <div class="px-card px-card-hover p-4 text-center h-100">
+          <div class="px-feature-icon mx-auto" style="width:72px;height:72px;font-size:1.6rem;"><span>3</span></div>
+          <h3 class="mt-3">Enjoy the moment</h3>
+          <p class="mb-0 text-muted-px">Relax and enjoy your event — Plannix handles everything behind the scenes.</p>
+        </div>
+      </div>
     </div>
-    <!-- Service End -->
+  </div>
+</section>
 
-
-    <!-- Event Images Start -->
-    <div class="container-xxl py-5 destination">
-        <div class="container">
-            <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                <h6 class="section-title bg-white text-center text-primary px-3">Events</h6>
-                <h1 class="mb-5">Popular Events</h1>
-            </div>
-            <div class="row g-3">
-                <div class="col-lg-7 col-md-6">
-                    <div class="row g-3">
-                        <div class="col-lg-12 col-md-12 wow zoomIn" data-wow-delay="0.1s">
-                            <a class="position-relative d-block overflow-hidden" href="{% url "events" %}">
-                                <img class="img-fluid" src="{% static "img/gallery4.jpg" %}" alt="">
-                                <div class="bg-white text-danger fw-bold position-absolute top-0 start-0 m-3 py-1 px-2">30% OFF</div>
-                                <div class="bg-white text-primary fw-bold position-absolute bottom-0 end-0 m-3 py-1 px-2">Wedding</div>
-                            </a>
-                        </div>
-                        <div class="col-lg-6 col-md-12 wow zoomIn" data-wow-delay="0.3s">
-                            <a class="position-relative d-block overflow-hidden" href="{% url "events" %}">
-                                <img class="img-fluid" src="{% static "img/gallery3.jpg" %}" alt="">
-                                <div class="bg-white text-danger fw-bold position-absolute top-0 start-0 m-3 py-1 px-2">25% OFF</div>
-                                <div class="bg-white text-primary fw-bold position-absolute bottom-0 end-0 m-3 py-1 px-2">Birthday</div>
-                            </a>
-                        </div>
-                        <div class="col-lg-6 col-md-12 wow zoomIn" data-wow-delay="0.5s">
-                            <a class="position-relative d-block overflow-hidden" href="{% url "events" %}">
-                                <img class="img-fluid" src="{% static "img/gallery1.jpg" %}" alt="">
-                                <div class="bg-white text-danger fw-bold position-absolute top-0 start-0 m-3 py-1 px-2">35% OFF</div>
-                                <div class="bg-white text-primary fw-bold position-absolute bottom-0 end-0 m-3 py-1 px-2">Corporate</div>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-5 col-md-6 wow zoomIn" data-wow-delay="0.7s" style="min-height: 350px;">
-                    <a class="position-relative d-block h-100 overflow-hidden" href="{% url "events" %}">
-                        <img class="img-fluid position-absolute w-100 h-100" src="{% static "img/gallery5.jpg" %}" alt="" style="object-fit: cover;">
-                        <div class="bg-white text-danger fw-bold position-absolute top-0 start-0 m-3 py-1 px-2">20% OFF</div>
-                        <div class="bg-white text-primary fw-bold position-absolute bottom-0 end-0 m-3 py-1 px-2">Catering</div>
-                    </a>
-                </div>
-            </div>
-        </div>
+<!-- ============ Popular Events ============ -->
+<section class="px-section" style="background:var(--px-white);">
+  <div class="container px-container">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-5 reveal">
+      <div>
+        <span class="px-eyebrow">Featured</span>
+        <h2 class="px-section-title mb-0">Popular events right now</h2>
+      </div>
+      <a class="btn btn-ghost" href="{% url 'events' %}">View all <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
-    <!-- Event Images End -->
 
-
-    <!-- Process Start -->
-    <div class="container-xxl py-5">
-        <div class="container">
-            <div class="text-center pb-4 wow fadeInUp" data-wow-delay="0.1s">
-                <h6 class="section-title bg-white text-center text-primary px-3">Process</h6>
-                <h1 class="mb-5">3 Easy Steps</h1>
+    {% if featured_events %}
+      <div class="row g-4 reveal-stagger">
+        {% for event in featured_events %}
+        <div class="col-lg-4 col-md-6">
+          <article class="px-card event-card h-100 d-flex flex-column">
+            <div class="event-media">
+              {% if event.event_img %}
+                <img src="{{ event.event_img.url }}" alt="{{ event.event_name }}" loading="lazy">
+              {% else %}
+                <img src="{% static 'img/gallery1.jpg' %}" alt="{{ event.event_name }}" loading="lazy">
+              {% endif %}
+              <span class="event-badge">{{ event.event_type }}</span>
             </div>
-            <div class="row gy-5 gx-4 justify-content-center">
-                <div class="col-lg-4 col-sm-6 text-center pt-4 wow fadeInUp" data-wow-delay="0.1s">
-                    <div class="position-relative border border-primary pt-5 pb-4 px-4">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-primary rounded-circle position-absolute top-0 start-50 translate-middle shadow" style="width: 100px; height: 100px;">
-                            <i class="fa fa-globe fa-3x text-white"></i>
-                        </div>
-                        <h5 class="mt-4">Choose A Event</h5>
-                        <hr class="w-25 mx-auto bg-primary mb-1">
-                        <hr class="w-50 mx-auto bg-primary mt-0">
-                        <p class="mb-0">Select the type of event you want to host and get started instantly. From corporate events to private celebrations, Nexvent makes booking simple and seamless.</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-sm-6 text-center pt-4 wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="position-relative border border-primary pt-5 pb-4 px-4">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-primary rounded-circle position-absolute top-0 start-50 translate-middle shadow" style="width: 100px; height: 100px;">
-                            <i class="fa fa-dollar-sign fa-3x text-white"></i>
-                        </div>
-                        <h5 class="mt-4">Pay Online</h5>
-                        <hr class="w-25 mx-auto bg-primary mb-1">
-                        <hr class="w-50 mx-auto bg-primary mt-0">
-                        <p class="mb-0">Make secure and hassle-free payments with Nexvent. Pay online quickly and confirm your event booking instantly with our trusted payment system.</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-sm-6 text-center pt-4 wow fadeInUp" data-wow-delay="0.5s">
-                    <div class="position-relative border border-primary pt-5 pb-4 px-4">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-primary rounded-circle position-absolute top-0 start-50 translate-middle shadow" style="width: 100px; height: 100px;">
-                            <i class="fa fa-cog fa-3x text-white"></i>
-                        </div>
-                        <h5 class="mt-4">Enjoy Our Event</h5>
-                        <hr class="w-25 mx-auto bg-primary mb-1">
-                        <hr class="w-50 mx-auto bg-primary mt-0">
-                        <p class="mb-0">Enjoy your event while we take care of the rest. Relax and enjoy your event — Nexvent handles everything, Just enjoy your moment, we manage the magic.</p>
-                    </div>
-                </div>
+            <div class="event-body d-flex flex-column flex-grow-1">
+              <h3 class="event-title">{{ event.event_name }}</h3>
+              <p class="text-muted-px mb-1" style="font-size:.9rem;">{{ event.event_description|truncatechars:110 }}</p>
+              <div class="event-meta">
+                <span><i class="bi bi-geo-alt"></i>{{ event.location }}</span>
+                <span><i class="bi bi-people"></i>{{ event.package1 }}</span>
+              </div>
+              <div class="d-flex align-items-center justify-content-between mt-3 pt-3 border-top mt-auto">
+                <span class="event-price">₹ {{ event.event_price|intcomma }}</span>
+                <a class="btn btn-soft btn-sm" href="{% url 'readmore' event.id %}">View Details</a>
+              </div>
             </div>
+          </article>
         </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="px-empty px-card">
+        <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
+        <h4>No featured events yet</h4>
+        <p>Once events are listed they'll appear right here.</p>
+        {% if user_role == 'staff' or user_role == 'admin' %}
+          <a class="btn btn-brand" href="{% url 'manage_events' %}">Add an event</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ============ Testimonials ============ -->
+<section class="px-section">
+  <div class="container px-container">
+    <div class="text-center mb-5 reveal">
+      <span class="px-eyebrow">Testimonials</span>
+      <h2 class="px-section-title">Our clients say it best</h2>
     </div>
-    <!-- Process End -->
-
-
-    <!-- Team Start -->
-    <div class="container-xxl py-5">
-        <div class="container">
-            <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
-                <h6 class="section-title bg-white text-center text-primary px-3">Our Team</h6>
-                <h1 class="mb-5">Meet Our Team</h1>
+    <div class="row g-4">
+      <div class="col-lg-3 col-md-6 reveal">
+        <div class="px-card p-4 h-100">
+          <div class="text-brand mb-2">★★★★★</div>
+          <p class="text-muted-px">Plannix made our event planning completely stress-free. From booking to execution, everything was smooth and well-organised.</p>
+          <div class="d-flex align-items-center gap-3 mt-3">
+            <span class="avatar avatar-lg" style="background:var(--px-gradient);">C</span>
+            <div>
+              <strong class="d-block" style="color:var(--px-dark);">Catharine</strong>
+              <small class="text-muted-px">Corporate Client</small>
             </div>
-            <div class="row g-4">
-                <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                    <div class="team-item">
-                        <div class="overflow-hidden">
-                            <img class="img-fluid" src="{% static "img/team-1.jpg" %}" alt="">
-                        </div>
-                        <div class="position-relative d-flex justify-content-center" style="margin-top: -19px;">
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-twitter"></i></a>
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-instagram"></i></a>
-                        </div>
-                        <div class="text-center p-4">
-                            <h5 class="mb-0">Jacob</h5>
-                            <small>Event Manager</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                    <div class="team-item">
-                        <div class="overflow-hidden">
-                            <img class="img-fluid" src="{% static "img/team-2.jpg" %}" alt="">
-                        </div>
-                        <div class="position-relative d-flex justify-content-center" style="margin-top: -19px;">
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-twitter"></i></a>
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-instagram"></i></a>
-                        </div>
-                        <div class="text-center p-4">
-                            <h5 class="mb-0">Maria</h5>
-                            <small>Event Planner</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
-                    <div class="team-item">
-                        <div class="overflow-hidden">
-                            <img class="img-fluid" src="{% static "img/team-3.jpg" %}" alt="">
-                        </div>
-                        <div class="position-relative d-flex justify-content-center" style="margin-top: -19px;">
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-twitter"></i></a>
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-instagram"></i></a>
-                        </div>
-                        <div class="text-center p-4">
-                            <h5 class="mb-0">Dennis</h5>
-                            <small>Decorator</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.7s">
-                    <div class="team-item">
-                        <div class="overflow-hidden">
-                            <img class="img-fluid" src="{% static "img/team-4.jpg" %}" alt="">
-                        </div>
-                        <div class="position-relative d-flex justify-content-center" style="margin-top: -19px;">
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-facebook-f"></i></a>
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-twitter"></i></a>
-                            <a class="btn btn-square mx-1" href=""><i class="fab fa-instagram"></i></a>
-                        </div>
-                        <div class="text-center p-4">
-                            <h5 class="mb-0">Sofia</h5>
-                            <small>Event Controller</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+      </div>
+      <div class="col-lg-3 col-md-6 reveal reveal-delay-1">
+        <div class="px-card p-4 h-100">
+          <div class="text-brand mb-2">★★★★★</div>
+          <p class="text-muted-px">Excellent service and great coordination. The team ensured every detail was handled perfectly for our wedding. Truly impressed!</p>
+          <div class="d-flex align-items-center gap-3 mt-3">
+            <span class="avatar avatar-lg" style="background:linear-gradient(135deg,#10B981,#34D399);">M</span>
+            <div>
+              <strong class="d-block" style="color:var(--px-dark);">Micheal</strong>
+              <small class="text-muted-px">Wedding Client</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 reveal reveal-delay-2">
+        <div class="px-card p-4 h-100">
+          <div class="text-brand mb-2">★★★★★</div>
+          <p class="text-muted-px">User-friendly platform and reliable vendors. Plannix saved us a lot of time and effort. Will definitely use it again.</p>
+          <div class="d-flex align-items-center gap-3 mt-3">
+            <span class="avatar avatar-lg" style="background:linear-gradient(135deg,#F59E0B,#FBBF24);">R</span>
+            <div>
+              <strong class="d-block" style="color:var(--px-dark);">Rohit K</strong>
+              <small class="text-muted-px">Event Organizer</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3 col-md-6 reveal reveal-delay-3">
+        <div class="px-card p-4 h-100">
+          <div class="text-brand mb-2">★★★★★</div>
+          <p class="text-muted-px">From start to finish, Plannix delivered a flawless experience. Booking was easy and support was always available.</p>
+          <div class="d-flex align-items-center gap-3 mt-3">
+            <span class="avatar avatar-lg" style="background:linear-gradient(135deg,#3B82F6,#60A5FA);">S</span>
+            <div>
+              <strong class="d-block" style="color:var(--px-dark);">Sneha M</strong>
+              <small class="text-muted-px">Birthday Client</small>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- Team End -->
+  </div>
+</section>
 
-
-    <!-- Testimonial Start -->
-    <div class="container-xxl py-5 wow fadeInUp" data-wow-delay="0.1s">
-        <div class="container">
-            <div class="text-center">
-                <h6 class="section-title bg-white text-center text-primary px-3">Testimonial</h6>
-                <h1 class="mb-5">Our Clients Say!!!</h1>
-            </div>
-            <div class="owl-carousel testimonial-carousel position-relative">
-                <div class="testimonial-item bg-white text-center border p-4">
-                    <img class="bg-white rounded-circle shadow p-1 mx-auto mb-3" src="{% static "img/testimonial-1.jpg" %}" style="width: 80px; height: 80px;">
-                    <h5 class="mb-0">Catharine</h5>
-                    <p>Corporate Client</p>
-                    <p class="mb-0">Nexvent made our event planning completely stress-free. From booking to execution, everything was smooth and well-organized.</p>
-                </div>
-                <div class="testimonial-item bg-white text-center border p-4">
-                    <img class="bg-white rounded-circle shadow p-1 mx-auto mb-3" src="{% static "img/testimonial-2.jpg" %}" style="width: 80px; height: 80px;">
-                    <h5 class="mb-0">Micheal</h5>
-                    <p>Wedding Client</p>
-                    <p class="mt-2 mb-0">Excellent service and great coordination. The team ensured every detail was handled perfectly for our wedding. Truly impressed!</p>
-                </div>
-                <div class="testimonial-item bg-white text-center border p-4">
-                    <img class="bg-white rounded-circle shadow p-1 mx-auto mb-3" src="{% static "img/testimonial-3.jpg" %}" style="width: 80px; height: 80px;">
-                    <h5 class="mb-0">Rohit K</h5>
-                    <p>Event Organizer</p>
-                    <p class="mt-2 mb-0">User-friendly platform and reliable vendors. Nexvent saved us a lot of time and effort. Will definitely use it again.</p>
-                </div>
-                <div class="testimonial-item bg-white text-center border p-4">
-                    <img class="bg-white rounded-circle shadow p-1 mx-auto mb-3" src="{% static "img/testimonial-4.jpg" %}" style="width: 80px; height: 80px;">
-                    <h5 class="mb-0">Sneha M</h5>
-                    <p>Birthday Client</p>
-                    <p class="mt-2 mb-0">From start to finish, Nexvent delivered a flawless experience. Booking was easy and support was always available.</p>
-                </div>
-            </div>
+<!-- ============ CTA ============ -->
+<section class="px-section">
+  <div class="container px-container">
+    <div class="px-card overflow-hidden reveal">
+      <div class="row g-0 align-items-center">
+        <div class="col-lg-7 p-4 p-lg-5">
+          <span class="px-eyebrow">Ready when you are</span>
+          <h2 class="px-section-title mb-2">Your next great event starts here</h2>
+          <p class="text-muted-px mb-4">Join Plannix today and plan, book and manage your events — all in one place.</p>
+          <div class="d-flex flex-wrap gap-3">
+            {% if user.is_authenticated %}
+              <a class="btn btn-brand btn-lg" href="{% url 'dashboard' %}">Go to Dashboard</a>
+              <a class="btn btn-ghost btn-lg" href="{% url 'events' %}">Browse Events</a>
+            {% else %}
+              <a class="btn btn-brand btn-lg" href="{% url 'sign_up' %}">Create Free Account</a>
+              <a class="btn btn-ghost btn-lg" href="{% url 'events' %}">Browse Events</a>
+            {% endif %}
+          </div>
         </div>
+        <div class="col-lg-5 d-none d-lg-block" style="background:var(--px-gradient);min-height:280px;position:relative;overflow:hidden;">
+          <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.14) 1px,transparent 1px);background-size:22px 22px;"></div>
+          <div class="px-hero-float one" style="animation:none;top:3rem;right:2.5rem;">
+            <span class="float-icon"><i class="bi bi-check-lg"></i></span>
+            Booking confirmed
+          </div>
+          <div class="px-hero-float two" style="animation:none;bottom:3rem;left:2.5rem;">
+            <span class="float-icon"><i class="bi bi-star-fill" style="background:var(--px-warning-bg);color:var(--px-warning);"></i></span>
+            4.9 · client rating
+          </div>
+        </div>
+      </div>
     </div>
-    <!-- Testimonial End -->
-        
+  </div>
+</section>
 
-    <!-- Footer Start -->
-    <div class="container-fluid bg-dark text-light footer pt-5 mt-5 wow fadeIn" data-wow-delay="0.1s">
-        <div class="container py-5">
-            <div class="row g-5">
-                <div class="col-lg-3 col-md-6">
-                    <h4 class="text-white mb-3">Our Pages</h4>
-                    <a class="btn btn-link" href="{% url "about" %}">About Us</a>
-                    <a class="btn btn-link" href="{% url "feedback" %}">Feedback Us</a>
-                    <a class="btn btn-link" href="{% url "privacy_policy" %}">Privacy Policy</a>
-                    <a class="btn btn-link" href="{% url "events" %}">Events</a>
-                    <a class="btn btn-link" href="{% url "sign_up" %}">Account</a>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <h4 class="text-white mb-3">Contact</h4>
-                    <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>Info Street, Banglore, India</p>
-                    <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+91 9037656805</p>
-                    <p class="mb-2"><i class="fa fa-envelope me-3"></i>nexventinfo@gmail.com</p>
-                    <div class="d-flex pt-2">
-                        <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>
-                        <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-facebook-f"></i></a>
-                        <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-youtube"></i></a>
-                        <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-linkedin-in"></i></a>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <h4 class="text-white mb-3">Gallery</h4>
-                    <div class="row g-2 pt-2">
-                        <div class="col-4">
-                            <img class="img-fluid bg-light p-1" src="{% static "img/gallery1.jpg" %}" alt="">
-                        </div>
-                        <div class="col-4">
-                            <img class="img-fluid bg-light p-1" src="{% static "img/gallery2.jpg" %}" alt="">
-                        </div>
-                        <div class="col-4">
-                            <img class="img-fluid bg-light p-1" src="{% static "img/gallery3.jpg" %}" alt="">
-                        </div>
-                        <div class="col-4">
-                            <img class="img-fluid bg-light p-1" src="{% static "img/gallery4.jpg" %}" alt="">
-                        </div>
-                        <div class="col-4">
-                            <img class="img-fluid bg-light p-1" src="{% static "img/gallery5.jpg" %}" alt="">
-                        </div>
-                        <div class="col-4">
-                            <img class="img-fluid bg-light p-1" src="{% static "img/gallery6.jpg" %}" alt="">
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6">
-                    <h4 class="text-white mb-3">Nexvent</h4>
-                    <p>Relax and enjoy your event — Nexvent handles everything.</p>
-                </div>
-            </div>
-        </div>
-        <div class="container">
-            <div class="copyright">
-                <div class="row">
-                    <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
-                        &copy; <a class="border-bottom" href="{% url "index" %}">Nexvent</a>, All Right Reserved.
-
-                        <!--/*** This template is free as long as you keep the footer author’s credit link/attribution link/backlink. If you'd like to use the template without the footer author’s credit link/attribution link/backlink, you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". Thank you for your support. ***/-->
-                        Designed By <a class="border-bottom" href="https://rajeevportfolio.pythonanywhere.com">Rajeev</a>
-                    </div>
-                    <div class="col-md-6 text-center text-md-end">
-                        <div class="footer-menu">
-                            <a href="{% url "index" %}">Home</a>
-                            <a href="{% url "about" %}">About</a>
-                            <a href="{% url "events" %}">Events</a>
-                            <a href="{% url "feedback" %}">Feedback Us</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Footer End -->
-
-
-    <!-- Back to Top -->
-    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
-
-
-    <!-- JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{% static "lib/wow/wow.min.js" %}"></script>
-    <script src="{% static "lib/easing/easing.min.js" %}"></script>
-    <script src="{% static "lib/waypoints/waypoints.min.js" %}"></script>
-    <script src="{% static "lib/owlcarousel/owl.carousel.min.js" %}"></script>
-    <script src="{% static "lib/tempusdominus/js/moment.min.js" %}"></script>
-    <script src="{% static "lib/tempusdominus/js/moment-timezone.min.js" %}"></script>
-    <script src="{% static "lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js" %}"></script>
-
-    <!-- Template Javascript -->
-    <script src="{% static "js/main.js" %}"></script>
-    <script src="{% static "js/dev.js" %}"></script>
-</body>
-
-</html>
+{% endblock %}

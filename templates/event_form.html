@@ -1,0 +1,96 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}{% if event %}Edit{% else %}Add{% endif %} Event — Plannix{% endblock %}
+{% block page_title %}{% if event %}Edit Event{% else %}Add New Event{% endif %}{% endblock %}
+
+{% block content %}
+
+<div class="px-card p-4 p-lg-5 reveal" style="max-width:860px;">
+  <span class="px-eyebrow">Event Package</span>
+  <h2 class="px-section-title" style="font-size:1.4rem;">
+    {% if event %}Update “{{ event.event_name }}”{% else %}Create a new event package{% endif %}
+  </h2>
+  <p class="text-muted-px">Fill in the details below. Required fields are marked with *.</p>
+
+  <form method="post" enctype="multipart/form-data"
+        action="{% if event %}{% url 'edit_event' event.id %}{% else %}{% url 'add_event' %}{% endif %}"
+        class="mt-4">
+    {% csrf_token %}
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="f_name">Event name *</label>
+        <input type="text" class="form-control" id="f_name" name="event_name" required
+               value="{{ event.event_name|default:'' }}" placeholder="e.g. Royal Wedding Package">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f_type">Event type *</label>
+        <input type="text" class="form-control" id="f_type" name="event_type" required
+               value="{{ event.event_type|default:'' }}" placeholder="e.g. Wedding">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="f_price">Price (₹) *</label>
+        <input type="number" class="form-control" id="f_price" name="event_price" required
+               min="0" value="{{ event.event_price|default:'' }}" placeholder="e.g. 150000">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f_location">Location *</label>
+        <input type="text" class="form-control" id="f_location" name="location" required
+               value="{{ event.location|default:'' }}" placeholder="e.g. Kochi, Kerala">
+      </div>
+
+      <div class="col-md-6">
+        <label class="form-label" for="f_mobile">Vendor mobile number</label>
+        <input type="tel" class="form-control" id="f_mobile" name="event_mobile_number"
+               maxlength="10" pattern="[0-9]{10}" value="{{ event.event_mobile_number|default:'' }}"
+               placeholder="10-digit mobile number">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="f_img">Event image</label>
+        <input type="file" class="form-control" id="f_img" name="event_img" accept="image/*">
+        <small class="text-muted-px">
+          {% if event and event.event_img %}Current image will be kept if none chosen.{% else %}Optional.{% endif %}
+        </small>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label" for="f_desc">Event description *</label>
+        <textarea class="form-control" id="f_desc" name="event_description" required rows="4"
+                  placeholder="Describe the event package…">{{ event.event_description|default:'' }}</textarea>
+      </div>
+
+      <div class="col-12">
+        <label class="form-label">Packages included</label>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <input type="text" class="form-control" name="package1" placeholder="Package 1"
+                   value="{{ event.package1|default:'' }}">
+          </div>
+          <div class="col-md-6">
+            <input type="text" class="form-control" name="package2" placeholder="Package 2"
+                   value="{{ event.package2|default:'' }}">
+          </div>
+          <div class="col-md-6">
+            <input type="text" class="form-control" name="package3" placeholder="Package 3"
+                   value="{{ event.package3|default:'' }}">
+          </div>
+          <div class="col-md-6">
+            <input type="text" class="form-control" name="package4" placeholder="Package 4"
+                   value="{{ event.package4|default:'' }}">
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 d-flex flex-wrap gap-2 mt-4">
+        <button class="btn btn-brand btn-lg" type="submit">
+          <i class="bi bi-check2-circle me-1"></i>{% if event %}Save Changes{% else %}Create Event{% endif %}
+        </button>
+        <a class="btn btn-ghost btn-lg" href="{% url 'manage_events' %}"><i class="bi bi-arrow-left me-1"></i>Cancel</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
