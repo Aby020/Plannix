@@ -1,4 +1,4 @@
-# 🎉 Plannix — Premium Event Planning & Booking Platform
+# ⚙️ Plannix — Premium Event Planning & Booking Platform
 
 <div align="center">
 
