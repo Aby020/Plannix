@@ -5,6 +5,8 @@ dashboards (admin / organizer / attendee), organizer ownership-scoped views,
 and admin lifecycle management.
 """
 from datetime import date, timedelta
+from io import StringIO
+from pathlib import Path
 from unittest.mock import patch
 
 from django.conf import settings
@@ -13,6 +15,7 @@ from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
+from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -27,6 +30,7 @@ from .models import (
     EventCategory,
     Review,
 )
+from .management.commands.upload_live_images import LIVE_IMAGE_MAP
 from .payments import (
     PaymentError,
     advance_amount,
@@ -2340,3 +2344,149 @@ class NotificationBadgeTests(PlannixTestCase):
         response = self.client.get(reverse('attendee_dashboard'))
         # Attendees have no sidebar count — the topbar notification dot shows.
         self.assertContains(response, 'class="dot"')
+
+
+# ---------------------------------------------------------------------------
+# upload_live_images management command tests
+# ---------------------------------------------------------------------------
+
+@override_settings(BASE_DIR=None)  # overridden per-test in setUp
+class UploadLiveImagesTests(TestCase):
+    """Tests for the upload_live_images management command.
+
+    Each test creates a temporary directory with the expected event_images/
+    structure and overrides BASE_DIR so the command resolves source paths
+    inside the temp directory — no real images are touched.
+    """
+
+    def setUp(self):
+        import tempfile
+        self._tmp = tempfile.mkdtemp()
+        self._tmpdir = Path(self._tmp)
+
+        # Create the category folder + a valid 1x1 PNG for each mapped category
+        folders = {'birthday', 'catering', 'corperate', 'wedding'}
+        for folder in folders:
+            (self._tmpdir / 'event_images' / folder).mkdir(parents=True)
+            for key, filename in LIVE_IMAGE_MAP.items():
+                if key[1] == folder:
+                    (self._tmpdir / 'event_images' / folder / filename).write_bytes(
+                        PNG_1PX
+                    )
+
+        # MEDIA_ROOT inside the temp tree so default_storage saves there
+        (self._tmpdir / 'media').mkdir()
+
+        self._overrides = {
+            'BASE_DIR': self._tmpdir,
+            'MEDIA_ROOT': self._tmpdir / 'media',
+        }
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self._tmp, ignore_errors=True)
+
+    _event_counter = 0
+
+    def _make_event(self, title='Event', category_name='Wedding', status='live'):
+        cat, _ = EventCategory.objects.get_or_create(name=category_name)
+        UploadLiveImagesTests._event_counter += 1
+        return Event.objects.create(
+            title=title,
+            category=cat,
+            description=f'{title} description.',
+            price=100000,
+            location='Kochi, Kerala',
+            venue='Grand Hyatt',
+            contact_number='9876543210',
+            capacity=100,
+            status=status,
+            owner=User.objects.create_user(
+                username=f'owner_{UploadLiveImagesTests._event_counter}',
+                password='testpass123',
+            ),
+        )
+
+    # ---- test 1: dry-run does not modify records ----
+
+    def test_dry_run_does_not_modify_records(self):
+        event = self._make_event('Birthday Bash', 'Birthday')
+        with override_settings(**self._overrides):
+            call_command('upload_live_images', '--dry-run', stdout=StringIO(),
+                         stderr=StringIO())
+        event.refresh_from_db()
+        self.assertEqual(event.featured_image, '')
+
+    # ---- test 2: correct live-event mapping ----
+
+    def test_correct_live_event_mapping(self):
+        event = self._make_event('Royal Wedding', 'Wedding')
+        with override_settings(**self._overrides):
+            call_command('upload_live_images', stdout=StringIO(),
+                         stderr=StringIO())
+        event.refresh_from_db()
+        self.assertEqual(
+            event.featured_image, 'events/pexels-alonssus-3212018.jpg',
+        )
+        dest = self._tmpdir / 'media' / 'events' / 'pexels-alonssus-3212018.jpg'
+        self.assertTrue(dest.exists())
+
+    # ---- test 3: non-live events are ignored ----
+
+    def test_non_live_events_are_ignored(self):
+        draft = self._make_event('Ghost Event', 'Wedding', status='draft')
+        completed = self._make_event(
+            'Zombie Event', 'Wedding', status='completed',
+        )
+        rejected = self._make_event(
+            'Lost Event', 'Wedding', status='rejected',
+        )
+        with override_settings(**self._overrides):
+            out = StringIO()
+            call_command('upload_live_images', stdout=out, stderr=StringIO())
+        draft.refresh_from_db()
+        completed.refresh_from_db()
+        rejected.refresh_from_db()
+        self.assertEqual(draft.featured_image, '')
+        self.assertEqual(completed.featured_image, '')
+        self.assertEqual(rejected.featured_image, '')
+        self.assertNotIn('Ghost Event', out.getvalue())
+        self.assertNotIn('Zombie Event', out.getvalue())
+        self.assertNotIn('Lost Event', out.getvalue())
+
+    # ---- test 4: missing image is reported ----
+
+    def test_missing_image_is_reported(self):
+        event = self._make_event('Birthday Bash', 'Birthday')
+        # Remove the source file so the command can't find it
+        src = self._tmpdir / 'event_images' / 'birthday'
+        for f in src.iterdir():
+            f.unlink()
+        with override_settings(**self._overrides):
+            err = StringIO()
+            with self.assertRaises(SystemExit) as ctx:
+                call_command('upload_live_images', stdout=StringIO(),
+                             stderr=err)
+            self.assertEqual(ctx.exception.code, 1)
+        self.assertIn('missing:', err.getvalue())
+
+    # ---- test 5: repeated execution is idempotent ----
+
+    def test_repeated_execution_is_idempotent(self):
+        event = self._make_event('Intimate Wedding', 'Wedding')
+        with override_settings(**self._overrides):
+            call_command('upload_live_images', stdout=StringIO(),
+                         stderr=StringIO())
+        event.refresh_from_db()
+        first_name = event.featured_image
+        with override_settings(**self._overrides):
+            out = StringIO()
+            call_command('upload_live_images', stdout=out, stderr=StringIO())
+        event.refresh_from_db()
+        self.assertEqual(event.featured_image, first_name)
+        self.assertIn('unchanged:', out.getvalue())
+        # Summary line contains "uploaded: 0" — only check per-event lines.
+        self.assertFalse(
+            any('uploaded:' in line for line in out.getvalue().splitlines()
+                if line.startswith('  ')),
+        )
