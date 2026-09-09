@@ -146,7 +146,7 @@ def selected_event(request, pk):
 def event_booking(request):
     """Handle a new booking submission — transactional and safe."""
     if request.method != 'POST':
-        return render(request, 'event-booking-form.html', {'today_date': date.today().isoformat()})
+        return redirect('events')
 
     event_id = request.POST.get('event_id')
     event = None

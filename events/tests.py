@@ -4,16 +4,19 @@ Covers the public LIVE catalogue, transactional booking flow, role-based
 dashboards (admin / organizer / attendee), organizer ownership-scoped views,
 and admin lifecycle management.
 """
+import json
 import os
 import re
+import urllib.error
 from datetime import date, timedelta
 from io import StringIO
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core import mail
+from django.core.mail import EmailMessage
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
@@ -2670,3 +2673,275 @@ class SetAdminPasswordTests(TestCase):
                 stderr=StringIO(),
             )
             self.assertIn('already up to date', out2.getvalue())
+
+
+# ---------------------------------------------------------------------------
+# Resend HTTPS email backend (production Render Free)
+# ---------------------------------------------------------------------------
+
+class FakeResendResponse:
+    """Minimal stand-in for the urllib response returned by Resend."""
+
+    def __init__(self, status=200, body=b'{"ok":true}'):
+        self.status = status
+        self._body = body
+
+    def read(self):
+        return self._body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        pass
+
+
+class _UrlopenPatcherMixin:
+    """Mixin to patch urllib.request.urlopen where the Resend backend looks it up."""
+
+    def _patch_urlopen(self, side_effect=None, return_value=None):
+        patcher = patch(
+            'Plannix.email_backends.urllib.request.urlopen',
+            side_effect=side_effect or (lambda *a, **kw: return_value or FakeResendResponse()),
+        )
+        self.addCleanup(patcher.stop)
+        return patcher.start()
+
+
+@override_settings(
+    EMAIL_BACKEND='Plannix.email_backends.ResendEmailBackend',
+    EMAIL_TIMEOUT=5,
+    DEFAULT_FROM_EMAIL='no-reply@plannix.example.com',
+)
+class EmailBackendTests(PlannixTestCase, _UrlopenPatcherMixin):
+    """Unit tests for ResendEmailBackend: payload, auth, error handling, silence."""
+
+    # ── successful request ────────────────────────────────────────────────────
+
+    def test_successful_post_sends_one_message(self):
+        """One EmailMessage yields exactly one urlopen call returning 200."""
+        urlopen = self._patch_urlopen(return_value=FakeResendResponse())
+        msg = EmailMessage(
+            subject='Test', body='Hello',
+            from_email='no-reply@plannix.example.com',
+            to=['user@example.com'],
+        )
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_test_key'}):
+            num_sent = mail.get_connection().send_messages([msg])
+        self.assertEqual(num_sent, 1)
+        self.assertEqual(urlopen.call_count, 1)
+
+    def test_post_payload_has_correct_fields(self):
+        """The JSON body sent to Resend includes from, to, subject, and text."""
+        captured = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured['data'] = json.loads(req.data)
+            return FakeResendResponse()
+
+        self._patch_urlopen(side_effect=fake_urlopen)
+        msg = EmailMessage(
+            subject='Event Confirmed', body='See you there!',
+            from_email='no-reply@plannix.example.com',
+            to=['alice@example.com'],
+        )
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_test_key'}):
+            mail.get_connection().send_messages([msg])
+        self.assertEqual(captured['data']['from'], 'no-reply@plannix.example.com')
+        self.assertEqual(captured['data']['to'], ['alice@example.com'])
+        self.assertEqual(captured['data']['subject'], 'Event Confirmed')
+        self.assertEqual(captured['data']['text'], 'See you there!')
+
+    def test_auth_header_contains_bearer_token(self):
+        """Authorization header is 'Bearer <key>' — not Basic auth."""
+        captured_headers = {}
+
+        def fake_urlopen(req, timeout=None):
+            captured_headers.update(req.headers)
+            return FakeResendResponse()
+
+        self._patch_urlopen(side_effect=fake_urlopen)
+        msg = EmailMessage(subject='Hi', body='body', to=['u@e.com'],
+                           from_email='from@e.com')
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_live_abc123'}):
+            mail.get_connection().send_messages([msg])
+        self.assertEqual(captured_headers['Authorization'], 'Bearer re_live_abc123')
+
+    def test_timeout_from_settings(self):
+        """urlopen is called with the timeout from EMAIL_TIMEOUT (5s in this test)."""
+        kwargs = {}
+
+        def fake_urlopen(req, timeout=None):
+            kwargs['timeout'] = timeout
+            return FakeResendResponse()
+
+        self._patch_urlopen(side_effect=fake_urlopen)
+        msg = EmailMessage(subject='T', body='b', to=['a@b.com'], from_email='f@e.com')
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_test_key'}):
+            mail.get_connection().send_messages([msg])
+        self.assertEqual(kwargs['timeout'], 5)
+
+    # ── provider HTTP failure ─────────────────────────────────────────────────
+
+    def test_http_error_raises_when_fail_silently_false(self):
+        """A 4xx from Resend raises when fail_silently=False (default)."""
+        self._patch_urlopen(
+            side_effect=urllib.error.HTTPError(
+                url='https://api.resend.com/emails', code=422,
+                msg='Unprocessable', hdrs=None,
+                fp=StringIO('{"error":"invalid"}'),
+            ),
+        )
+        msg = EmailMessage(subject='Fail', body='b', to=['a@b.com'], from_email='f@e.com')
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_test_key'}):
+            with self.assertRaises(urllib.error.HTTPError):
+                mail.get_connection().send_messages([msg])
+
+    def test_http_error_silent_returns_zero(self):
+        """A 4xx is swallowed and returns 0 when fail_silently=True."""
+        self._patch_urlopen(
+            side_effect=urllib.error.HTTPError(
+                url='https://api.resend.com/emails', code=403,
+                msg='Forbidden', hdrs=None, fp=StringIO(''),
+            ),
+        )
+        msg = EmailMessage(subject='Fail', body='b', to=['a@b.com'], from_email='f@e.com')
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_test_key'}):
+            num_sent = mail.get_connection(fail_silently=True).send_messages([msg])
+        self.assertEqual(num_sent, 0)
+
+    # ── provider timeout ──────────────────────────────────────────────────────
+
+    def test_timeout_raises_when_fail_silently_false(self):
+        """urlopen raising TimeoutError propagates when fail_silently=False."""
+        self._patch_urlopen(side_effect=TimeoutError('timed out'))
+        msg = EmailMessage(subject='T', body='b', to=['a@b.com'], from_email='f@e.com')
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_test_key'}):
+            with self.assertRaises(TimeoutError):
+                mail.get_connection().send_messages([msg])
+
+    def test_timeout_silent_returns_zero(self):
+        """Timeout swallowed when fail_silently=True."""
+        self._patch_urlopen(side_effect=TimeoutError('timed out'))
+        msg = EmailMessage(subject='T', body='b', to=['a@b.com'], from_email='f@e.com')
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_test_key'}):
+            num_sent = mail.get_connection(fail_silently=True).send_messages([msg])
+        self.assertEqual(num_sent, 0)
+
+    # ── missing API key ───────────────────────────────────────────────────────
+
+    def test_missing_api_key_raises_when_fail_silently_false(self):
+        """Without RESEND_API_KEY set, ValueError is raised."""
+        msg = EmailMessage(subject='X', body='b', to=['a@b.com'], from_email='f@e.com')
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop('RESEND_API_KEY', None)
+            with self.assertRaises(ValueError):
+                mail.get_connection().send_messages([msg])
+
+    def test_missing_api_key_silent_returns_zero(self):
+        """Without RESEND_API_KEY set and fail_silently=True, returns 0."""
+        msg = EmailMessage(subject='X', body='b', to=['a@b.com'], from_email='f@e.com')
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop('RESEND_API_KEY', None)
+            num_sent = mail.get_connection(fail_silently=True).send_messages([msg])
+        self.assertEqual(num_sent, 0)
+
+    # ── fail_silently contract for partial failures ────────────────────────────
+
+    def test_partial_failure_returns_number_sent(self):
+        """Of two messages, only the first succeeds — returns 1."""
+        call_count = {'n': 0}
+
+        def flaky_urlopen(req, timeout=None):
+            call_count['n'] += 1
+            if call_count['n'] == 1:
+                return FakeResendResponse()
+            raise urllib.error.HTTPError('url', 500, 'err', None, StringIO(''))
+
+        self._patch_urlopen(side_effect=flaky_urlopen)
+        msg1 = EmailMessage(subject='A', body='a', to=['a@b.com'], from_email='f@e.com')
+        msg2 = EmailMessage(subject='B', body='b', to=['c@d.com'], from_email='f@e.com')
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_test_key'}):
+            num_sent = mail.get_connection(fail_silently=True).send_messages([msg1, msg2])
+        self.assertEqual(num_sent, 1)
+
+
+# ---------------------------------------------------------------------------
+# Registration / Booking still succeeds when the email backend fails
+# ---------------------------------------------------------------------------
+
+@override_settings(
+    EMAIL_BACKEND='Plannix.email_backends.ResendEmailBackend',
+)
+class RegistrationBookingWithFailingEmailTests(PlannixTestCase, _UrlopenPatcherMixin):
+    """The booking is persisted and the redirect fires even when email fails.
+
+    Both ``send_registration_notice`` and ``send_booking_confirmation`` live
+    inside a try/except in ``Plannix/emails.py`` — a backend error is logged
+    and swallowed so the user sees a success redirect, not an error page.
+    """
+
+    def _force_sign_up(self):
+        """POST to the registration view using the field names it actually reads."""
+        return self.client.post(reverse('sign_up'), {
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'first_name': 'New',
+            'last_name': 'User',
+            'password': 'StrongPass!1234',
+            'confirm_password': 'StrongPass!1234',
+            'user_type': 'attendee',
+        })
+
+    def test_registration_creates_user_when_email_fails(self):
+        """User exists after a failed email, and the view redirects to sign_in."""
+        self._patch_urlopen(side_effect=urllib.error.HTTPError(
+            'url', 500, 'err', None, StringIO('')))
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop('RESEND_API_KEY', None)
+            response = self._force_sign_up()
+        self.assertTrue(User.objects.filter(username='newuser').exists())
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('sign_in'), response.url)
+
+    def test_booking_persists_when_email_fails(self):
+        """EventBooking row exists and redirect fires even when email raises."""
+        owner = self.make_user(username='org1', group='EventOrganizer')
+        event = self.make_event(owner, price=150000)
+        user = self.make_user(username='attendee1')
+        self._patch_urlopen(side_effect=TimeoutError('timed out'))
+        self.client.force_login(user)
+        with patch.dict(os.environ, {'RESEND_API_KEY': 're_test_key'}):
+            response = self.client.post(reverse('event_booking'), {
+                'event_id': event.pk,
+                'name': 'Test Attendee',
+                'email': user.email,
+                'number': '9876543210',
+                'event_location': event.location,
+                'date': (date.today() + timedelta(days=7)).isoformat(),
+            })
+        self.assertEqual(EventBooking.objects.filter(attendee=user).count(), 1)
+        booking = EventBooking.objects.get(attendee=user)
+        self.assertRedirects(
+            response, f"{reverse('success')}?booking={booking.pk}")
+
+
+# ---------------------------------------------------------------------------
+# GET on the generic booking form (no pk) redirects to the events catalogue
+# ---------------------------------------------------------------------------
+
+class BookingFormGetRedirectTests(PlannixTestCase):
+    """GET on /event-booking-form/ (no pk) sends users to the events catalogue."""
+
+    def test_get_redirects_to_events(self):
+        user = self.make_user(username='attendee1')
+        self.client.force_login(user)
+        response = self.client.get(reverse('event_booking'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('events'), response.url)
+
+    def test_get_requires_login(self):
+        """Unauthenticated GET redirects to sign_in, not to the events page."""
+        response = self.client.get(reverse('event_booking'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('sign_in'), response.url)

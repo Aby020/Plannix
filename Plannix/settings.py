@@ -191,8 +191,11 @@ if env.bool('USE_CLOUDINARY', default=False):
 # E-mail configuration
 # The app password lives in .env; credentials are never committed.
 # Backend defaults to the console backend for local development (emails print
-# to the terminal). To send real mail, set EMAIL_BACKEND to the SMTP backend in
-# .env — e.g. django.core.mail.backends.smtp.EmailBackend for Gmail.
+# to the terminal). To send real mail in local dev, set EMAIL_BACKEND to the
+# SMTP backend in .env — e.g. django.core.mail.backends.smtp.EmailBackend.
+# In production (Render Free, which blocks SMTP), use the Resend HTTP backend
+# instead: Plannix.email_backends.ResendEmailBackend (requires RESEND_API_KEY
+# in the environment, never in source code).
 EMAIL_BACKEND = env(
     'EMAIL_BACKEND',
     default='django.core.mail.backends.console.EmailBackend',
@@ -246,8 +249,8 @@ SECURE_BROWSER_XSS_FILTER = env.bool('SECURE_BROWSER_XSS_FILTER', default=True)
 SECURE_CONTENT_TYPE_NOSNIFF = env.bool('SECURE_CONTENT_TYPE_NOSNIFF', default=True)
 
 # Connection keep-alive / request timeout guard for the mail backend (seconds).
-# Prevents a slow or unreachable SMTP server from hanging a booking request.
-EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=15)
+# Prevents a slow or unreachable mail server from hanging a booking request.
+EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=5)
 
 
 # Message tags mapped to Bootstrap 5 alert classes
