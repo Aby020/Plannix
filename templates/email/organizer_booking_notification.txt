@@ -1,0 +1,18 @@
+Dear Provider,
+
+You have received a new booking request on Plannix.
+
+Booking details:
+    Customer         : {{ customer_name }}
+    Contact          : {{ customer_email }}{% if customer_number %} / {{ customer_number }}{% endif %}
+    Package / Event  : {{ event_title }}
+    Requested Date   : {{ event_date }}
+    Location         : {{ event_location }}
+    Booking Reference: {{ booking_reference }}
+    Booking Status   : {{ status }}
+
+Please sign in to review and confirm this booking.
+
+Best Regards,
+Plannix Team
+{{ site_url }}

@@ -1,108 +1,170 @@
 {% extends "dashboard_base.html" %}
-{% load static humanize %}
+{% load static humanize plannix_filters %}
 
-{% block title %}Staff Dashboard — Plannix{% endblock %}
-{% block page_title %}Staff Dashboard{% endblock %}
+{% block title %}Organizer Dashboard — Plannix{% endblock %}
+{% block page_title %}Organizer Dashboard{% endblock %}
 
 {% block content %}
 
-<div class="row g-4 mb-4">
-  <div class="col-xl-3 col-md-6">
-    <div class="px-stat reveal">
-      <span class="stat-icon indigo"><i class="bi bi-calendar-event"></i></span>
-      <div>
-        <div class="stat-num" data-counter="{{ total_events }}">{{ total_events|intcomma }}</div>
-        <div class="stat-label">Active Events</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="px-stat reveal reveal-delay-1">
-      <span class="stat-icon blue"><i class="bi bi-journal-check"></i></span>
-      <div>
-        <div class="stat-num" data-counter="{{ total_bookings }}">{{ total_bookings|intcomma }}</div>
-        <div class="stat-label">Total Bookings</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="px-stat reveal reveal-delay-2">
-      <span class="stat-icon amber"><i class="bi bi-hourglass-split"></i></span>
-      <div>
-        <div class="stat-num" data-counter="{{ pending_bookings }}">{{ pending_bookings|intcomma }}</div>
-        <div class="stat-label">Pending Approval</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="px-stat reveal reveal-delay-3">
-      <span class="stat-icon green"><i class="bi bi-chat-heart"></i></span>
-      <div>
-        <div class="stat-num" data-counter="{{ total_feedback }}">{{ total_feedback|intcomma }}</div>
-        <div class="stat-label">Feedback Received</div>
-      </div>
-    </div>
-  </div>
+<!-- ─── Welcome ─── -->
+<div class="px-dash-welcome reveal">
+  <span class="px-eyebrow">Organizer Platform</span>
+  <h1 class="px-dash-welcome-title">{{ user|display_name }}'s Workspace</h1>
+  <p class="px-dash-welcome-sub">Manage your organization and event packages.</p>
 </div>
 
-<div class="row g-4">
-  <!-- Pending bookings queue -->
-  <div class="col-lg-7">
-    <div class="px-card reveal">
-      <div class="d-flex align-items-center justify-content-between p-4 pb-3">
-        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
-          <i class="bi bi-inboxes text-brand me-2"></i>Bookings Needing Attention
-        </h2>
-        <a class="btn btn-ghost btn-sm" href="{% url 'manage_bookings' %}">Manage All</a>
-      </div>
-      <div class="px-table border-0 rounded-0">
-        <table class="table table-hover">
-          <thead>
-            <tr><th>Event</th><th>Customer</th><th>Date</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            {% for b in recent_bookings %}
-            <tr>
-              <td class="text-truncate" style="max-width:180px;">{{ b.event_company_name }}</td>
-              <td>{{ b.name }}</td>
-              <td>{{ b.event_booking_date }}</td>
-              <td><span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span></td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="4" class="text-center text-muted-px py-4">No bookings yet.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+<!-- ─── Organization status ─── -->
+{% if organization %}
+  {% if organization.is_approved %}
+  <div class="px-dash-org approved reveal">
+    <div class="px-dash-org-seal"><i class="bi bi-patch-check-fill"></i></div>
+    <div class="px-dash-org-body">
+      <strong>{{ organization.name }}</strong>
+      <span class="px-dash-org-status-label">Verified</span>
+      <span class="px-dash-org-detail">Organization approved — you can now publish event packages.</span>
+      {% if organization.contact_number %}<span class="px-dash-org-detail">{{ organization.contact_number }}</span>{% endif %}
+      {% if organization.email %}<span class="px-dash-org-detail">{{ organization.email }}</span>{% endif %}
     </div>
+    <a class="btn btn-ghost btn-sm" href="{% url 'my_organization' %}"><i class="bi bi-gear me-1"></i>Manage</a>
   </div>
 
-  <!-- Recent feedback -->
-  <div class="col-lg-5">
-    <div class="px-card reveal reveal-delay-1">
-      <div class="d-flex align-items-center justify-content-between p-4 pb-3">
-        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
-          <i class="bi bi-chat-square-text text-brand me-2"></i>Recent Feedback
-        </h2>
-        <a class="btn btn-ghost btn-sm" href="{% url 'manage_feedback' %}">View All</a>
-      </div>
-      <div class="list-group list-group-flush">
-        {% for f in recent_feedback %}
-        <div class="list-group-item px-4 py-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <strong style="color:var(--px-dark);">{{ f.name }}</strong>
-            <small class="text-muted-px">{{ f.created_at|date:"d M" }}</small>
-          </div>
-          <small class="text-muted-px d-block text-truncate">{{ f.message|truncatechars:90 }}</small>
-        </div>
-        {% empty %}
-        <div class="px-empty py-4">
-          <p class="mb-0">No feedback yet.</p>
-        </div>
-        {% endfor %}
-      </div>
+  {% elif organization.status == 'pending' and organization.submitted_at %}
+  <div class="px-dash-org pending reveal">
+    <div class="px-dash-org-seal"><i class="bi bi-hourglass-split"></i></div>
+    <div class="px-dash-org-body">
+      <strong>{{ organization.name }}</strong>
+      <span class="px-dash-org-status-label pending">Under Review</span>
+      <span class="px-dash-org-detail">Submitted and awaiting admin approval.</span>
     </div>
+    <a class="btn btn-ghost btn-sm" href="{% url 'my_organization' %}"><i class="bi bi-pencil me-1"></i>Edit</a>
   </div>
+
+  {% elif organization.status == 'rejected' %}
+  <div class="px-dash-org rejected reveal">
+    <div class="px-dash-org-seal"><i class="bi bi-exclamation-triangle"></i></div>
+    <div class="px-dash-org-body">
+      <strong>{{ organization.name }}</strong>
+      <span class="px-dash-org-status-label rejected">Not Approved</span>
+      {% if organization.rejection_reason %}
+        <span class="px-dash-org-detail">{{ organization.rejection_reason }}</span>
+      {% else %}
+        <span class="px-dash-org-detail">Organization application was not approved. Please review and resubmit.</span>
+      {% endif %}
+    </div>
+    <a class="btn btn-brand btn-sm" href="{% url 'my_organization' %}"><i class="bi bi-pencil me-1"></i>Fix & Resubmit</a>
+  </div>
+  {% endif %}
+{% else %}
+  <div class="px-dash-org reveal">
+    <div class="px-dash-org-seal"><i class="bi bi-building"></i></div>
+    <div class="px-dash-org-body">
+      <strong>Set up your Organization</strong>
+      <span class="px-dash-org-detail">Create your marketplace organization to start offering event packages.</span>
+    </div>
+    <a class="btn btn-brand btn-sm" href="{% url 'my_organization' %}"><i class="bi bi-plus-lg me-1"></i>Create Organization</a>
+  </div>
+{% endif %}
+
+<!-- ─── Primary actions ─── -->
+<div class="px-dash-cta reveal">
+  {% if organization and organization.is_approved %}
+    <a class="px-dash-cta-btn" href="{% url 'create_event' %}">
+      <i class="bi bi-plus-circle"></i>
+      <span>Create Event Package</span>
+    </a>
+    <a class="px-dash-cta-secondary" href="{% url 'manage_bookings' %}">
+      <i class="bi bi-journal-check"></i>
+      <span>View Bookings</span>
+    </a>
+  {% else %}
+    <a class="px-dash-cta-btn" href="{% url 'my_organization' %}">
+      <i class="bi bi-building"></i>
+      <span>{% if organization %}Get Approved to Publish{% else %}Set up Organization{% endif %}</span>
+    </a>
+    <a class="px-dash-cta-secondary" href="{% url 'manage_bookings' %}">
+      <i class="bi bi-journal-check"></i>
+      <span>View Bookings</span>
+    </a>
+  {% endif %}
+</div>
+
+<!-- ─── Packages ─── -->
+<div class="px-dash-section reveal">
+  <div class="px-dash-section-header">
+    <h2>Event Packages</h2>
+    <a class="btn btn-ghost btn-sm" href="{% url 'manage_events' %}">View All</a>
+  </div>
+
+  {% if events_with_pulse %}
+    <div class="px-ledger">
+      {% for item in events_with_pulse %}
+      <div class="ledger-row">
+        <div class="ledger-main">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="ledger-title">{{ item.event.title }}</div>
+            <span class="px-badge badge-{{ item.event.status }}">{{ item.event.get_status_display }}</span>
+          </div>
+          <div class="ledger-meta">
+            {% if item.event.category %}{{ item.event.category.name }} &middot; {% endif %}
+            &#8377; {{ item.event.price|intcomma }} &middot; {{ item.event.location }}
+          </div>
+          <div class="mt-1">
+            {% if item.pulse.active_registrations > 10 %}
+              <span class="px-health high_demand">High demand</span>
+            {% elif item.pulse.active_registrations > 0 %}
+              <span class="px-health healthy">Healthy</span>
+            {% else %}
+              <span class="px-health low_traction">Low traction</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="ledger-actions d-none d-md-flex">
+          <a class="btn btn-ghost btn-sm" href="{% url 'edit_event' item.event.pk %}" title="Edit"><i class="bi bi-pencil"></i></a>
+          <a class="btn btn-ghost btn-sm" href="{% url 'readmore' item.event.pk %}" target="_blank" title="Preview"><i class="bi bi-eye"></i></a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="px-empty py-4">
+      <div class="empty-icon"><i class="bi bi-calendar-plus"></i></div>
+      <h4>No packages yet</h4>
+      <p>Create your first event package to start accepting bookings.</p>
+      <a class="btn btn-brand btn-sm" href="{% url 'create_event' %}"><i class="bi bi-plus-lg me-1"></i>Create Package</a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ─── Recent bookings ─── -->
+<div class="px-dash-section reveal">
+  <div class="px-dash-section-header">
+    <h2>Recent Bookings</h2>
+    {% if pending_bookings > 0 %}
+    <span class="px-dash-section-count">{{ pending_bookings }} pending</span>
+    {% endif %}
+    <a class="btn btn-ghost btn-sm" href="{% url 'manage_bookings' %}">View All</a>
+  </div>
+
+  {% if recent_bookings %}
+    <div class="px-ledger">
+      {% for b in recent_bookings %}
+      <div class="ledger-row">
+        <div class="ledger-main">
+          <div class="ledger-title">{{ b.event_title }}</div>
+          <div class="ledger-meta">
+            {{ b.event_date|date:"M j, Y" }} &middot; &#8377; {{ b.price|intcomma }}
+            {% if b.event_location %} &middot; {{ b.event_location }}{% endif %}
+          </div>
+        </div>
+        <span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="px-empty py-4">
+      <p class="mb-0">No bookings yet.</p>
+    </div>
+  {% endif %}
 </div>
 
 {% endblock %}

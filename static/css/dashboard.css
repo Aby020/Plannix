@@ -1,0 +1,1856 @@
+/* ==========================================================================
+   Plannix Dashboard — Warm Editorial Design System
+   Loaded ONLY in dashboard_base.html, after style.css.
+   Redefines shared tokens + components for the dashboard context.
+   Public pages never load this file.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. TOKENS — warm editorial palette
+   All --px-* vars redefined: dashboard cascade consumes these automatically.
+   -------------------------------------------------------------------------- */
+
+:root {
+  --px-primary: #A6533B;
+  --px-primary-light: #C4785F;
+  --px-primary-dark: #8F4530;
+  --px-violet: #A6533B;
+  --px-accent: #C08A3E;
+
+  --px-dark: #24211E;
+  --px-surface: #2E2A26;
+  --px-surface-2: #3A352F;
+
+  --px-success: #4E6B53;
+  --px-success-bg: #EBF1E9;
+  --px-danger: #9E4A3C;
+  --px-danger-bg: #F7EBE7;
+  --px-warning: #A67A2E;
+  --px-warning-bg: #FBF3E2;
+  --px-info: #5A6672;
+  --px-info-bg: #EEF0F2;
+
+  --px-bg: #F5F1E9;
+  --px-white: #FDFCFA;
+  --px-text: #443E37;
+  --px-text-light: #8C847A;
+  --px-border: #E7DFD2;
+  --px-border-dark: #D8CDBD;
+
+  /* Flat warm "gradients" — kill all violet/indigo gradients */
+  --px-gradient: linear-gradient(135deg, #A6533B, #A6533B);
+  --px-gradient-soft: linear-gradient(135deg, rgba(166,83,59,.08), rgba(166,83,59,.08));
+
+  --px-shadow-sm: 0 1px 2px rgba(45,40,34,.05);
+  --px-shadow: 0 2px 10px rgba(45,40,34,.06);
+  --px-shadow-lg: 0 10px 28px rgba(45,40,34,.10);
+  --px-shadow-brand: 0 6px 18px rgba(166,83,59,.22);
+
+  --px-font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --px-font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+
+  --px-radius-sm: 6px;
+  --px-radius: 8px;
+  --px-radius-lg: 12px;
+  --px-transition: .18s ease;
+}
+
+/* --------------------------------------------------------------------------
+   2. LAYOUT — shell reset
+   -------------------------------------------------------------------------- */
+
+body {
+  background: var(--px-bg);
+  color: var(--px-text);
+}
+
+.px-dash {
+  min-height: 100vh;
+}
+
+/* --------------------------------------------------------------------------
+   3. RAIL — light warm sidebar
+   Replaces the dark navy rail with an airy, parchment-toned panel.
+   -------------------------------------------------------------------------- */
+
+.px-sidebar {
+  background: #FBFAF6;
+  border-right: 1px solid var(--px-border);
+  color: var(--px-text);
+  padding: 1.5rem 1.1rem;
+  transition: transform .22s ease;
+}
+
+.px-sidebar .sidebar-brand {
+  color: var(--px-dark);
+  font-weight: 700;
+  font-family: var(--px-font-display);
+  font-size: 1.55rem;
+  letter-spacing: -.01em;
+  padding: 0 .5rem 1.5rem;
+  border-bottom: 1px solid var(--px-border);
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+}
+
+.px-sidebar .sidebar-brand img {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+.px-sidebar .nav-section {
+  color: #A79C8E;
+  padding: 1.5rem .6rem .55rem;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 600;
+}
+
+.px-sidebar .nav-link {
+  color: #6F665B;
+  gap: .8rem;
+  padding: .68rem .9rem;
+  border-radius: 6px;
+  margin-bottom: .1rem;
+  border-left: 3px solid transparent;
+  transition: color var(--px-transition), background var(--px-transition), border-color var(--px-transition);
+}
+
+.px-sidebar .nav-link i {
+  width: 20px;
+  font-size: 1rem;
+  color: #B19A87;
+}
+
+.px-sidebar .nav-link:hover {
+  color: var(--px-primary-dark);
+  background: rgba(166,83,59,.07);
+  text-decoration: none;
+}
+
+.px-sidebar .nav-link:hover i {
+  color: var(--px-primary);
+}
+
+.px-sidebar .nav-link.active {
+  color: var(--px-primary-dark);
+  background: rgba(166,83,59,.09);
+  border-left-color: var(--px-primary);
+  border-radius: 4px;
+  padding-left: calc(.9rem - 3px);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.px-sidebar .nav-link.active i {
+  color: var(--px-primary);
+}
+
+.px-sidebar .nav-link .count {
+  background: var(--px-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: .72rem;
+}
+
+.px-sidebar .sidebar-footer {
+  border-top: 1px solid var(--px-border);
+}
+
+.px-sidebar .avatar,
+.px-topbar .avatar {
+  background: var(--px-primary);
+  color: #fff;
+  font-weight: 600;
+  font-size: .85rem;
+  width: 36px;
+  height: 36px;
+}
+
+.px-topbar .topbar-name {
+  color: var(--px-dark);
+  font-weight: 600;
+  font-size: .85rem;
+  text-decoration: none;
+  padding: .25rem .5rem;
+  border-radius: var(--px-radius-sm, 6px);
+  transition: background .15s;
+}
+.px-topbar .topbar-name:hover {
+  background: var(--px-surface, rgba(0,0,0,.04));
+}
+
+.px-sidebar .sidebar-user {
+  color: var(--px-dark);
+}
+
+.px-sidebar .sidebar-user .uname {
+  color: var(--px-dark);
+}
+
+.px-sidebar .sidebar-user .urole {
+  color: var(--px-text-light);
+}
+
+/* Sign-out button: strip inline dark styles from dashboard_base */
+.px-sidebar .sign-out-btn {
+  background: transparent;
+  border: 1px solid var(--px-border);
+  color: var(--px-text-light);
+  border-radius: 6px;
+  padding: .55rem .9rem;
+  font-size: .82rem;
+  transition: all var(--px-transition);
+  box-shadow: none;
+}
+
+.px-sidebar .sign-out-btn:hover {
+  background: var(--px-danger-bg);
+  border-color: var(--px-danger);
+  color: var(--px-danger);
+}
+
+/* --------------------------------------------------------------------------
+   4. TOPBAR — clean editorial masthead
+   -------------------------------------------------------------------------- */
+
+.px-topbar {
+  background: rgba(251,250,246,.92);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1px solid var(--px-border);
+  padding: 1rem 2rem;
+}
+
+.px-topbar .page-title {
+  font-family: var(--px-font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--px-dark);
+  letter-spacing: -.01em;
+}
+
+.px-topbar .bell {
+  background: var(--px-white);
+  border: 1px solid var(--px-border);
+}
+
+.px-topbar .bell .dot {
+  background: var(--px-danger);
+  border-color: var(--px-white);
+}
+
+.px-content {
+  padding: 2rem;
+}
+
+/* --------------------------------------------------------------------------
+   5. BUTTONS — warm terracotta family
+   -------------------------------------------------------------------------- */
+
+.btn-brand {
+  background: var(--px-primary);
+  color: #fff;
+  border: none;
+  box-shadow: var(--px-shadow-brand);
+  transition: background var(--px-transition), box-shadow var(--px-transition), transform var(--px-transition);
+}
+
+.btn-brand:hover {
+  background: var(--px-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(166,83,59,.28);
+  filter: none;
+}
+
+.btn-soft {
+  background: rgba(166,83,59,.1);
+  color: var(--px-primary-dark);
+  border: none;
+}
+
+.btn-soft:hover {
+  background: var(--px-primary);
+  color: #fff;
+}
+
+.btn-ghost {
+  border-color: var(--px-border);
+  color: var(--px-text);
+}
+
+.btn-ghost:hover {
+  background: #F4EFE7;
+  border-color: var(--px-border-dark);
+  color: var(--px-primary-dark);
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.btn-outline-brand {
+  border-color: var(--px-primary);
+  color: var(--px-primary);
+}
+
+.btn-outline-brand:hover {
+  background: var(--px-primary);
+  color: #fff;
+}
+
+.btn-outline-primary {
+  border-color: var(--px-primary);
+  color: var(--px-primary);
+}
+
+.btn-outline-primary:hover {
+  background: var(--px-primary);
+  color: #fff;
+}
+
+.btn-outline-secondary {
+  border-color: var(--px-border-dark);
+  color: var(--px-text);
+}
+
+.btn-outline-secondary:hover {
+  background: var(--px-bg);
+  border-color: var(--px-primary);
+  color: var(--px-primary-dark);
+}
+
+/* --------------------------------------------------------------------------
+   6. CARDS — warm hairline cards
+   -------------------------------------------------------------------------- */
+
+.px-card {
+  background: var(--px-white);
+  border: 1px solid var(--px-border);
+  border-radius: 10px;
+  box-shadow: var(--px-shadow-sm);
+  transition: transform var(--px-transition), box-shadow var(--px-transition), border-color var(--px-transition);
+}
+
+.px-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--px-shadow);
+  border-color: rgba(166,83,59,.22);
+}
+
+.px-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--px-shadow);
+}
+
+.list-group-item {
+  border-color: #EFEAE0;
+}
+
+.list-group-item-action:hover {
+  background: #FBF7F0;
+}
+
+/* --------------------------------------------------------------------------
+   7. FORMS — warm focus rings
+   -------------------------------------------------------------------------- */
+
+.form-control,
+.form-select {
+  border: 1px solid var(--px-border);
+  border-radius: 6px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--px-primary);
+  box-shadow: 0 0 0 3px rgba(166,83,59,.12);
+}
+
+.form-check-input:checked {
+  background-color: var(--px-primary);
+  border-color: var(--px-primary);
+}
+
+.input-group-text {
+  background: var(--px-bg);
+  border: 1px solid var(--px-border);
+}
+
+.form-label {
+  color: var(--px-dark);
+  font-weight: 500;
+  font-size: .88rem;
+}
+
+.form-text {
+  color: var(--px-text-light);
+}
+
+/* --------------------------------------------------------------------------
+   8. STAT CARDS — editorial metric cards
+   -------------------------------------------------------------------------- */
+
+.px-stat {
+  background: var(--px-white);
+  border: 1px solid var(--px-border);
+  border-radius: 10px;
+  padding: 1.4rem 1.5rem;
+  transition: transform var(--px-transition), box-shadow var(--px-transition);
+}
+
+.px-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--px-shadow);
+}
+
+.px-stat .stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Flat warm scrims — override all indigo/blue gradient stat-icon classes */
+.px-stat .stat-icon.indigo {
+  background: rgba(166,83,59,.1);
+  color: var(--px-primary-dark);
+}
+
+.px-stat .stat-icon.green {
+  background: rgba(94,123,98,.12);
+  color: #4B6650;
+}
+
+.px-stat .stat-icon.amber {
+  background: rgba(183,138,62,.14);
+  color: #8A5A1E;
+}
+
+.px-stat .stat-icon.rose {
+  background: rgba(163,98,84,.12);
+  color: #975048;
+}
+
+.px-stat .stat-icon.blue {
+  background: rgba(101,114,126,.12);
+  color: #56626F;
+}
+
+.px-stat .stat-num {
+  font-family: var(--px-font-display);
+  font-weight: 600;
+  font-size: 1.75rem;
+  color: var(--px-dark);
+  letter-spacing: -.01em;
+}
+
+.px-stat .stat-label {
+  font-size: .83rem;
+  color: var(--px-text-light);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+/* Slim stat variant for compact strips */
+.px-stat.px-stat-sm {
+  padding: 1.1rem 1.3rem;
+}
+
+.px-stat.px-stat-sm .stat-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 1.05rem;
+}
+
+.px-stat.px-stat-sm .stat-num {
+  font-size: 1.45rem;
+}
+
+/* --------------------------------------------------------------------------
+   9. BADGES — warm status palette
+   -------------------------------------------------------------------------- */
+
+.px-badge {
+  font-weight: 600;
+  border-radius: 999px;
+  padding: .25rem .7rem;
+  font-size: .76rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.px-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Lifecycle statuses */
+.px-badge.badge-draft {
+  background: #EFEBE3;
+  color: #6F665B;
+}
+
+.px-badge.badge-under_review,
+.px-badge.badge-pending {
+  background: var(--px-warning-bg);
+  color: #8A5A1E;
+}
+
+.px-badge.badge-approved {
+  background: #EAF0E7;
+  color: #4B6650;
+}
+
+.px-badge.badge-published {
+  background: #E5EDE1;
+  color: #3C5A40;
+}
+
+.px-badge.badge-live {
+  background: #E2EBE0;
+  color: #3C5A40;
+}
+
+.px-badge.badge-confirmed {
+  background: #E7EDE2;
+  color: #44604A;
+}
+
+.px-badge.badge-completed {
+  background: #E4EADF;
+  color: #3F5C44;
+}
+
+.px-badge.badge-cancelled,
+.px-badge.badge-rejected {
+  background: var(--px-danger-bg);
+  color: #93493C;
+}
+
+.px-badge.badge-suspended {
+  background: #EEF0F2;
+  color: #5A6672;
+}
+
+.px-badge.badge-primary {
+  background: rgba(166,83,59,.1);
+  color: var(--px-primary-dark);
+}
+
+.px-badge.badge-warning {
+  background: var(--px-warning-bg);
+  color: #8A5A1E;
+}
+
+.px-badge.badge-success {
+  background: var(--px-success-bg);
+  color: #4B6650;
+}
+
+.px-badge.badge-danger {
+  background: var(--px-danger-bg);
+  color: #93493C;
+}
+
+.px-badge.badge-dark {
+  background: #EFEBE3;
+  color: var(--px-text);
+}
+
+.px-badge.badge-secondary {
+  background: #EEF0F2;
+  color: var(--px-text);
+}
+
+/* --------------------------------------------------------------------------
+   10. ROLE BADGES
+   -------------------------------------------------------------------------- */
+
+.px-role {
+  border-radius: 999px;
+  padding: .25rem .7rem;
+  font-size: .74rem;
+  font-weight: 600;
+}
+
+.px-role.admin {
+  background: var(--px-danger-bg);
+  color: #93493C;
+}
+
+.px-role.staff,
+.px-role.organizer {
+  background: #EAF0E7;
+  color: #4B6650;
+}
+
+.px-role.customer,
+.px-role.attendee {
+  background: #EEF0F2;
+  color: #56626F;
+}
+
+/* --------------------------------------------------------------------------
+   11. TABLES — warm editorial tables
+   -------------------------------------------------------------------------- */
+
+.px-table {
+  background: var(--px-white);
+  border: 1px solid var(--px-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.px-table .table {
+  color: var(--px-text);
+}
+
+.px-table .table thead th {
+  background: #F7F3EB;
+  color: #6F665B;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 600;
+  border-bottom: 1px solid var(--px-border);
+  padding: .85rem 1rem;
+}
+
+.px-table .table tbody td {
+  border-color: #EFEAE0;
+  padding: .85rem 1rem;
+  vertical-align: middle;
+}
+
+.px-table .table tbody tr:hover {
+  background: #FBF7F0;
+}
+
+/* --------------------------------------------------------------------------
+   12. FILTER PILLS
+   -------------------------------------------------------------------------- */
+
+.px-filter {
+  display: flex;
+  gap: .45rem;
+  flex-wrap: wrap;
+}
+
+.px-filter .filter-pill {
+  border: 1px solid var(--px-border);
+  background: var(--px-white);
+  color: var(--px-text-light);
+  padding: .4rem .85rem;
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 500;
+  transition: all var(--px-transition);
+  cursor: pointer;
+}
+
+.px-filter .filter-pill:hover {
+  border-color: var(--px-primary);
+  color: var(--px-primary-dark);
+}
+
+.px-filter .filter-pill.active {
+  background: var(--px-primary);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   13. EYEBROW — editorial label
+   -------------------------------------------------------------------------- */
+
+.px-eyebrow {
+  background: rgba(166,83,59,.1);
+  color: var(--px-primary-dark);
+  padding: .3rem .7rem;
+  border-radius: 999px;
+  font-size: .73rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  display: inline-block;
+}
+
+/* --------------------------------------------------------------------------
+   14. EMPTY STATE
+   -------------------------------------------------------------------------- */
+
+.px-empty .empty-icon {
+  background: rgba(166,83,59,.1);
+  color: var(--px-primary);
+}
+
+.px-empty h4 {
+  font-family: var(--px-font-display);
+  font-weight: 600;
+  color: var(--px-dark);
+}
+
+.px-empty p {
+  color: var(--px-text-light);
+}
+
+/* --------------------------------------------------------------------------
+   15. ALERTS — warm tones
+   -------------------------------------------------------------------------- */
+
+.alert-success {
+  background: var(--px-success-bg);
+  color: #3D5A42;
+  border-color: #C5D5C8;
+}
+
+.alert-danger {
+  background: var(--px-danger-bg);
+  color: #7C3C30;
+  border-color: #E5C4BA;
+}
+
+.alert-warning {
+  background: var(--px-warning-bg);
+  color: #7A5A1C;
+  border-color: #E8D6A8;
+}
+
+.alert-info {
+  background: var(--px-info-bg);
+  color: #4A5860;
+  border-color: #C8D0D8;
+}
+
+.alert-primary {
+  background: rgba(166,83,59,.08);
+  color: #7A3D2E;
+  border-color: rgba(166,83,59,.22);
+}
+
+.alert {
+  border-radius: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   16. SIDEBAR OVERLAY — warm scrim
+   -------------------------------------------------------------------------- */
+
+.px-sidebar-overlay {
+  background: rgba(36,33,30,.5);
+}
+
+/* --------------------------------------------------------------------------
+   17. TOASTS — inherit from redefined --px-* vars
+       (style.css toast rules use var(--px-success) etc., now warm)
+       Add toast-info for the admin info toasts in approval_queue.
+   -------------------------------------------------------------------------- */
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(100%); }
+}
+
+/* --------------------------------------------------------------------------
+   18. NEW COMPONENTS — dashboard-specific vocabulary
+   -------------------------------------------------------------------------- */
+
+/* --- Masthead: editorial page header ------------------------------------ */
+
+.px-masthead {
+  margin-bottom: 1.75rem;
+}
+
+.px-masthead .px-eyebrow {
+  margin-bottom: .4rem;
+}
+
+.px-masthead h1 {
+  font-family: var(--px-font-display);
+  font-size: clamp(1.7rem, 2.5vw, 2.2rem);
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--px-dark);
+  margin: .25rem 0 .45rem;
+}
+
+.px-masthead .px-lede {
+  color: var(--px-text-light);
+  max-width: 560px;
+  margin: 0;
+  font-size: .98rem;
+  line-height: 1.55;
+}
+
+/* --- Ledger: hairline row lists ----------------------------------------- */
+
+.px-ledger {
+  display: flex;
+  flex-direction: column;
+}
+
+.px-ledger .ledger-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.35rem;
+  border-top: 1px solid #EFEAE0;
+  transition: background var(--px-transition);
+}
+
+.px-ledger .ledger-row:first-child {
+  border-top: none;
+}
+
+.px-ledger .ledger-row:hover {
+  background: #FBF7F0;
+}
+
+.px-ledger .ledger-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.px-ledger .ledger-title {
+  font-weight: 600;
+  color: var(--px-dark);
+}
+
+.px-ledger .ledger-title a {
+  color: var(--px-dark);
+  text-decoration: none;
+}
+
+.px-ledger .ledger-title a:hover {
+  color: var(--px-primary);
+}
+
+.px-ledger .ledger-meta {
+  font-size: .85rem;
+  color: var(--px-text-light);
+}
+
+.px-ledger .ledger-actions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-shrink: 0;
+}
+
+/* --- Health chips: status indicators ------------------------------------ */
+
+.px-health {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .72rem;
+  font-weight: 600;
+  padding: .22rem .65rem;
+  border-radius: 999px;
+  border: 1px solid var(--px-border);
+}
+
+.px-health::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.px-health.high_demand {
+  color: #3C5A40;
+  background: #E7EDE2;
+  border-color: #D6E2D2;
+}
+
+.px-health.healthy {
+  color: #4B6650;
+  background: #EDF2EA;
+  border-color: #DDE6DA;
+}
+
+.px-health.low_traction {
+  color: #8A5A1E;
+  background: #FBF3E2;
+  border-color: #F1E4C6;
+}
+
+.px-health.cancellation_warning {
+  color: #93493C;
+  background: #F7EBE7;
+  border-color: #EED9D2;
+}
+
+/* --- Org banner: organizer organization status -------------------------- */
+
+.px-org-banner {
+  border: 1px solid var(--px-border);
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  background: var(--px-white);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  transition: border-color var(--px-transition), box-shadow var(--px-transition);
+}
+
+.px-org-banner:hover {
+  box-shadow: var(--px-shadow);
+}
+
+.px-org-banner .org-seal {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: rgba(166,83,59,.1);
+  color: var(--px-primary-dark);
+  flex-shrink: 0;
+}
+
+.px-org-banner.pending {
+  border-left: 3px solid var(--px-warning);
+}
+
+.px-org-banner.approved {
+  border-left: 3px solid var(--px-success);
+}
+
+.px-org-banner.rejected {
+  border-left: 3px solid var(--px-danger);
+}
+
+.px-org-banner .org-body {
+  flex: 1;
+  min-width: 200px;
+}
+
+.px-org-banner h3 {
+  font-family: var(--px-font-display);
+  font-weight: 600;
+  font-size: 1.4rem;
+  color: var(--px-dark);
+  margin: 0;
+}
+
+.px-org-banner p {
+  margin: .2rem 0 0;
+  color: var(--px-text-light);
+  font-size: .93rem;
+  max-width: 520px;
+}
+
+/* --- Metric: inline stat inline with icon ------------------------------- */
+
+.px-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .87rem;
+  color: var(--px-text);
+}
+
+.px-metric i {
+  color: var(--px-primary-light);
+}
+
+/* --- Quick actions: admin action grid ----------------------------------- */
+
+.px-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: .8rem;
+}
+
+.px-quick-action {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  padding: 1rem 1.1rem;
+  background: var(--px-white);
+  border: 1px solid var(--px-border);
+  border-radius: 10px;
+  color: var(--px-dark);
+  text-decoration: none;
+  transition: border-color var(--px-transition), transform var(--px-transition);
+}
+
+.px-quick-action i {
+  font-size: 1.15rem;
+  color: var(--px-primary);
+}
+
+.px-quick-action span {
+  font-size: .86rem;
+  font-weight: 600;
+  color: var(--px-text);
+}
+
+.px-quick-action small {
+  font-size: .76rem;
+  color: var(--px-text-light);
+}
+
+.px-quick-action:hover {
+  border-color: rgba(166,83,59,.35);
+  transform: translateY(-1px);
+  color: var(--px-dark);
+  text-decoration: none;
+}
+
+/* --- Review desk: admin approval section headers ------------------------ */
+
+.px-review-section-head {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin: 2.2rem 0 1rem;
+}
+
+.px-review-section-head:first-child {
+  margin-top: 0;
+}
+
+.px-review-section-head .head-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--px-border);
+}
+
+.px-review-section-head h2 {
+  font-family: var(--px-font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--px-dark);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.px-count {
+  background: rgba(166,83,59,.12);
+  color: var(--px-primary-dark);
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+}
+
+/* --- Activity log: timeline --------------------------------------------- */
+
+.px-activity-log {
+  display: flex;
+  flex-direction: column;
+}
+
+.px-activity-log .log-entry {
+  display: flex;
+  gap: .85rem;
+  padding: .85rem 1.35rem;
+  border-top: 1px solid #EFEAE0;
+}
+
+.px-activity-log .log-entry:first-child {
+  border-top: none;
+}
+
+.px-activity-log .log-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--px-primary-light);
+  margin-top: .45rem;
+  flex-shrink: 0;
+}
+
+.px-activity-log .log-body {
+  flex: 1;
+}
+
+.px-activity-log .log-body p {
+  margin: 0;
+  font-size: .9rem;
+  color: var(--px-text);
+}
+
+.px-activity-log .log-body .log-time {
+  font-size: .78rem;
+  color: var(--px-text-light);
+  margin-top: .2rem;
+}
+
+/* --- Event status detail chip (for org banner package count) ----------- */
+
+.px-org-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .82rem;
+  color: var(--px-text);
+  padding: .35rem .75rem;
+  background: var(--px-bg);
+  border: 1px solid var(--px-border);
+  border-radius: 8px;
+}
+
+.px-org-stat i {
+  color: var(--px-primary-light);
+  font-size: .95rem;
+}
+
+.px-org-stat strong {
+  font-family: var(--px-font-display);
+  font-weight: 600;
+  color: var(--px-dark);
+  font-size: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   19. REVEAL ANIMATION — soften to editorial pace
+   (style.css defines .reveal base; we refine timing)
+   -------------------------------------------------------------------------- */
+
+.reveal {
+  transition: opacity .28s ease, transform .28s ease;
+}
+
+.reveal.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal.reveal-visible,
+  .px-sidebar,
+  .px-card,
+  .px-stat,
+  .px-org-banner,
+  .btn-brand,
+  .filter-pill {
+    transition: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   20. RESPONSIVE — 375px to 1440px
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 991.98px) {
+  .px-content {
+    padding: 1.25rem;
+  }
+
+  .px-topbar {
+    padding: .85rem 1.25rem;
+  }
+
+  .px-topbar .page-title {
+    font-size: 1.15rem;
+  }
+
+  .px-masthead h1 {
+    font-size: 1.5rem;
+  }
+
+  .px-stat .stat-num {
+    font-size: 1.4rem;
+  }
+
+  .px-stat .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .px-quick-actions {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: .6rem;
+  }
+
+  .px-org-banner {
+    padding: 1.25rem 1.35rem;
+  }
+
+  .px-org-banner .org-seal {
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
+  }
+
+  /* On mobile, collapse ledger-row metadata */
+  .px-ledger .ledger-row {
+    flex-wrap: wrap;
+    gap: .6rem;
+    padding: .85rem 1.1rem;
+  }
+
+  /* Dashboard components: 375px recompose */
+  .px-dash-cta {
+    flex-direction: column;
+    gap: .55rem;
+  }
+
+  .px-dash-cta-btn,
+  .px-dash-cta-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .px-dash-active {
+    padding: 1.25rem 1.35rem;
+  }
+
+  .px-dash-active-title {
+    font-size: 1.2rem;
+  }
+
+  .px-dash-welcome-title {
+    font-size: 1.4rem;
+  }
+
+  .px-dash-summary {
+    flex-direction: column;
+  }
+
+  .px-dash-summary-item {
+    min-width: auto;
+  }
+
+  .px-dash-quicklinks {
+    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+    gap: .55rem;
+  }
+
+  .role-options {
+    grid-template-columns: 1fr;
+    gap: .55rem;
+  }
+
+  .px-dash-org {
+    padding: 1.1rem 1.25rem;
+  }
+
+  .px-dash-org-seal {
+    width: 44px;
+    height: 44px;
+    font-size: 1.15rem;
+  }
+
+  .px-dash-attention {
+    padding: .95rem 1.15rem;
+  }
+
+  .px-dash-catchup {
+    padding: 1.15rem 1.35rem;
+    flex-direction: column;
+    text-align: center;
+    gap: .75rem;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .px-content {
+    padding: 1.5rem;
+  }
+
+  .px-stat .stat-num {
+    font-size: 1.55rem;
+  }
+}
+
+/* Large desktop: generous spacing */
+@media (min-width: 1200px) {
+  .px-content {
+    padding: 2.25rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   21. SCROLLBAR — subtle warm
+   -------------------------------------------------------------------------- */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--px-border-dark);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--px-text-light);
+}
+
+/* --------------------------------------------------------------------------
+   22. MISCELLANEOUS OVERRIDES
+   -------------------------------------------------------------------------- */
+
+/* Page header accents */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--px-dark);
+}
+
+/* --------------------------------------------------------------------------
+   23. DASHBOARD COMPONENTS — premium editorial dashboard vocabulary
+   Used by: customer_dashboard, staff_dashboard, admin_dashboard
+   -------------------------------------------------------------------------- */
+
+/* --- Welcome block ------------------------------------------------------ */
+
+.px-dash-welcome {
+  margin-bottom: 2rem;
+}
+
+.px-dash-welcome .px-eyebrow {
+  margin-bottom: .4rem;
+}
+
+.px-dash-welcome-title {
+  font-family: var(--px-font-display);
+  font-size: clamp(1.65rem, 2.5vw, 2.1rem);
+  font-weight: 600;
+  color: var(--px-dark);
+  letter-spacing: -.01em;
+  margin: .25rem 0 .4rem;
+}
+
+.px-dash-welcome-sub {
+  color: var(--px-text-light);
+  font-size: .98rem;
+  max-width: 560px;
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* --- CTA row ------------------------------------------------------------ */
+
+.px-dash-cta {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.px-dash-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  background: var(--px-primary);
+  color: #fff;
+  padding: .85rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: .95rem;
+  text-decoration: none;
+  transition: background var(--px-transition), box-shadow var(--px-transition), transform var(--px-transition);
+  box-shadow: var(--px-shadow-brand);
+}
+
+.px-dash-cta-btn:hover {
+  background: var(--px-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(166,83,59,.28);
+  color: #fff;
+  text-decoration: none;
+}
+
+.px-dash-cta-btn i {
+  font-size: 1.15rem;
+}
+
+.px-dash-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  border: 1px solid var(--px-border);
+  color: var(--px-text);
+  padding: .85rem 1.3rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: .95rem;
+  text-decoration: none;
+  transition: border-color var(--px-transition), color var(--px-transition), background var(--px-transition);
+}
+
+.px-dash-cta-secondary:hover {
+  border-color: var(--px-primary);
+  color: var(--px-primary-dark);
+  background: rgba(166,83,59,.05);
+  text-decoration: none;
+}
+
+/* --- Active booking highlight ------------------------------------------- */
+
+.px-dash-active {
+  border: 1px solid rgba(166,83,59,.22);
+  background: var(--px-white);
+  border-radius: 12px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 2rem;
+  border-left: 3px solid var(--px-primary);
+  box-shadow: var(--px-shadow-sm);
+}
+
+.px-dash-active-eyebrow {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--px-primary);
+  margin-bottom: .3rem;
+}
+
+.px-dash-active-title {
+  font-family: var(--px-font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--px-dark);
+  margin-bottom: .55rem;
+}
+
+.px-dash-active-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem 1.2rem;
+  font-size: .88rem;
+  color: var(--px-text-light);
+  margin-bottom: .65rem;
+}
+
+.px-dash-active-meta i {
+  color: var(--px-primary-light);
+  margin-right: .2rem;
+}
+
+.px-dash-active-status {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+}
+
+.px-dash-active-hint {
+  font-size: .84rem;
+  color: var(--px-text-light);
+  font-style: italic;
+}
+
+/* --- Section with header + count ---------------------------------------- */
+
+.px-dash-section {
+  margin-bottom: 2rem;
+}
+
+.px-dash-section-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.px-dash-section-header h2 {
+  font-family: var(--px-font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--px-dark);
+  margin: 0;
+}
+
+.px-dash-section-count {
+  background: rgba(166,83,59,.1);
+  color: var(--px-primary-dark);
+  font-size: .74rem;
+  font-weight: 700;
+  padding: .22rem .6rem;
+  border-radius: 999px;
+}
+
+/* --- Organization status (organizer dashboard) -------------------------- */
+
+.px-dash-org {
+  border: 1px solid var(--px-border);
+  border-radius: 12px;
+  padding: 1.35rem 1.5rem;
+  background: var(--px-white);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  transition: border-color var(--px-transition), box-shadow var(--px-transition);
+}
+
+.px-dash-org:hover {
+  box-shadow: var(--px-shadow);
+}
+
+.px-dash-org-seal {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  background: rgba(166,83,59,.1);
+  color: var(--px-primary-dark);
+  flex-shrink: 0;
+}
+
+.px-dash-org-body {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+}
+
+.px-dash-org-body strong {
+  font-family: var(--px-font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--px-dark);
+}
+
+.px-dash-org-status-label {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--px-success);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.px-dash-org-status-label.pending {
+  color: #8A5A1E;
+}
+
+.px-dash-org-status-label.rejected {
+  color: #93493C;
+}
+
+.px-dash-org-detail {
+  font-size: .86rem;
+  color: var(--px-text-light);
+}
+
+.px-dash-org.approved {
+  border-left: 3px solid var(--px-success);
+}
+
+.px-dash-org.pending {
+  border-left: 3px solid var(--px-warning);
+}
+
+.px-dash-org.rejected {
+  border-left: 3px solid var(--px-danger);
+}
+
+/* --- Attention banner (admin) ------------------------------------------- */
+
+.px-dash-attention {
+  background: var(--px-warning-bg);
+  border: 1px solid #E8D6A8;
+  border-radius: 10px;
+  padding: 1.1rem 1.4rem;
+  margin-bottom: 2rem;
+}
+
+.px-dash-attention-header {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  font-weight: 600;
+  color: #7A5A1C;
+  font-size: .95rem;
+}
+
+.px-dash-attention-header i {
+  font-size: 1.2rem;
+  color: #8A5A1E;
+}
+
+/* --- All caught up state ------------------------------------------------ */
+
+.px-dash-catchup {
+  border: 1px solid var(--px-border);
+  border-radius: 10px;
+  padding: 1.4rem 1.6rem;
+  background: var(--px-white);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.px-dash-catchup-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #EAF0E7;
+  color: #4B6650;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.px-dash-catchup strong {
+  color: var(--px-dark);
+}
+
+.px-dash-catchup span {
+  color: var(--px-text-light);
+  font-size: .9rem;
+}
+
+/* --- Quick links grid --------------------------------------------------- */
+
+.px-dash-quicklinks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: .75rem;
+  margin-bottom: 2rem;
+}
+
+.px-dash-quicklink {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  padding: 1rem 1.1rem;
+  background: var(--px-white);
+  border: 1px solid var(--px-border);
+  border-radius: 10px;
+  color: var(--px-dark);
+  text-decoration: none;
+  transition: border-color var(--px-transition), transform var(--px-transition);
+}
+
+.px-dash-quicklink i {
+  font-size: 1.15rem;
+  color: var(--px-primary);
+}
+
+.px-dash-quicklink span {
+  font-size: .86rem;
+  font-weight: 600;
+  color: var(--px-text);
+}
+
+.px-dash-quicklink:hover {
+  border-color: rgba(166,83,59,.35);
+  transform: translateY(-1px);
+  color: var(--px-dark);
+  text-decoration: none;
+}
+
+/* --- Summary row -------------------------------------------------------- */
+
+.px-dash-summary {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.px-dash-summary-item {
+  flex: 1;
+  min-width: 130px;
+  background: var(--px-white);
+  border: 1px solid var(--px-border);
+  border-radius: 10px;
+  padding: 1.15rem 1.3rem;
+  text-align: center;
+}
+
+.px-dash-summary-num {
+  font-family: var(--px-font-display);
+  font-size: 1.65rem;
+  font-weight: 600;
+  color: var(--px-dark);
+  letter-spacing: -.01em;
+}
+
+.px-dash-summary-label {
+  font-size: .78rem;
+  color: var(--px-text-light);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-top: .15rem;
+}
+
+/* --- Auth role select (sign-up) ----------------------------------------- */
+
+.auth-role-select {
+  margin-bottom: 1rem;
+}
+
+.auth-role-select .form-label {
+  font-weight: 600;
+  color: var(--px-dark);
+}
+
+.role-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+}
+
+.role-option {
+  position: relative;
+}
+
+.role-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.role-option label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .45rem;
+  padding: 1.25rem 1rem;
+  border: 2px solid var(--px-border);
+  border-radius: 10px;
+  background: var(--px-white);
+  cursor: pointer;
+  transition: border-color var(--px-transition), box-shadow var(--px-transition), background var(--px-transition);
+  text-align: center;
+}
+
+.role-option label:hover {
+  border-color: rgba(166,83,59,.35);
+  background: #FBF7F0;
+}
+
+.role-option input[type="radio"]:checked + label {
+  border-color: var(--px-primary);
+  background: rgba(166,83,59,.05);
+  box-shadow: 0 0 0 3px rgba(166,83,59,.12);
+}
+
+.role-option .role-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(166,83,59,.1);
+  color: var(--px-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.role-option .role-name {
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--px-dark);
+}
+
+.role-option .role-desc {
+  font-size: .8rem;
+  color: var(--px-text-light);
+  line-height: 1.4;
+}
+
+/* Links */
+a {
+  color: var(--px-primary);
+}
+
+a:hover {
+  color: var(--px-primary-dark);
+}
+
+/* Dropdown menus */
+.dropdown-menu {
+  border: 1px solid var(--px-border);
+  border-radius: var(--px-radius);
+  box-shadow: var(--px-shadow-lg);
+  background: var(--px-white);
+}
+
+.dropdown-item:hover {
+  background: #F4EFE7;
+  color: var(--px-primary-dark);
+}
+
+/* Modals */
+.modal-content {
+  border: 1px solid var(--px-border);
+  border-radius: var(--px-radius-lg);
+  box-shadow: var(--px-shadow-lg);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--px-border);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--px-border);
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+  background: transparent;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb-item a {
+  color: var(--px-primary);
+}
+
+.breadcrumb-item.active {
+  color: var(--px-text-light);
+}
+
+/* Pagination */
+.page-link {
+  color: var(--px-primary);
+  border-color: var(--px-border);
+}
+
+.page-item.active .page-link {
+  background-color: var(--px-primary);
+  border-color: var(--px-primary);
+}
+
+/* Spinner / loading */
+.spinner-border {
+  color: var(--px-primary);
+}
+
+/* Tooltip overrides (Bootstrap) */
+.tooltip-inner {
+  background: var(--px-dark);
+  border-radius: 6px;
+}

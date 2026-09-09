@@ -9,7 +9,7 @@
 <div class="px-card p-4 p-lg-5 reveal" style="max-width:860px;">
   <span class="px-eyebrow">Event Package</span>
   <h2 class="px-section-title" style="font-size:1.4rem;">
-    {% if event %}Update “{{ event.event_name }}”{% else %}Create a new event package{% endif %}
+    {% if event %}Update “{{ event.title }}”{% else %}Create a new event package{% endif %}
   </h2>
   <p class="text-muted-px">Fill in the details below. Required fields are marked with *.</p>
 
@@ -18,69 +18,68 @@
         class="mt-4">
     {% csrf_token %}
 
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
+    {% endif %}
+
     <div class="row g-3">
       <div class="col-md-6">
-        <label class="form-label" for="f_name">Event name *</label>
-        <input type="text" class="form-control" id="f_name" name="event_name" required
-               value="{{ event.event_name|default:'' }}" placeholder="e.g. Royal Wedding Package">
+        <label class="form-label" for="f_title">Event name *</label>
+        <input type="text" class="form-control" id="f_title" name="title" required
+               value="{{ form.title.value|default:'' }}" placeholder="e.g. Royal Wedding Package">
+        {% if form.title.errors %}<small class="text-danger">{{ form.title.errors }}</small>{% endif %}
       </div>
       <div class="col-md-6">
-        <label class="form-label" for="f_type">Event type *</label>
-        <input type="text" class="form-control" id="f_type" name="event_type" required
-               value="{{ event.event_type|default:'' }}" placeholder="e.g. Wedding">
+        <label class="form-label" for="f_category">Category</label>
+        <select class="form-select" id="f_category" name="category">
+          <option value="">— Select category —</option>
+          {% for choice in form.category.field.queryset %}
+          <option value="{{ choice.pk }}" {% if form.category.value|stringformat:"s" == choice.pk|stringformat:"s" %}selected{% endif %}>{{ choice.name }}</option>
+          {% endfor %}
+        </select>
+        {% if form.category.errors %}<small class="text-danger">{{ form.category.errors }}</small>{% endif %}
       </div>
 
       <div class="col-md-6">
         <label class="form-label" for="f_price">Price (₹) *</label>
-        <input type="number" class="form-control" id="f_price" name="event_price" required
-               min="0" value="{{ event.event_price|default:'' }}" placeholder="e.g. 150000">
+        <input type="number" class="form-control" id="f_price" name="price" required
+               min="0" step="0.01" value="{{ form.price.value|default:'' }}" placeholder="e.g. 150000">
+        {% if form.price.errors %}<small class="text-danger">{{ form.price.errors }}</small>{% endif %}
       </div>
       <div class="col-md-6">
-        <label class="form-label" for="f_location">Location *</label>
+        <label class="form-label" for="f_location">Location / service area *</label>
         <input type="text" class="form-control" id="f_location" name="location" required
-               value="{{ event.location|default:'' }}" placeholder="e.g. Kochi, Kerala">
+               value="{{ form.location.value|default:'' }}" placeholder="e.g. Kochi, Kerala">
+        {% if form.location.errors %}<small class="text-danger">{{ form.location.errors }}</small>{% endif %}
       </div>
 
       <div class="col-md-6">
-        <label class="form-label" for="f_mobile">Vendor mobile number</label>
-        <input type="tel" class="form-control" id="f_mobile" name="event_mobile_number"
-               maxlength="10" pattern="[0-9]{10}" value="{{ event.event_mobile_number|default:'' }}"
-               placeholder="10-digit mobile number">
+        <label class="form-label" for="f_capacity">Capacity</label>
+        <input type="number" class="form-control" id="f_capacity" name="capacity"
+               min="0" value="{{ form.capacity.value|default:'' }}" placeholder="e.g. 500">
+        {% if form.capacity.errors %}<small class="text-danger">{{ form.capacity.errors }}</small>{% endif %}
       </div>
       <div class="col-md-6">
-        <label class="form-label" for="f_img">Event image</label>
-        <input type="file" class="form-control" id="f_img" name="event_img" accept="image/*">
+        <label class="form-label" for="f_contact">Contact number</label>
+        <input type="tel" class="form-control" id="f_contact" name="contact_number"
+               value="{{ form.contact_number.value|default:'' }}" placeholder="Contact phone">
+        {% if form.contact_number.errors %}<small class="text-danger">{{ form.contact_number.errors }}</small>{% endif %}
+      </div>
+
+      <div class="col-12">
+        <label class="form-label" for="f_img">Featured image</label>
+        <input type="file" class="form-control" id="f_img" name="featured_image" accept="image/*">
         <small class="text-muted-px">
-          {% if event and event.event_img %}Current image will be kept if none chosen.{% else %}Optional.{% endif %}
+          {% if event and event.featured_image %}Current image will be kept if none chosen.{% else %}Optional.{% endif %}
         </small>
+        {% if form.featured_image.errors %}<small class="text-danger">{{ form.featured_image.errors }}</small>{% endif %}
       </div>
 
       <div class="col-12">
         <label class="form-label" for="f_desc">Event description *</label>
-        <textarea class="form-control" id="f_desc" name="event_description" required rows="4"
-                  placeholder="Describe the event package…">{{ event.event_description|default:'' }}</textarea>
-      </div>
-
-      <div class="col-12">
-        <label class="form-label">Packages included</label>
-        <div class="row g-3">
-          <div class="col-md-6">
-            <input type="text" class="form-control" name="package1" placeholder="Package 1"
-                   value="{{ event.package1|default:'' }}">
-          </div>
-          <div class="col-md-6">
-            <input type="text" class="form-control" name="package2" placeholder="Package 2"
-                   value="{{ event.package2|default:'' }}">
-          </div>
-          <div class="col-md-6">
-            <input type="text" class="form-control" name="package3" placeholder="Package 3"
-                   value="{{ event.package3|default:'' }}">
-          </div>
-          <div class="col-md-6">
-            <input type="text" class="form-control" name="package4" placeholder="Package 4"
-                   value="{{ event.package4|default:'' }}">
-          </div>
-        </div>
+        <textarea class="form-control" id="f_desc" name="description" required rows="4"
+                  placeholder="Describe the event package…">{{ form.description.value|default:'' }}</textarea>
+        {% if form.description.errors %}<small class="text-danger">{{ form.description.errors }}</small>{% endif %}
       </div>
 
       <div class="col-12 d-flex flex-wrap gap-2 mt-4">

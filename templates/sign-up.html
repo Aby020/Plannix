@@ -5,12 +5,50 @@
 
 {% block auth_header %}
   <h2>Create your account</h2>
-  <p class="auth-sub">Join Plannix and start planning events in minutes.</p>
+  <p class="auth-sub">Join Plannix and start planning or managing events.</p>
 {% endblock %}
 
 {% block auth_content %}
-  <form method="post" action="{% url 'sign_up' %}" class="d-flex flex-column gap-3">
+  <form method="post" action="{% url 'sign_up' %}" class="d-flex flex-column gap-3" data-submit-guard>
     {% csrf_token %}
+
+    {# ─── Role selection — server rejects anything other than attendee/organizer ─── #}
+    <fieldset class="auth-role-select">
+      <legend class="form-label fw-semibold">How will you use Plannix?</legend>
+      <div class="role-options">
+        <label class="role-option active" for="role-attendee">
+          <input type="radio" id="role-attendee" name="user_type" value="attendee" checked>
+          <span class="role-icon"><i class="bi bi-calendar-heart"></i></span>
+          <span class="role-info">
+            <strong>User / Attendee</strong>
+            <small>Find and book event packages</small>
+          </span>
+        </label>
+        <label class="role-option" for="role-organizer">
+          <input type="radio" id="role-organizer" name="user_type" value="organizer">
+          <span class="role-icon"><i class="bi bi-megaphone"></i></span>
+          <span class="role-info">
+            <strong>Event Organizer</strong>
+            <small>Offer and manage event packages</small>
+          </span>
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="row g-3">
+      <div class="col-6">
+        <label class="form-label" for="id_first_name">First name</label>
+        <input type="text" class="form-control" id="id_first_name" name="first_name"
+               autocomplete="given-name" maxlength="30"
+               placeholder="Your first name">
+      </div>
+      <div class="col-6">
+        <label class="form-label" for="id_last_name">Last name</label>
+        <input type="text" class="form-control" id="id_last_name" name="last_name"
+               autocomplete="family-name" maxlength="30"
+               placeholder="Your last name">
+      </div>
+    </div>
 
     <div>
       <label class="form-label" for="id_username">Username</label>
@@ -64,4 +102,19 @@
   <p class="text-center mt-3 mb-0">
     <a href="{% url 'index' %}" class="small"><i class="bi bi-arrow-left me-1"></i>Back to home</a>
   </p>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  var options = document.querySelectorAll('.role-option');
+  options.forEach(function(opt) {
+    var radio = opt.querySelector('input[type="radio"]');
+    radio.addEventListener('change', function() {
+      options.forEach(function(o) { o.classList.remove('active'); });
+      opt.classList.add('active');
+    });
+  });
+})();
+</script>
 {% endblock %}

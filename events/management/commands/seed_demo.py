@@ -1,47 +1,40 @@
-"""Seed the Plannix app with realistic demo data.
+"""Seed the Plannix app with realistic demo data for the Phase 1 redesign.
 
 Usage:
     python manage.py seed_demo
 
-Creates roles, an admin account (password from the PLANNIX_ADMIN_PASSWORD
-environment variable, or a random one printed to the terminal), staff and
-customer accounts, **20 individual event packages** — 5 categories (Birthday,
-Catering, Corporate, DJ, Wedding) × 4 events each — where every event has its
-own database record, its own unique name and **exactly one image** pulled from
-``event_images/<category>/``, plus bookings across every status and sample
-feedback.
+Creates:
+- Groups: Attendee, EventOrganizer, Admin
+- Users: admin (superuser), organizer1, organizer2, 4 attendees
+- EventCategories with slugs and sort_order
+- 20 events across realistic lifecycle states
+- EventInclusion rows from package lists
+- EventBookings with event FK, attendee FK, snapshots
+- Sample Reviews for completed bookings
 
-The first run also cleans up the legacy demo events (the five bare-category
-packages from an earlier single-event-per-category seed), then re-seeds the
-new 20-event catalogue.
-
-Idempotent where it matters: accounts and events are upserted by a stable
-key (username / event name), images are copied into ``media/events/`` only
-when missing (or when the source file has changed), and bookings/feedback are
-only created when none exist yet — re-running never duplicates or destroys
-data.
+Idempotent: upserts by stable keys, skips existing bookings/reviews.
 """
 import os
 import secrets
 import shutil
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
-from events.models import Event_Booking, Event_Company
-from themes.models import Feedback
+from account_manager.models import OrganizerProfile
+from events.models import (
+    Event, EventAuditLog, EventBooking, EventCategory, EventInclusion, Review,
+)
 
-# The demo event image set lives in event_images/<category>/ — each folder
-# holds exactly the 4 images for that category. Every seeded event is linked
-# to exactly one of those images (its own record, its own image). Images are
-# copied into media/events/ keeping their original filenames.
+# ---------------------------------------------------------------------------
+# Image helpers (reuse existing event_images/ folder structure)
+# ---------------------------------------------------------------------------
 EVENT_IMAGE_DIR = Path(settings.BASE_DIR) / 'event_images'
 
-# Category → image-folder name. Corporate's folder is ``corperate`` (as it
-# is on disk), so the mapping is explicit rather than a simple lowercase.
 CATEGORY_FOLDER = {
     'Birthday': 'birthday',
     'Catering': 'catering',
@@ -50,25 +43,18 @@ CATEGORY_FOLDER = {
     'Wedding': 'wedding',
 }
 
-# Legacy demo packages from the earlier seed (one event per category, each
-# carrying a 4-image gallery). They are deleted on the first run of the new
-# seed so the catalogue is rebuilt as 20 individual events.
-LEGACY_DEMO_EVENT_NAMES = ['Birthday', 'Catering', 'Corporate', 'DJ', 'Wedding']
-
 # ---------------------------------------------------------------------------
-# The 20 event packages: 5 categories × 4 events.
-#
-# ``image`` is the exact source filename inside the category folder, so every
-# event maps to precisely one image and categories never mix.
+# The 20 event definitions: 5 categories x 4 events each.
+# Maps to the new model fields: title, category, price, location, description.
 # ---------------------------------------------------------------------------
 EVENTS = [
-    # --- Birthday -----------------------------------------------------------
+    # --- Birthday ---
     {
-        'event_name': 'Birthday Bash',
-        'event_type': 'Birthday',
-        'event_price': 60000,
+        'title': 'Birthday Bash',
+        'category': 'Birthday',
+        'price': 60000,
         'location': 'Kochi, Kerala',
-        'event_description': (
+        'description': (
             'A lively birthday celebration with balloon decor, a custom cake '
             'and fun games — everything to make the birthday person feel '
             'extra special.'
@@ -77,11 +63,11 @@ EVENTS = [
         'image': 'pexels-freestockpro-12616001.jpg',
     },
     {
-        'event_name': 'Kids Birthday Party',
-        'event_type': 'Birthday',
-        'event_price': 40000,
+        'title': 'Kids Birthday Party',
+        'category': 'Birthday',
+        'price': 40000,
         'location': 'Kochi, Kerala',
-        'event_description': (
+        'description': (
             'A safe, colourful party for little ones — character theme decor, '
             'a cartoon-style cake and a dedicated host for games and fun.'
         ),
@@ -89,11 +75,11 @@ EVENTS = [
         'image': 'pexels-rdne-4920988.jpg',
     },
     {
-        'event_name': 'Sweet 16 Celebration',
-        'event_type': 'Birthday',
-        'event_price': 85000,
+        'title': 'Sweet 16 Celebration',
+        'category': 'Birthday',
+        'price': 85000,
         'location': 'Trivandrum, Kerala',
-        'event_description': (
+        'description': (
             'A glamorous sweet-sixteen party with pastel decor, a dessert '
             'table, photo booth and DJ, styled around the birthday star.'
         ),
@@ -101,24 +87,24 @@ EVENTS = [
         'image': 'pexels-rdne-7363067.jpg',
     },
     {
-        'event_name': 'Milestone Birthday',
-        'event_type': 'Birthday',
-        'event_price': 120000,
+        'title': 'Milestone Birthday',
+        'category': 'Birthday',
+        'price': 120000,
         'location': 'Bangalore, Karnataka',
-        'event_description': (
+        'description': (
             'An elegant milestone celebration with premium decor, gourmet '
             'dinner, live music and a personalised tribute video.'
         ),
         'packages': ['Premium floral decor', 'Gourmet dinner', 'Live music', 'Tribute video & photography'],
         'image': 'pexels-ron-lach-10032953.jpg',
     },
-    # --- Catering -----------------------------------------------------------
+    # --- Catering ---
     {
-        'event_name': 'Grand Catering Service',
-        'event_type': 'Catering',
-        'event_price': 150000,
+        'title': 'Grand Catering Service',
+        'category': 'Catering',
+        'price': 150000,
         'location': 'Kochi, Kerala',
-        'event_description': (
+        'description': (
             'Full-service catering for large gatherings — a lavish multi-cuisine '
             'buffet served by an experienced team with elegant table setups.'
         ),
@@ -126,11 +112,11 @@ EVENTS = [
         'image': 'pexels-kseniia-lopyreva-3299160-4959845.jpg',
     },
     {
-        'event_name': 'Multi-Cuisine Buffet',
-        'event_type': 'Catering',
-        'event_price': 90000,
+        'title': 'Multi-Cuisine Buffet',
+        'category': 'Catering',
+        'price': 90000,
         'location': 'Kochi, Kerala',
-        'event_description': (
+        'description': (
             'A spread of regional and continental favourites — live counters, '
             'a dessert bar and on-site chefs for a memorable dining experience.'
         ),
@@ -138,11 +124,11 @@ EVENTS = [
         'image': 'pexels-novkov-visuals-34321369.jpg',
     },
     {
-        'event_name': 'Live Counter Catering',
-        'event_type': 'Catering',
-        'event_price': 75000,
+        'title': 'Live Counter Catering',
+        'category': 'Catering',
+        'price': 75000,
         'location': 'Chennai, Tamil Nadu',
-        'event_description': (
+        'description': (
             'Interactive live stations — pasta, dosa, chaat and grill counters — '
             'prepared fresh in front of your guests.'
         ),
@@ -150,24 +136,24 @@ EVENTS = [
         'image': 'pexels-prosper-buka-1289782307-28736727.jpg',
     },
     {
-        'event_name': 'Premium Wedding Catering',
-        'event_type': 'Catering',
-        'event_price': 280000,
+        'title': 'Premium Wedding Catering',
+        'category': 'Catering',
+        'price': 280000,
         'location': 'Kochi, Kerala',
-        'event_description': (
+        'description': (
             'A regal wedding feast — traditional sadhya and fine-dining '
             'courses, ornate table styling and dedicated banquet service.'
         ),
         'packages': ['Traditional sadhya', 'Fine-dining courses', 'Ornate table styling', 'Banquet service team'],
         'image': 'pexels-stewphotography-12253092.jpg',
     },
-    # --- Corporate ----------------------------------------------------------
+    # --- Corporate ---
     {
-        'event_name': 'Corporate Summit',
-        'event_type': 'Corporate',
-        'event_price': 480000,
+        'title': 'Corporate Summit',
+        'category': 'Corporate',
+        'price': 480000,
         'location': 'Bangalore, Karnataka',
-        'event_description': (
+        'description': (
             'Full-scale summit management — keynote stage with AV, guest '
             'registration, conference hall setup and refreshments for up to '
             '500 delegates.'
@@ -176,11 +162,11 @@ EVENTS = [
         'image': 'pexels-kaandurmus-9864907.jpg',
     },
     {
-        'event_name': 'Conference & Seminar',
-        'event_type': 'Corporate',
-        'event_price': 250000,
+        'title': 'Conference & Seminar',
+        'category': 'Corporate',
+        'price': 250000,
         'location': 'Mumbai, Maharashtra',
-        'event_description': (
+        'description': (
             'Professional conference execution — projector and sound, panel '
             'seating, breaks and a help desk for a smooth, focused event.'
         ),
@@ -188,11 +174,11 @@ EVENTS = [
         'image': 'pexels-pavel-danilyuk-6405783.jpg',
     },
     {
-        'event_name': 'Annual Day Gala',
-        'event_type': 'Corporate',
-        'event_price': 350000,
+        'title': 'Annual Day Gala',
+        'category': 'Corporate',
+        'price': 350000,
         'location': 'Kochi, Kerala',
-        'event_description': (
+        'description': (
             'A celebratory annual gala with awards ceremony, themed decor, '
             'dinner and entertainment for the whole company.'
         ),
@@ -200,24 +186,24 @@ EVENTS = [
         'image': 'pexels-reiez-35042249.jpg',
     },
     {
-        'event_name': 'Team Offsite Retreat',
-        'event_type': 'Corporate',
-        'event_price': 180000,
+        'title': 'Team Offsite Retreat',
+        'category': 'Corporate',
+        'price': 180000,
         'location': 'Goa',
-        'event_description': (
+        'description': (
             'A relaxed offsite with team-building activities, beachside '
             'accommodation, group meals and a closing bonfire night.'
         ),
         'packages': ['Team-building activities', 'Beachside stay', 'Group meals', 'Bonfire night'],
         'image': 'pexels-reiez-35042461.jpg',
     },
-    # --- DJ -----------------------------------------------------------------
+    # --- DJ ---
     {
-        'event_name': 'DJ Night Party',
-        'event_type': 'DJ',
-        'event_price': 45000,
+        'title': 'DJ Night Party',
+        'category': 'DJ',
+        'price': 45000,
         'location': 'Kochi, Kerala',
-        'event_description': (
+        'description': (
             'A high-energy DJ night with a pro sound system, laser and stage '
             'lighting and a glowing dance floor to keep the party going.'
         ),
@@ -225,11 +211,11 @@ EVENTS = [
         'image': 'pexels-ellis-5949085.jpg',
     },
     {
-        'event_name': 'Club DJ Experience',
-        'event_type': 'DJ',
-        'event_price': 60000,
+        'title': 'Club DJ Experience',
+        'category': 'DJ',
+        'price': 60000,
         'location': 'Bangalore, Karnataka',
-        'event_description': (
+        'description': (
             'An immersive club-style night — open-format DJ sets, VIP booth, '
             'crystal-clear sound and a professional light show.'
         ),
@@ -237,11 +223,11 @@ EVENTS = [
         'image': 'pexels-joshua-sanchez-1713464086-29263194.jpg',
     },
     {
-        'event_name': 'Pool Party DJ',
-        'event_type': 'DJ',
-        'event_price': 55000,
+        'title': 'Pool Party DJ',
+        'category': 'DJ',
+        'price': 55000,
         'location': 'Goa',
-        'event_description': (
+        'description': (
             'Sun-down beats by the pool — tropical DJ sets, ambient lighting, '
             'a mini dance deck and chilled cocktails for the crowd.'
         ),
@@ -249,24 +235,24 @@ EVENTS = [
         'image': 'pexels-leonardo-delsabio-2150529415-35243129.jpg',
     },
     {
-        'event_name': 'Festival DJ Show',
-        'event_type': 'DJ',
-        'event_price': 95000,
+        'title': 'Festival DJ Show',
+        'category': 'DJ',
+        'price': 95000,
         'location': 'Mumbai, Maharashtra',
-        'event_description': (
+        'description': (
             'A big-stage festival show — main-stage DJ, huge LED screens, '
             'confetti and pyro effects for a truly unforgettable set.'
         ),
         'packages': ['Main-stage DJ', 'LED screens', 'Confetti & pyro effects', 'Stage crew'],
         'image': 'pexels-yankrukov-9005499.jpg',
     },
-    # --- Wedding ------------------------------------------------------------
+    # --- Wedding ---
     {
-        'event_name': 'Royal Wedding',
-        'event_type': 'Wedding',
-        'event_price': 350000,
+        'title': 'Royal Wedding',
+        'category': 'Wedding',
+        'price': 350000,
         'location': 'Kochi, Kerala',
-        'event_description': (
+        'description': (
             'A regal wedding experience with grand venues, traditional mandap '
             'decor, multi-cuisine catering and a dedicated wedding coordinator.'
         ),
@@ -274,11 +260,11 @@ EVENTS = [
         'image': 'pexels-alonssus-3212018.jpg',
     },
     {
-        'event_name': 'Classic Wedding',
-        'event_type': 'Wedding',
-        'event_price': 220000,
+        'title': 'Classic Wedding',
+        'category': 'Wedding',
+        'price': 220000,
         'location': 'Trivandrum, Kerala',
-        'event_description': (
+        'description': (
             'Timeless wedding styling — elegant floral decor, a warm ceremony '
             'setup and thoughtful planning for a classic celebration.'
         ),
@@ -286,11 +272,11 @@ EVENTS = [
         'image': 'pexels-breno-cardoso-149064345-18322558.jpg',
     },
     {
-        'event_name': 'Destination Wedding',
-        'event_type': 'Wedding',
-        'event_price': 500000,
+        'title': 'Destination Wedding',
+        'category': 'Wedding',
+        'price': 500000,
         'location': 'Goa',
-        'event_description': (
+        'description': (
             'A dream beach wedding — seaside altar, stay for guests, sunset '
             'vows and a beachside reception under the stars.'
         ),
@@ -298,11 +284,11 @@ EVENTS = [
         'image': 'pexels-nudethephotographer-37828118.jpg',
     },
     {
-        'event_name': 'Intimate Wedding',
-        'event_type': 'Wedding',
-        'event_price': 120000,
+        'title': 'Intimate Wedding',
+        'category': 'Wedding',
+        'price': 120000,
         'location': 'Kochi, Kerala',
-        'event_description': (
+        'description': (
             'A cosy, close-to-home celebration — soft floral decor, a small '
             'reception and personal touches for up to 50 guests.'
         ),
@@ -311,6 +297,40 @@ EVENTS = [
     },
 ]
 
+# ---------------------------------------------------------------------------
+# Lifecycle assignment: which event titles get which status
+# ---------------------------------------------------------------------------
+LIFECYCLE_MAP = {
+    # LIVE events (most of the catalogue)
+    'Birthday Bash': 'live',
+    'Kids Birthday Party': 'live',
+    'Sweet 16 Celebration': 'live',
+    'Grand Catering Service': 'live',
+    'Multi-Cuisine Buffet': 'live',
+    'Live Counter Catering': 'live',
+    'Premium Wedding Catering': 'live',
+    'Corporate Summit': 'live',
+    'Conference & Seminar': 'live',
+    'Annual Day Gala': 'live',
+    'Intimate Wedding': 'live',
+    'Royal Wedding': 'live',
+    # PUBLISHED — approved and public but not yet live
+    'Classic Wedding': 'published',
+    # COMPLETED — events that already happened
+    'DJ Night Party': 'completed',
+    'Club DJ Experience': 'completed',
+    # CANCELLED — event was called off
+    'Destination Wedding': 'cancelled',
+    # DRAFT
+    'Milestone Birthday': 'draft',
+    # UNDER_REVIEW
+    'Team Offsite Retreat': 'under_review',
+    # REJECTED
+    'Pool Party DJ': 'rejected',
+    # APPROVED
+    'Festival DJ Show': 'approved',
+}
+
 CUSTOMERS = [
     ('priya', 'priya@example.com', 'Priya', 'Nair'),
     ('arjun', 'arjun@example.com', 'Arjun', 'Menon'),
@@ -318,12 +338,18 @@ CUSTOMERS = [
     ('rahul', 'rahul@example.com', 'Rahul', 'Varma'),
 ]
 
-FEEDBACK = [
-    ('Ananya', 'ananya@example.com', '9876500001', 'Planning our wedding with Plannix was effortless. The team handled everything!'),
-    ('Vishnu', 'vishnu@example.com', '9876500002', 'The corporate summit was flawless — stage, AV, catering, all perfect.'),
-    ('Sara', 'sara@example.com', '9876500003', 'Loved the beach proposal package. Truly a once-in-a-lifetime experience.'),
-    ('Kiran', 'kiran@example.com', '9876500004', 'Very responsive team. They made booking our anniversary gala so simple.'),
-    ('Divya', 'divya@example.com', '9876500005', 'From the first call to the final event, everything exceeded expectations.'),
+# Booking scenarios: (username, event_title, days_from_today, status)
+BOOKING_SCENARIOS = [
+    ('priya', 'Royal Wedding', +45, 'confirmed'),
+    ('priya', 'Birthday Bash', +20, 'pending'),
+    ('arjun', 'DJ Night Party', -30, 'completed'),
+    ('arjun', 'Classic Wedding', +60, 'pending'),
+    ('meera', 'Corporate Summit', +15, 'confirmed'),
+    ('meera', 'Club DJ Experience', -12, 'completed'),
+    ('meera', 'Conference & Seminar', +90, 'pending'),
+    ('rahul', 'Kids Birthday Party', +35, 'confirmed'),
+    ('rahul', 'Royal Wedding', -8, 'completed'),
+    ('priya', 'Grand Catering Service', +120, 'cancelled'),
 ]
 
 
@@ -331,28 +357,33 @@ class Command(BaseCommand):
     help = 'Seed Plannix with demo users, events, bookings and feedback.'
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.MIGRATE_HEADING('Seeding Plannix demo data…'))
-        self._roles()
+        self.stdout.write(self.style.MIGRATE_HEADING('Seeding Plannix demo data...'))
+        self._groups()
         users = self._users()
-        events = self._events()
+        categories = self._categories()
+        events = self._events(users, categories)
         self._bookings(users, events)
-        self._feedback()
+        self._reviews(users, events)
+        self._audit_logs(events, users)
         self.stdout.write(self.style.SUCCESS('Demo data is ready.'))
 
     # ------------------------------------------------------------------
-    def _roles(self):
-        for name in ('admin', 'staff', 'customer'):
+    def _groups(self):
+        for name in ('Attendee', 'EventOrganizer', 'Admin'):
             Group.objects.get_or_create(name=name)
-        self.stdout.write('  roles: admin, staff, customer')
+        self.stdout.write('  groups: Attendee, EventOrganizer, Admin')
 
     def _users(self):
-        """Create admin (from env/random password), staff and customers."""
         users = {}
 
-        # Admin superuser — password from env, else random and printed.
+        # Admin superuser
         admin, created = User.objects.get_or_create(
             username='admin',
-            defaults={'email': 'admin@plannix.app', 'is_superuser': True, 'is_staff': True},
+            defaults={
+                'email': 'admin@plannix.app',
+                'is_superuser': True,
+                'is_staff': True,
+            },
         )
         if created:
             password = os.environ.get('PLANNIX_ADMIN_PASSWORD') or secrets.token_urlsafe(9)
@@ -364,132 +395,336 @@ class Command(BaseCommand):
             ))
         else:
             self.stdout.write('  admin already exists (password untouched)')
+        admin.groups.add(Group.objects.get(name='Admin'))
         users['admin'] = admin
 
-        # Staff account.
-        staff, _ = User.objects.get_or_create(
-            username='staff1',
-            defaults={'email': 'staff@plannix.app', 'first_name': 'Riya', 'last_name': 'Thomas'},
-        )
-        staff.groups.add(Group.objects.get(name='staff'))
-        if staff.password == '' or not staff.has_usable_password():
-            staff.set_password('staffpass123')
-            staff.save(update_fields=['password'])
-        users['staff'] = staff
+        # Organizer accounts
+        org_group = Group.objects.get(name='EventOrganizer')
+        organizer_specs = [
+            ('organizer1', 'organizer@plannix.app', 'Aravind', 'Kumar'),
+            ('organizer2', 'organizer2@plannix.app', 'Deepa', 'Nair'),
+            ('demot', 'demot@plannix.app', 'Rohit', 'Menon'),
+            ('Doe', 'doe@plannix.app', 'Diana', 'Doe'),
+        ]
+        for username, email, first, last in organizer_specs:
+            user, created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    'email': email,
+                    'first_name': first,
+                    'last_name': last,
+                },
+            )
+            user.groups.add(org_group)
+            if created or user.password == '' or not user.has_usable_password():
+                user.set_password('organizer123')
+                user.save(update_fields=['password'])
+            OrganizerProfile.objects.get_or_create(
+                user=user,
+                defaults={'business_name': f'{first} {last} Events'},
+            )
+            users[username] = user
 
-        # Customer accounts.
+        # Attendee accounts
+        att_group = Group.objects.get(name='Attendee')
         for username, email, first, last in CUSTOMERS:
-            customer, _ = User.objects.get_or_create(
+            customer, created = User.objects.get_or_create(
                 username=username,
                 defaults={'email': email, 'first_name': first, 'last_name': last},
             )
-            if customer.password == '' or not customer.has_usable_password():
+            customer.groups.add(att_group)
+            if created or customer.password == '' or not customer.has_usable_password():
                 customer.set_password('customer123')
                 customer.save(update_fields=['password'])
             users[username] = customer
 
+        # Organizations for approved and pending organizers
+        from account_manager.models import Organization
+        from django.utils import timezone as _tz
+        now = _tz.now()
+
+        org_approved, created = Organization.objects.get_or_create(
+            owner=users['demot'],
+            defaults={
+                'name': 'Apex Event Planners',
+                'status': 'approved',
+                'is_verified': True,
+                'submitted_at': now - timedelta(days=60),
+                'approved_at': now - timedelta(days=50),
+                'contact_number': '9876543210',
+                'email': 'apex@plannix.app',
+            },
+        )
+        if created:
+            self.stdout.write('  org: Apex Event Planners (approved) created')
+
+        org_pending, created = Organization.objects.get_or_create(
+            owner=users['Doe'],
+            defaults={
+                'name': 'Evergreen Events Studio',
+                'status': 'pending',
+                'submitted_at': now - timedelta(days=5),
+                'contact_number': '9876543211',
+                'email': 'evergreen@plannix.app',
+            },
+        )
+        if created:
+            self.stdout.write('  org: Evergreen Events Studio (pending) created')
+
         self.stdout.write(f'  users: {", ".join(users)}')
         return users
 
-    def _events(self):
-        """Remove legacy demo events, then upsert the 20 individual packages.
+    def _categories(self):
+        """Create EventCategories with slugs and sort_order."""
+        category_data = [
+            ('Birthday', 'birthday', 1),
+            ('Catering', 'catering', 2),
+            ('Corporate', 'corporate', 3),
+            ('DJ', 'dj', 4),
+            ('Wedding', 'wedding', 5),
+        ]
+        cats = {}
+        for name, slug, order in category_data:
+            cat, _ = EventCategory.objects.get_or_create(
+                name=name,
+                defaults={'slug': slug, 'sort_order': order},
+            )
+            cats[name] = cat
+        self.stdout.write(f'  categories: {", ".join(cats.keys())}')
+        return cats
 
-        Each event is upserted by its unique ``event_name`` and linked to
-        exactly one image from its category folder.
-        """
-        legacy = Event_Company.objects.filter(event_name__in=LEGACY_DEMO_EVENT_NAMES)
-        if legacy.exists():
-            self.stdout.write(f'  cleaned legacy demo events: {legacy.count()}')
-            legacy.delete()
-
+    def _events(self, users, categories):
+        """Upsert the 20 events with lifecycle states and ownership."""
+        now = timezone.now()
         created_count = 0
-        for spec in EVENTS:
-            event, created = Event_Company.objects.update_or_create(
-                event_name=spec['event_name'],
+        events_map = {}
+
+        for idx, spec in enumerate(EVENTS):
+            title = spec['title']
+            status = LIFECYCLE_MAP.get(title, 'live')
+            category = categories.get(spec['category'])
+
+            # Assign owner: alternate between organizer1 and organizer2
+            owner = users['organizer1'] if idx % 2 == 0 else users['organizer2']
+
+            # Build lifecycle timestamps based on status
+            submitted_at = now - timedelta(days=30) if status != 'draft' else None
+            approved_at = now - timedelta(days=20) if status in ('approved', 'published', 'live', 'completed') else None
+            publish_at = now - timedelta(days=10) if status in ('published', 'live', 'completed') else None
+
+            # Start/end dates vary by lifecycle state
+            if status == 'completed':
+                # Past event that already finished
+                start_at = now - timedelta(days=60)
+                end_at = now - timedelta(days=1)
+            elif status == 'cancelled':
+                # Was going to happen but got cancelled — past dates
+                start_at = now - timedelta(days=10)
+                end_at = now - timedelta(days=9)
+            elif status in ('draft', 'under_review', 'rejected'):
+                # Not yet scheduled — use placeholder future dates
+                start_at = now + timedelta(days=14 + idx)
+                end_at = start_at + timedelta(days=1)
+            else:
+                # approved, published, live — future event
+                start_at = now + timedelta(days=14 + idx)
+                end_at = start_at + timedelta(days=1)
+
+            rejection_reason = ''
+            if status == 'rejected':
+                rejection_reason = 'Event description needs more detail. Please revise and resubmit.'
+
+            event, created = Event.objects.update_or_create(
+                title=title,
                 defaults={
-                    'event_type': spec['event_type'],
-                    'event_price': spec['event_price'],
+                    'owner': owner,
+                    'category': category,
+                    'price': spec['price'],
                     'location': spec['location'],
-                    'event_description': spec['event_description'],
-                    'event_mobile_number': '9876543210',
-                    'package1': spec['packages'][0],
-                    'package2': spec['packages'][1],
-                    'package3': spec['packages'][2],
-                    'package4': spec['packages'][3],
+                    'description': spec['description'],
+                    'contact_number': '9876543210',
+                    'venue': spec['location'].split(',')[0] if ',' in spec['location'] else spec['location'],
+                    'status': status,
+                    'start_at': start_at,
+                    'end_at': end_at,
+                    'capacity': 100 + idx * 10,
+                    'submitted_at': submitted_at,
+                    'approved_at': approved_at,
+                    'publish_at': publish_at,
+                    'rejection_reason': rejection_reason,
+                    'is_active': True,
                 },
             )
-            self._attach_image(event, spec['event_type'], spec['image'])
+            events_map[title] = event
+            self._attach_image(event, spec['category'], spec['image'])
+            self._create_inclusions(event, spec['packages'])
             created_count += int(created)
+
         self.stdout.write(f'  events: {created_count} created, {len(EVENTS) - created_count} updated')
-        return list(Event_Company.objects.filter(event_name__in=[s['event_name'] for s in EVENTS]))
+        return events_map
 
     def _attach_image(self, event, category, source_name):
-        """Copy one image from event_images/<category>/ into media/events/ and link it.
-
-        Uses the source filename as-is (no renaming). Copies only when the
-        destination is missing or differs in size, so re-running the seed is
-        safe and never clobbers an uploaded file.
-        """
+        """Copy image from event_images/<category>/ into media/events/."""
         folder = EVENT_IMAGE_DIR / CATEGORY_FOLDER[category]
         source = folder / source_name
         if not source.exists():
-            raise FileNotFoundError(
-                f'Missing seed image: {source} (event "{event.event_name}")',
-            )
+            self.stdout.write(self.style.WARNING(
+                f'  skipping missing image: {source} (event "{event.title}")',
+            ))
+            return
         dest = settings.MEDIA_ROOT / 'events' / source_name
         dest.parent.mkdir(parents=True, exist_ok=True)
         if not dest.exists() or dest.stat().st_size != source.stat().st_size:
             shutil.copyfile(source, dest)
         rel = f'events/{source_name}'
-        if event.event_img != rel:
-            event.event_img = rel
-            event.save(update_fields=['event_img'])
+        if event.featured_image != rel:
+            event.featured_image = rel
+            event.save(update_fields=['featured_image'])
+
+    def _create_inclusions(self, event, packages):
+        """Create EventInclusion rows for an event."""
+        # Only create if none exist for this event yet
+        if event.inclusions.exists():
+            return
+        for i, name in enumerate(packages):
+            EventInclusion.objects.create(event=event, name=name, sort_order=i)
 
     def _bookings(self, users, events):
-        """Seed bookings only when none exist yet (never duplicates)."""
-        if Event_Booking.objects.exists():
-            self.stdout.write('  bookings: already seeded — skipped')
-            return
+        """Create demo bookings with event FK, attendee FK, snapshots.
 
-        def pick(event_type):
-            return next(e for e in events if e.event_type == event_type)
+        Re-runnable: purges orphaned legacy rows (created before the event FK
+        existed) so the demo reflects the current domain model, then creates
+        any scenario row that is missing for its (attendee, event) pair.
+        """
+        # Legacy rows from the pre-migration schema had no event FK — drop them.
+        orphans = EventBooking.objects.filter(event__isnull=True)
+        if orphans.exists():
+            self.stdout.write(f'  bookings: removed {orphans.count()} orphaned legacy rows (no event FK)')
+            orphans.delete()
 
         today = date.today()
-        # (customer, event_type, days_from_today, status)
-        scenarios = [
-            ('priya', 'Wedding', +45, 'confirmed'),
-            ('priya', 'Birthday', +20, 'pending'),
-            ('arjun', 'DJ', -30, 'completed'),
-            ('arjun', 'Wedding', +60, 'pending'),
-            ('meera', 'Corporate', +15, 'confirmed'),
-            ('meera', 'DJ', -12, 'completed'),
-            ('meera', 'Corporate', +90, 'pending'),
-            ('rahul', 'Birthday', +35, 'confirmed'),
-            ('rahul', 'Wedding', -8, 'completed'),
-            ('priya', 'Catering', +120, 'cancelled'),
-        ]
-        for username, event_type, delta, status in scenarios:
-            customer = users[username]
-            event = pick(event_type)
-            Event_Booking.objects.create(
-                user=customer,
+        created = 0
+        for username, event_title, delta, status in BOOKING_SCENARIOS:
+            if event_title not in events:
+                continue
+            customer = users.get(username)
+            event = events[event_title]
+            if not customer or not event:
+                continue
+            existing = EventBooking.objects.filter(
+                event=event, attendee=customer,
+            ).exists()
+            if existing:
+                continue
+            EventBooking.objects.create(
+                event=event,
+                attendee=customer,
                 name=f'{customer.first_name} {customer.last_name}'.strip() or customer.username,
                 email=customer.email,
                 number='9876543210',
-                event_company_name=event.event_name,
-                event_type=event.event_type,
-                event_price=event.event_price,
+                event_title=event.title,
+                price=event.price,
                 event_location=event.location,
-                event_mobile_number=event.event_mobile_number,
-                event_booking_date=(today + timedelta(days=delta)).isoformat(),
+                event_date=today + timedelta(days=delta),
                 status=status,
             )
-        self.stdout.write(f'  bookings: {len(scenarios)} created')
+            created += 1
+        self.stdout.write(f'  bookings: {created} created, {EventBooking.objects.count()} total')
 
-    def _feedback(self):
-        if Feedback.objects.exists():
-            self.stdout.write('  feedback: already seeded — skipped')
+    def _reviews(self, users, events):
+        """Create sample reviews for completed bookings."""
+        if Review.objects.exists():
+            self.stdout.write('  reviews: already seeded — skipped')
             return
-        for name, email, number, message in FEEDBACK:
-            Feedback.objects.create(name=name, email=email, number=number, message=message)
-        self.stdout.write(f'  feedback: {len(FEEDBACK)} created')
+
+        review_data = [
+            ('arjun', 'DJ Night Party', 5, 'Amazing DJ setup! The sound system was top-notch.'),
+            ('meera', 'Club DJ Experience', 4, 'Great night, professional team. Would recommend.'),
+            ('rahul', 'Royal Wedding', 5, 'Flawless wedding planning. Our families loved every moment.'),
+        ]
+
+        for username, event_title, rating, comment in review_data:
+            customer = users.get(username)
+            event = events.get(event_title)
+            if not customer or not event:
+                continue
+            booking = EventBooking.objects.filter(
+                event=event, attendee=customer, status='completed',
+            ).first()
+            Review.objects.create(
+                event=event,
+                attendee=customer,
+                booking=booking,
+                rating=rating,
+                comment=comment,
+                moderation_status='approved',
+            )
+        self.stdout.write(f'  reviews: {Review.objects.count()} total')
+
+    def _audit_logs(self, events, users):
+        """Create audit log entries reflecting each event's lifecycle path.
+
+        created_at is auto_now_add, so it cannot be set at insert time — we
+        backfill the historical timestamp via .update() afterwards so the
+        seeded logs read like a real lifecycle timeline.
+        """
+        if EventAuditLog.objects.exists():
+            self.stdout.write('  audit_logs: already seeded — skipped')
+            return
+
+        def log(event, actor, action, frm, to, when, reason=''):
+            entry = EventAuditLog.objects.create(
+                event=event, actor=actor, action=action,
+                from_status=frm, to_status=to, reason=reason,
+            )
+            if when is not None:
+                EventAuditLog.objects.filter(pk=entry.pk).update(created_at=when)
+            return entry
+
+        admin = users['admin']
+        now = timezone.now()
+        count = 0
+
+        for title, event in events.items():
+            status = event.status
+            # Every non-draft event was submitted
+            if status != 'draft' and event.submitted_at:
+                log(event, event.owner, 'submit', 'draft', 'under_review', event.submitted_at)
+                count += 1
+
+            # Rejected events also got a reject entry
+            if status == 'rejected':
+                when = event.submitted_at + timedelta(days=3) if event.submitted_at else now
+                log(event, admin, 'reject', 'under_review', 'rejected', when,
+                    event.rejection_reason or 'Needs more detail')
+                count += 1
+
+            # Approved or beyond got an approve entry
+            if status in ('approved', 'published', 'live', 'completed') and event.approved_at:
+                log(event, admin, 'approve', 'under_review', 'approved', event.approved_at)
+                count += 1
+
+            # Published or beyond got a publish entry
+            if status in ('published', 'live', 'completed') and event.publish_at:
+                log(event, admin, 'publish', 'approved', 'published', event.publish_at)
+                count += 1
+
+            # Live events got a go_live entry
+            if status in ('live', 'completed'):
+                when = event.publish_at + timedelta(days=5) if event.publish_at else now
+                log(event, admin, 'go_live', 'published', 'live', when)
+                count += 1
+
+            # Completed events got a complete entry
+            if status == 'completed':
+                log(event, None, 'complete', 'live', 'completed', event.end_at or now)
+                count += 1
+
+            # Cancelled events got a cancel entry
+            if status == 'cancelled':
+                when = event.start_at - timedelta(days=2) if event.start_at else now
+                log(event, admin, 'cancel', 'live', 'cancelled', when,
+                    'Organiser requested cancellation')
+                count += 1
+
+        self.stdout.write(f'  audit_logs: {count} created')

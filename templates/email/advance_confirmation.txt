@@ -1,0 +1,14 @@
+Dear {{ name }},
+
+Your advance payment has been received for the following booking:
+
+    Package / Event  : {{ event_title }}
+    Booking Reference: {{ booking_reference }}
+    Advance Paid     : Rs. {{ advance }}
+    Remaining Balance: Rs. {{ remaining }}
+
+Your booking is now secured. Thank you for choosing Plannix!
+
+Best Regards,
+Plannix Team
+{{ site_url }}

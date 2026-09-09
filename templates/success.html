@@ -8,18 +8,60 @@
 <section class="px-section d-flex align-items-center" style="min-height:100vh;">
   <div class="container px-container">
     <div class="px-card p-4 p-lg-5 text-center mx-auto reveal" style="max-width:560px;">
-      <div class="px-feature-icon mx-auto mb-4" style="width:88px;height:88px;font-size:2.2rem;background:linear-gradient(135deg,#10B981,#34D399);box-shadow:0 12px 28px rgba(16,185,129,.35);">
+      <div class="px-feature-icon mx-auto mb-4" style="width:88px;height:88px;font-size:2.2rem;background:var(--px-public-gold);box-shadow:0 12px 28px rgba(166,83,59,.35);">
         <i class="bi bi-check-lg"></i>
       </div>
       <span class="px-eyebrow">Booking received</span>
       <h2 class="px-section-title">You're all set!</h2>
       <p class="text-muted-px mb-4">Thank you for booking with Plannix. Your booking request has been received and a confirmation email is on its way. Our team will reach out shortly to confirm the details.</p>
 
-      <div class="px-card px-card-hover p-4 mb-4 text-start bg-soft-brand" style="border:1px solid rgba(109,94,247,.2);">
+      {% if booking %}
+      <div class="px-card p-4 mb-4 text-start" style="background:var(--px-public-cream);border:1px solid rgba(166,83,59,.2);">
+        <h3 class="h5 mb-3" style="color:var(--px-public-dark);">Your booking</h3>
+        <div class="pay-detail">
+          <span class="pay-label">Package / Event</span>
+          <span class="pay-value">{{ booking.event_title }}</span>
+        </div>
+        <div class="pay-detail">
+          <span class="pay-label">Provider</span>
+          <span class="pay-value">{{ provider_name }}</span>
+        </div>
+        {% if booking.booking_reference %}
+        <div class="pay-detail">
+          <span class="pay-label">Booking Reference</span>
+          <span class="pay-value">{{ booking.booking_reference }}</span>
+        </div>
+        {% endif %}
+        <div class="pay-detail">
+          <span class="pay-label">Requested Date</span>
+          <span class="pay-value">{{ booking.event_date }}</span>
+        </div>
+        <div class="pay-detail">
+          <span class="pay-label">Location</span>
+          <span class="pay-value">{{ booking.event_location }}</span>
+        </div>
+        <div class="pay-detail">
+          <span class="pay-label">Package Price</span>
+          <span class="pay-value">₹ {{ booking.price }}</span>
+        </div>
+      </div>
+
+      <div class="px-card px-card-hover p-4 mb-4 text-start" style="background:var(--px-public-cream);border:1px solid rgba(166,83,59,.2);">
+        <strong class="d-block mb-1" style="color:var(--px-public-dark);">For payment details, please contact the event organizer directly.</strong>
+        <small class="text-muted-px d-block mb-2">The organizer will confirm your booking and arrange payment with you.</small>
+        <div class="pay-detail">
+          <span class="pay-label">Organizer Contact</span>
+          {% if organizer_email %}<span class="pay-value">Email: {{ organizer_email }}</span>{% endif %}
+          {% if organizer_phone %}<span class="pay-value">Phone: {{ organizer_phone }}</span>{% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="px-card px-card-hover p-4 mb-4 text-start" style="background:var(--px-public-cream);border:1px solid rgba(166,83,59,.2);">
         <div class="d-flex align-items-center gap-3">
           <span class="pulse-dot"></span>
           <div>
-            <strong class="d-block" style="color:var(--px-dark);">What happens next?</strong>
+            <strong class="d-block" style="color:var(--px-public-dark);">What happens next?</strong>
             <small class="text-muted-px">We'll review your booking and confirm it within 24 hours. Track its status anytime from your dashboard.</small>
           </div>
         </div>
@@ -33,4 +75,12 @@
   </div>
 </section>
 
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .pay-detail { display:flex; flex-direction:column; padding:.5rem 0; border-bottom:1px solid var(--px-border,#eee); }
+  .pay-label { font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:var(--px-muted,#8a8a8a); }
+  .pay-value { font-weight:600; color:var(--px-dark,#1c1c1c); }
+</style>
 {% endblock %}

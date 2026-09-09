@@ -1,108 +1,209 @@
 {% extends "base.html" %}
-{% load static humanize %}
+{% load static humanize plannix_filters %}
 
-{% block title %}{{ event_detail.event_name }} — Plannix{% endblock %}
+{% block title %}{{ event_detail.title }} — Event package on Plannix{% endblock %}
 
 {% block content %}
 
+<!-- ============ Page hero ============ -->
 <section class="px-page-hero">
   <div class="container px-container">
-    <span class="px-eyebrow" style="background:rgba(255,255,255,.12);color:#C7BFFD;">{{ event_detail.event_type }}</span>
-    <h1>{{ event_detail.event_name }}</h1>
-    <p>{{ event_detail.location }} · ₹ {{ event_detail.event_price|intcomma }}</p>
+    <span class="px-eyebrow">{% if event_detail.category %}{{ event_detail.category.name }}{% else %}Event package{% endif %}</span>
+    <h1>{{ event_detail.title }}</h1>
+    <p class="mb-0">{{ event_detail.location }} · by {{ provider_name }}</p>
     <div class="px-breadcrumb">
       <a href="{% url 'index' %}">Home</a>
       <i class="bi bi-chevron-right"></i>
-      <a href="{% url 'events' %}">Events</a>
+      <a href="{% url 'events' %}">Discover</a>
       <i class="bi bi-chevron-right"></i>
-      <span>{{ event_detail.event_name }}</span>
+      <span>{{ event_detail.title }}</span>
     </div>
   </div>
 </section>
 
-<section class="px-section">
+<section class="px-section" style="padding-bottom:4rem;">
   <div class="container px-container">
     <div class="row g-5">
-      <!-- Event media -->
-      <div class="col-lg-6 reveal">
-        <div class="px-card overflow-hidden">
-          {% if event_detail.event_img %}
-            <img id="px-main-event-img" src="{{ event_detail.event_img.url }}" alt="{{ event_detail.event_name }}"
-                 style="width:100%;aspect-ratio:4/3;object-fit:cover;" loading="lazy">
+      <!-- ============ Main column ============ -->
+      <div class="col-lg-8">
+        <!-- Photo -->
+        <div class="px-detail-hero reveal">
+          {% if event_detail.featured_image %}
+            <img src="{{ event_detail.featured_image.url }}" alt="{{ event_detail.title }}" loading="lazy">
           {% else %}
-            <img id="px-main-event-img" src="{% static 'img/gallery1.jpg' %}" alt="{{ event_detail.event_name }}"
-                 style="width:100%;aspect-ratio:4/3;object-fit:cover;" loading="lazy">
+            <img src="{% static 'img/px-event-fallback.jpg' %}" alt="{{ event_detail.title }}" loading="lazy">
+          {% endif %}
+          <span class="detail-badge">{% if event_detail.category %}{{ event_detail.category.name }}{% endif %}</span>
+        </div>
+
+        <!-- At-a-glance -->
+        <div class="px-detail-info-grid mt-4 reveal">
+          <div class="px-detail-info-item">
+            <i class="bi bi-calendar2-heart" aria-hidden="true"></i>
+            <span class="info-label">Occasion</span>
+            <span class="info-value text-capitalize">{% if event_detail.category %}{{ event_detail.category.name }}{% else %}General{% endif %}</span>
+          </div>
+          <div class="px-detail-info-item">
+            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+            <span class="info-label">Location</span>
+            <span class="info-value">{{ event_detail.location }}</span>
+          </div>
+          <div class="px-detail-info-item">
+            <i class="bi bi-people" aria-hidden="true"></i>
+            <span class="info-label">Capacity</span>
+            <span class="info-value">{% if event_detail.capacity %}Up to {{ event_detail.capacity }}{% else %}Flexible{% endif %}</span>
+          </div>
+          <div class="px-detail-info-item">
+            <i class="bi bi-tag" aria-hidden="true"></i>
+            <span class="info-label">Package price</span>
+            <span class="info-value">₹ {{ event_detail.price|intcomma }}</span>
+          </div>
+        </div>
+
+        <!-- About -->
+        <div class="mt-5 reveal">
+          <h2 class="px-section-title" style="font-size:1.4rem;">About this package</h2>
+          <p class="text-muted-px" style="line-height:1.75;">{{ event_detail.description }}</p>
+          {% if event_detail.venue %}
+          <p class="text-muted-px small mb-0"><i class="bi bi-building me-1" aria-hidden="true"></i>Venue: {{ event_detail.venue }}</p>
           {% endif %}
         </div>
-        <div class="row g-3 mt-2">
-          <div class="col-4">
-            <div class="px-card px-card-hover p-3 text-center">
-              <i class="bi bi-geo-alt text-brand fs-4 d-block mb-1"></i>
-              <small class="text-muted-px">Location</small><br>
-              <strong class="small" style="color:var(--px-dark);">{{ event_detail.location }}</strong>
+
+        <!-- What's included -->
+        <div class="mt-5 reveal">
+          <h2 class="px-section-title" style="font-size:1.4rem;">What's included</h2>
+          {% if event_detail.inclusions.all %}
+          <div class="px-inclusion-list">
+            {% for inc in event_detail.inclusions.all %}
+            <div class="px-inclusion-item">
+              <span class="inclusion-icon"><i class="bi bi-check2" aria-hidden="true"></i></span>
+              <span>{{ inc.name }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="px-inclusion-list">
+            <div class="px-inclusion-item">
+              <span class="inclusion-icon"><i class="bi bi-chat-dots" aria-hidden="true"></i></span>
+              <span>Contact the provider for the full package contents.</span>
             </div>
           </div>
-          <div class="col-4">
-            <div class="px-card px-card-hover p-3 text-center">
-              <i class="bi bi-tag text-brand fs-4 d-block mb-1"></i>
-              <small class="text-muted-px">Starting at</small><br>
-              <strong class="small" style="color:var(--px-dark);">₹ {{ event_detail.event_price|intcomma }}</strong>
+          {% endif %}
+        </div>
+
+        <!-- Provider -->
+        <div class="mt-5 reveal">
+          <h2 class="px-section-title" style="font-size:1.4rem;">About the provider</h2>
+          <div class="px-organizer-info">
+            <span class="organizer-avatar d-flex align-items-center justify-content-center text-white font-display"
+                  style="background:rgba(166,83,59,.25);color:var(--px-public-gold-dark);font-weight:800;font-size:1.2rem;"
+                  aria-hidden="true">{{ event_detail.owner|avatar_initial }}</span>
+            <div>
+              <span class="organizer-name d-block">{{ provider_name }}
+                {% if organizer.is_verified %}<i class="bi bi-patch-check-fill" style="color:var(--px-public-gold);" title="Verified provider"></i>{% endif %}
+              </span>
+              <span class="organizer-label d-block">
+                {% if organizer.bio %}{{ organizer.bio|truncatechars:120 }}{% else %}Provider behind this package on Plannix.{% endif %}
+              </span>
             </div>
           </div>
-          <div class="col-4">
-            <div class="px-card px-card-hover p-3 text-center">
-              <i class="bi bi-calendar-event text-brand fs-4 d-block mb-1"></i>
-              <small class="text-muted-px">Event type</small><br>
-              <strong class="small text-capitalize" style="color:var(--px-dark);">{{ event_detail.event_type }}</strong>
+        </div>
+
+        <!-- Event Pulse -->
+        <div class="mt-5 reveal">
+          <h2 class="px-section-title" style="font-size:1.4rem;">Event pulse</h2>
+          <div class="px-pulse-card">
+            <div class="pulse-header">
+              <span class="pulse-icon"><i class="bi bi-activity" aria-hidden="true"></i></span>
+              <h4>Live performance indicators</h4>
+            </div>
+
+            <div class="pulse-stat">
+              <span class="stat-label"><i class="bi bi-heart-pulse me-1" aria-hidden="true"></i>Health</span>
+              <span class="stat-value">
+                {% if pulse.health == 'high_demand' %}High demand
+                {% elif pulse.health == 'cancellation_warning' %}Watching cancellations
+                {% elif pulse.health == 'low_traction' %}Newly listed
+                {% else %}Healthy demand{% endif %}
+              </span>
+            </div>
+
+            <div class="pulse-stat">
+              <span class="stat-label"><i class="bi bi-people me-1" aria-hidden="true"></i>Active bookings</span>
+              <span class="stat-value">
+                {{ pulse.active_registrations }}
+                {% if pulse.capacity %}/ {{ pulse.capacity }} capacity{% endif %}
+              </span>
+            </div>
+
+            <div class="pulse-stat">
+              <span class="stat-label"><i class="bi bi-calendar-check me-1" aria-hidden="true"></i>Bookings to date</span>
+              <span class="stat-value">{{ pulse.total_bookings }}</span>
+            </div>
+
+            <div class="pulse-stat">
+              <span class="stat-label"><i class="bi bi-speedometer2 me-1" aria-hidden="true"></i>Recent interest (7 days)</span>
+              <span class="stat-value">{{ pulse.recent_activity.count }}</span>
+            </div>
+
+            <div class="pulse-stat">
+              <span class="stat-label"><i class="bi bi-star me-1" aria-hidden="true"></i>Average rating</span>
+              <span class="stat-value">
+                {% if pulse.average_rating %}{{ pulse.average_rating|floatformat:1 }} / 5{% else %}No ratings yet{% endif %}
+              </span>
             </div>
           </div>
+        </div>
+
+        <!-- Reviews -->
+        <div class="mt-5 reveal">
+          <h2 class="px-section-title" style="font-size:1.4rem;">What people are saying</h2>
+          {% if reviews %}
+          <div class="row g-3">
+            {% for review in reviews %}
+            <div class="col-md-6">
+              <div class="px-review-card h-100">
+                <div class="review-stars" aria-label="{{ review.rating }} out of 5 stars">
+                  {% for _ in ""|ljust:review.rating %}<i class="bi bi-star-fill" aria-hidden="true"></i>{% endfor %}
+                </div>
+                {% if review.comment %}<p class="review-text">{{ review.comment }}</p>{% endif %}
+                <span class="review-author">{{ review.attendee|display_name }}
+                  <span aria-hidden="true"> · </span>{{ review.created_at|date:"M Y" }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="px-review-card" style="text-align:center;">
+            <i class="bi bi-chat-square-text text-muted" style="font-size:1.4rem;" aria-hidden="true"></i>
+            <p class="text-muted-px mb-0 mt-2">No reviews yet — be the first to book and share your experience.</p>
+          </div>
+          {% endif %}
         </div>
       </div>
 
-      <!-- Event details -->
-      <div class="col-lg-6 reveal reveal-delay-1">
-        <span class="px-eyebrow">Event Details</span>
-        <h2 class="px-section-title">{{ event_detail.event_name }}</h2>
-        <p class="text-muted-px">{{ event_detail.event_description }}</p>
+      <!-- ============ Booking sidebar ============ -->
+      <div class="col-lg-4">
+        <div class="px-booking-card sticky-lg-top reveal" style="top:1.5rem;">
+          <div class="booking-price-row">
+            <span class="text-muted-px small">Package price</span>
+            <span class="booking-price">₹ {{ event_detail.price|intcomma }}</span>
+          </div>
 
-        <h4 class="mt-4 mb-3" style="font-size:1.1rem;">What's included</h4>
-        <div class="d-flex flex-column gap-2">
-          <div class="d-flex align-items-center gap-3 px-card px-card-hover p-3">
-            <span class="px-feature-icon" style="width:42px;height:42px;font-size:1rem;margin:0;"><i class="bi bi-check2"></i></span>
-            <span>{{ event_detail.package1 }}</span>
-          </div>
-          <div class="d-flex align-items-center gap-3 px-card px-card-hover p-3">
-            <span class="px-feature-icon" style="width:42px;height:42px;font-size:1rem;margin:0;"><i class="bi bi-check2"></i></span>
-            <span>{{ event_detail.package2 }}</span>
-          </div>
-          <div class="d-flex align-items-center gap-3 px-card px-card-hover p-3">
-            <span class="px-feature-icon" style="width:42px;height:42px;font-size:1rem;margin:0;"><i class="bi bi-check2"></i></span>
-            <span>{{ event_detail.package3 }}</span>
-          </div>
-          <div class="d-flex align-items-center gap-3 px-card px-card-hover p-3">
-            <span class="px-feature-icon" style="width:42px;height:42px;font-size:1rem;margin:0;"><i class="bi bi-check2"></i></span>
-            <span>{{ event_detail.package4 }}</span>
+          <a class="btn-book-now" href="{% url 'selected_event' event_detail.id %}">
+            <i class="bi bi-calendar2-check" aria-hidden="true"></i> Request this package
+          </a>
+
+          <p class="booking-note"><i class="bi bi-info-circle" aria-hidden="true"></i>No payment is taken here — the provider confirms your booking request.</p>
+
+          <div class="mt-3 pt-3" style="border-top:1px solid var(--px-public-border-light);">
+            <p class="text-muted-px small mb-2"><i class="bi bi-building me-1" aria-hidden="true"></i>Provided by {{ provider_name }}</p>
+            <p class="text-muted-px mb-0" style="font-size:.85rem;">
+              <i class="bi bi-telephone me-1" aria-hidden="true"></i>Questions? Call
+              <strong style="color:var(--px-public-dark);">+91 {{ event_detail.contact_number }}</strong>
+            </p>
           </div>
         </div>
-
-        <div class="px-card p-4 mt-4 bg-soft-brand" style="border:1px solid rgba(109,94,247,.2);">
-          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div>
-              <div class="text-muted-px small">Package price</div>
-              <div class="event-price">₹ {{ event_detail.event_price|intcomma }}</div>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
-              <a class="btn btn-brand btn-lg" href="{% url 'selected_event' event_detail.id %}">
-                <i class="bi bi-calendar-check me-1"></i>Book This Event
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <p class="text-muted-px mt-3 mb-0" style="font-size:.88rem;">
-          <i class="bi bi-telephone me-2"></i>Questions? Call the vendor on
-          <strong>+91 {{ event_detail.event_mobile_number }}</strong>
-        </p>
       </div>
     </div>
   </div>

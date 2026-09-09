@@ -1,0 +1,12 @@
+Dear {{ username }},
+
+Welcome to Plannix!
+
+You have successfully created your Plannix account as a {{ role_label }}.
+Please keep this email for your records and do not forward or share it with anyone.
+
+You can now sign in and get started:
+{{ site_url }}
+
+Best Regards,
+Plannix Team

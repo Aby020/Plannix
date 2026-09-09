@@ -8,16 +8,14 @@ A modern full-stack **Django** web application for discovering event packages, b
 ![Django](https://img.shields.io/badge/Django-6.0-092E20?logo=django)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+![License](https://img.shields.io/badge/License-CC0%201.0-lightgrey)
 
 </div>
 
 ## 🎬 Demo
 
-Watch the full journey — browse, filter, book, and manage — in a few seconds:
-
 <p align="center">
-  <img src="screenshots/plannix-hoem_page.gif" alt="Plannix home page demo" width="100%">
+  <img src="screenshots/01-home.png" alt="Plannix home page" width="100%">
 </p>
 
 ---
@@ -84,50 +82,24 @@ Whether it's a grand wedding, a corporate summit, or a sunset beach proposal, Pl
 
 ## 📸 Screenshots
 
-### 🏠 Catalogue & Browsing
+### 🏠 Home & Discovery
 
-Browse the full catalogue, filter by event type, and learn about Plannix.
-
-**Event catalogue with the Birthday filter applied** — 4 packages, type pills, and keyword search:
+**Home page** — hero, featured categories, and trust signals:
 
 <p align="center">
-  <img src="screenshots/01-events-birthday.png" width="100%" alt="Event catalogue filtered by Birthday">
+  <img src="screenshots/01-home.png" width="100%" alt="Plannix home page">
 </p>
 
-**The complete catalogue** across all event types:
+**Discover packages** — browse the full catalogue with category filter:
 
 <p align="center">
-  <img src="screenshots/05-events-all.png" width="100%" alt="All event packages">
+  <img src="screenshots/04-discover-packages.png" width="100%" alt="Discover event packages">
 </p>
 
-**Our Mission section** — what Plannix stands for:
+**Package detail** — full event description, pricing, and inclusions:
 
 <p align="center">
-  <img src="screenshots/02-about-mission.png" width="100%" alt="Plannix mission section">
-</p>
-
-**The About page**, end to end:
-
-<p align="center">
-  <img src="screenshots/04-about-page.png" width="100%" alt="About Plannix page">
-</p>
-
----
-
-### 🛒 Booking Flow
-
-From a few clicks on the booking form to instant confirmation.
-
-**The booking form**, pre-filled for a signed-in customer:
-
-<p align="center">
-  <img src="screenshots/08-book-event.png" width="100%" alt="Event booking form">
-</p>
-
-**Booking confirmation** — instant feedback after submission:
-
-<p align="center">
-  <img src="screenshots/09-booking-success.png" width="100%" alt="Booking confirmation">
+  <img src="screenshots/05-package-detail.png" width="100%" alt="Package detail page">
 </p>
 
 ---
@@ -137,18 +109,32 @@ From a few clicks on the booking form to instant confirmation.
 Sign-in and sign-up with validation and a polished brand look:
 
 <p align="center">
-  <img src="screenshots/06-login.png" width="49%" alt="Sign in">
-  <img src="screenshots/07-register.png" width="49%" alt="Sign up">
+  <img src="screenshots/02-sign-in.png" width="49%" alt="Sign in">
+  <img src="screenshots/03-register.png" width="49%" alt="Sign up">
 </p>
 
 ---
 
-### 💬 Feedback
+### 🛒 Booking Flow
 
-Customers can share their experience through a clean form:
+From a few clicks on the booking form to instant confirmation.
+
+**The booking form**, pre-filled for a signed-in customer — no payment is taken at this step:
 
 <p align="center">
-  <img src="screenshots/03-feedback-form.png" width="100%" alt="Feedback form">
+  <img src="screenshots/06-booking-form.png" width="100%" alt="Event booking form">
+</p>
+
+**Booking confirmation** — instant feedback with organizer contact details:
+
+<p align="center">
+  <img src="screenshots/07-booking-confirmation.png" width="100%" alt="Booking confirmation">
+</p>
+
+**My Bookings** — customers track all their bookings in one place:
+
+<p align="center">
+  <img src="screenshots/08-my-bookings.png" width="100%" alt="My bookings">
 </p>
 
 ---
@@ -157,19 +143,13 @@ Customers can share their experience through a clean form:
 
 Each role gets its own operational view.
 
-**Customer dashboard** — upcoming bookings, spend, and recent activity:
+**Organizer dashboard** — revenue, pending bookings, and package stats:
 
 <p align="center">
-  <img src="screenshots/10-customer-dashboard.png" width="100%" alt="Customer dashboard">
+  <img src="screenshots/09-organizer-dashboard.png" width="100%" alt="Organizer dashboard">
 </p>
 
-**Staff dashboard** — the operational view staff use to keep the platform moving:
-
-<p align="center">
-  <img src="screenshots/11-staff-dashboard.png" width="100%" alt="Staff dashboard">
-</p>
-
-**Admin dashboard** — revenue, bookings, users, event types, and recent activity at a glance:
+**Admin dashboard** — revenue, bookings, users, and platform health at a glance:
 
 <p align="center">
   <img src="screenshots/12-admin-dashboard.png" width="100%" alt="Admin dashboard">
@@ -179,18 +159,24 @@ Each role gets its own operational view.
 
 ### 🗂️ Management Suite
 
-Moderate the platform — events and feedback, staffed by staff & admins.
+Organizers manage packages; admins approve organizations and moderate the platform.
 
-**Manage events** — add, edit, and remove packages:
+**Manage packages** — organizers add, edit, and remove their event packages:
 
 <p align="center">
-  <img src="screenshots/13-manage-events.png" width="100%" alt="Manage events">
+  <img src="screenshots/10-manage-packages.png" width="100%" alt="Manage packages">
 </p>
 
-**Manage feedback** — review and moderate customer feedback:
+**Organization status** — organizers view their approved organization details:
 
 <p align="center">
-  <img src="screenshots/14-manage-feedback.png" width="100%" alt="Manage feedback">
+  <img src="screenshots/11-organization-status.png" width="100%" alt="Organization status">
+</p>
+
+**Admin approval queue** — admins review and approve pending organizer organizations:
+
+<p align="center">
+  <img src="screenshots/13-admin-approval-queue.png" width="100%" alt="Admin approval queue">
 </p>
 
 ---
@@ -290,7 +276,7 @@ Plannix/
 │   └── css/style.css        # full design system
 ├── media/                   # Uploaded event images
 ├── event_images/            # Seed-source images by category
-├── screenshots/             # README screenshots & demo GIF
+├── screenshots/             # README screenshots
 ├── scripts/                 # Tooling (screenshot capture, etc.)
 │
 ├── manage.py
@@ -515,7 +501,7 @@ Planned enhancements for future releases:
 
 ## 📄 License
 
-This project is licensed under the MIT License. See the **LICENSE** file for details.
+This project is released under the **CC0 1.0 Universal** public-domain dedication. See the **LICENSE** file for details.
 
 ---
 

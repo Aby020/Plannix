@@ -1,9 +1,10 @@
 """Role-based access control helpers for Plannix.
 
 Roles are derived from Django Groups:
-    - ``admin``    -> full platform management (plus Django admin)
-    - ``staff``    -> operational management (events, bookings, feedback)
-    - ``customer`` -> regular registered users (default when no group is set)
+    - ``admin``     -> full platform management (superuser or Admin group)
+    - ``organizer`` -> event organizers (EventOrganizer group)
+    - ``attendee``  -> regular registered users (Attendee group or default)
+    - ``anonymous`` -> unauthenticated visitors
 
 Superusers are always treated as ``admin``.
 """
@@ -14,17 +15,17 @@ from django.shortcuts import redirect
 
 
 def get_role(user):
-    """Return ``'admin'``, ``'staff'``, ``'customer'`` or ``'anonymous'``."""
+    """Return 'admin', 'organizer', 'attendee' or 'anonymous'."""
     if not user.is_authenticated:
         return 'anonymous'
     if user.is_superuser:
         return 'admin'
     groups = set(user.groups.values_list('name', flat=True))
-    if 'admin' in groups:
+    if 'Admin' in groups:
         return 'admin'
-    if 'staff' in groups:
-        return 'staff'
-    return 'customer'
+    if 'EventOrganizer' in groups:
+        return 'organizer'
+    return 'attendee'
 
 
 def unauthenticated_user(view_func):
@@ -33,14 +34,76 @@ def unauthenticated_user(view_func):
     @wraps(view_func)
     def wrapper_func(request, *args, **kwargs):
         if request.user.is_authenticated:
+            return redirect('index')
+        return view_func(request, *args, **kwargs)
+
+    return wrapper_func
+
+
+def attendee_required(view_func):
+    """Require the user to be an authenticated attendee."""
+
+    @wraps(view_func)
+    def wrapper_func(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request, 'Please sign in to continue.')
+            return redirect('sign_in')
+        role = get_role(request.user)
+        if role not in ('attendee', 'organizer', 'admin'):
+            messages.error(request, 'You do not have permission to view that page.')
             return redirect('dashboard')
         return view_func(request, *args, **kwargs)
 
     return wrapper_func
 
 
+def organizer_required(view_func):
+    """Require the user to be an organizer or admin."""
+
+    @wraps(view_func)
+    def wrapper_func(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request, 'Please sign in to continue.')
+            return redirect('sign_in')
+        role = get_role(request.user)
+        if role not in ('organizer', 'admin'):
+            messages.error(request, 'You do not have permission to view that page.')
+            return redirect('dashboard')
+        return view_func(request, *args, **kwargs)
+
+    return wrapper_func
+
+
+def admin_required(view_func):
+    """Require the user to be an admin."""
+
+    @wraps(view_func)
+    def wrapper_func(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request, 'Please sign in to continue.')
+            return redirect('sign_in')
+        role = get_role(request.user)
+        if role != 'admin':
+            messages.error(request, 'You do not have permission to view that page.')
+            return redirect('dashboard')
+        return view_func(request, *args, **kwargs)
+
+    return wrapper_func
+
+
+# ---------------------------------------------------------------------------
+# Legacy aliases — kept temporarily until all usages are migrated
+# ---------------------------------------------------------------------------
+
+def admin_only(view_func):
+    return admin_required(view_func)
+
+
+def staff_or_admin(view_func):
+    return organizer_required(view_func)
+
+
 def allowed_roles(allowed_roles=()):
-    """Allow access only to users whose role is in ``allowed_roles``."""
     allowed = set(allowed_roles)
 
     def decorator(view_func):
@@ -55,13 +118,3 @@ def allowed_roles(allowed_roles=()):
         return wrapper_func
 
     return decorator
-
-
-def admin_only(view_func):
-    """Restrict a view to administrators only."""
-    return allowed_roles(['admin'])(view_func)
-
-
-def staff_or_admin(view_func):
-    """Restrict a view to staff members and administrators."""
-    return allowed_roles(['staff', 'admin'])(view_func)

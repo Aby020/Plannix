@@ -1,0 +1,82 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize %}
+
+{% block title %}Manage Categories — Plannix{% endblock %}
+{% block page_title %}Manage Categories{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="px-card p-4 reveal">
+      <h2 class="h5 mb-3" style="font-family:var(--px-font-display);color:var(--px-dark);">
+        <i class="bi bi-plus-circle text-brand me-2"></i>Add Category
+      </h2>
+      <form method="post" action="{% url 'manage_categories' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+        <div class="mb-3">
+          <label class="form-label" for="c_name">Name *</label>
+          <input type="text" class="form-control" id="c_name" name="name" required placeholder="e.g. Wedding">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="c_desc">Description</label>
+          <textarea class="form-control" id="c_desc" name="description" rows="3"
+                    placeholder="Optional short description"></textarea>
+        </div>
+        <button class="btn btn-brand" type="submit"><i class="bi bi-check2 me-1"></i>Create</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="px-card reveal">
+      <div class="p-4 pb-3">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-tags text-brand me-2"></i>Categories ({{ categories|length }})
+        </h2>
+      </div>
+      <div class="px-table border-0 rounded-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Events</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cat in categories %}
+              <tr>
+                <td><strong style="color:var(--px-dark);">{{ cat.name }}</strong></td>
+                <td class="text-muted-px">{{ cat.description|default:"—"|truncatechars:60 }}</td>
+                <td>{{ cat.events.count }}</td>
+                <td class="text-end">
+                  <form method="post" action="{% url 'manage_categories' %}" class="d-inline"
+                        data-confirm="Delete category '{{ cat.name }}'?">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="category_id" value="{{ cat.id }}">
+                    <button class="btn btn-ghost btn-sm text-danger" type="submit" title="Delete"
+                            style="border-color:rgba(239,68,68,.3);">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted-px py-3">No categories yet — add one on the left.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -17,10 +17,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Environment variable initialise
 env = environ.Env()
 
-# Reading .env file (values are loaded once at startup)
+# Reading .env file (values are loaded once at startup). overwrite=True makes
+# .env authoritative over any pre-set shell/CI env vars (e.g. a stale
+# EMAIL_HOST), so the config in .env is what actually applies.
 env_path = BASE_DIR / '.env'
-environ.Env.read_env(env_path)
-environ.Env.read_env()
+environ.Env.read_env(env_path, overwrite=True)
+environ.Env.read_env(overwrite=True)
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -30,6 +32,10 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
+
+# Cross-site request forgery — trusted origins must include the public scheme +
+# host (e.g. https://plannix.onrender.com). Set in .env for production.
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
 
 
 # Application definition
@@ -50,6 +56,10 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise serves static files in production (compressed + cached with
+    # far-future headers). Only enabled when USE_WHITENOISE=True and the
+    # package is installed; local dev leaves it off.
+    *(['whitenoise.middleware.WhiteNoiseMiddleware'] if env.bool('USE_WHITENOISE', default=False) else []),
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django_session_timeout.middleware.SessionTimeoutMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -82,13 +92,22 @@ WSGI_APPLICATION = 'Plannix.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+#
+# Locally the app uses SQLite (default). In production set DATABASE_URL to a
+# PostgreSQL connection string (e.g. the Neon pooler URL) and Django switches
+# to PostgreSQL automatically — no code change needed. Example:
+#   postgres://user:password@host:5432/plannix?sslmode=require
+if env('DATABASE_URL', default=''):
+    # Production (Neon/PostgreSQL): parse the connection string from env.
+    DATABASES = {'default': env.db('DATABASE_URL')}
+else:
+    # Local development: SQLite, unchanged.
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
 
 
 # Password validation
@@ -140,17 +159,63 @@ MEDIA_URL = 'media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# WhiteNoise storage backend for compressed, cache-busted static files in
+# production (requires the `whitenoise` package, only active with the flag).
+if env.bool('USE_WHITENOISE', default=False):
+    STORAGES = {
+        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        'staticfiles': {
+            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        },
+    }
+    WHITENOISE_AUTOREFRESH = env.bool('WHITENOISE_AUTOREFRESH', default=True)
+    WHITENOISE_MAX_AGE = 31536000  # 1 year for immutable hashed assets
+
+# Cloudinary media storage — optional, enabled via .env for production.
+# Requires `cloudinary` and `django-cloudinary-storage` (not installed locally;
+# this block only activates when USE_CLOUDINARY=True and the keys are set).
+if env.bool('USE_CLOUDINARY', default=False):
+    INSTALLED_APPS = INSTALLED_APPS + [
+        'cloudinary_storage',
+        'cloudinary',
+    ]
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME', default=''),
+        'API_KEY': env('CLOUDINARY_API_KEY', default=''),
+        'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 
 # E-mail configuration
 # The app password lives in .env; credentials are never committed.
-EMAIL_HOST = env('EMAIL_HOST')
-EMAIL_USE_TLS = env('EMAIL_USE_TLS')
-EMAIL_PORT = env('EMAIL_PORT')
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-SERVER_EMAIL = env('SERVER_EMAIL')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-# Console backend is used for local development — emails print to the terminal.
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Backend defaults to the console backend for local development (emails print
+# to the terminal). To send real mail, set EMAIL_BACKEND to the SMTP backend in
+# .env — e.g. django.core.mail.backends.smtp.EmailBackend for Gmail.
+EMAIL_BACKEND = env(
+    'EMAIL_BACKEND',
+    default='django.core.mail.backends.console.EmailBackend',
+)
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+SERVER_EMAIL = env('SERVER_EMAIL', default=EMAIL_HOST_USER)
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+# Default sender for all app emails; falls back to EMAIL_HOST_USER when unset.
+DEFAULT_FROM_EMAIL = env(
+    'DEFAULT_FROM_EMAIL',
+    default=EMAIL_HOST_USER or 'plannix@example.com',
+)
+
+
+# Advance payment (Razorpay) — keys come from env; empty in local dev means the
+# payment gateway is unavailable (the "Pay Advance" action stays hidden).
+RAZORPAY_KEY_ID = env('RAZORPAY_KEY_ID', default='')
+RAZORPAY_KEY_SECRET = env('RAZORPAY_KEY_SECRET', default='')
+# Percentage of the package price collected as the advance. Server-calculated
+# and never trusted from the browser.
+PAYMENT_ADVANCE_PERCENT = env.int('PAYMENT_ADVANCE_PERCENT', default=30)
 
 
 # Session timeout configuration (django-session-timeout)
@@ -159,19 +224,29 @@ SESSION_EXPIRE_AFTER_LAST_ACTIVITY = True
 SESSION_TIMEOUT_REDIRECT = 'sign_in'  # URL name to redirect to on session timeout
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Invalid session after browser is closed
 
-# HTTPS settings — enable these behind TLS in production
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-SECURE_SSL_REDIRECT = False
+# Session security hardening
+SESSION_COOKIE_HTTPONLY = True   # JavaScript cannot access session cookie
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF cross-site protection
+CSRF_COOKIE_HTTPONLY = True      # JavaScript cannot access CSRF cookie
+
+# HTTPS settings — enabled via .env behind TLS in production, off by default
+# so local development over HTTP keeps working unchanged.
+SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=False)
+CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=False)
+SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=False)
 
 # HSTS settings
-SECURE_HSTS_SECONDS = 31536000  # 1 YEAR
-SECURE_HSTS_PRELOAD = False
-SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=0)
+SECURE_HSTS_PRELOAD = env.bool('SECURE_HSTS_PRELOAD', default=False)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=False)
 
 # XSS & content-type protections
-SECURE_BROWSER_XSS_FILTER = False
-SECURE_CONTENT_TYPE_NOSNIFF = False
+SECURE_BROWSER_XSS_FILTER = env.bool('SECURE_BROWSER_XSS_FILTER', default=True)
+SECURE_CONTENT_TYPE_NOSNIFF = env.bool('SECURE_CONTENT_TYPE_NOSNIFF', default=True)
+
+# Connection keep-alive / request timeout guard for the mail backend (seconds).
+# Prevents a slow or unreachable SMTP server from hanging a booking request.
+EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=15)
 
 
 # Message tags mapped to Bootstrap 5 alert classes
@@ -202,8 +277,14 @@ JAZZMIN_SETTINGS = {
         'auth': 'fas fa-users-cog',
         'auth.User': 'fas fa-user',
         'auth.Group': 'fas fa-users',
-        'events.Event_Company': 'fas fa-calendar-check',
-        'events.Event_Booking': 'fas fa-ticket-alt',
+        'events.Event': 'fas fa-calendar-check',
+        'events.EventCategory': 'fas fa-tags',
+        'events.EventInclusion': 'fas fa-list-check',
+        'events.EventImage': 'fas fa-images',
+        'events.EventBooking': 'fas fa-ticket-alt',
+        'events.Review': 'fas fa-star',
+        'events.EventAuditLog': 'fas fa-clock-rotate-left',
+        'account_manager.OrganizerProfile': 'fas fa-id-badge',
         'themes.Feedback': 'fas fa-comment-dots',
     },
     'order_with_respect_to': ['events', 'themes', 'auth'],

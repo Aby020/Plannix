@@ -6,6 +6,11 @@
 (function () {
   "use strict";
 
+  // Mark JS as active so CSS only hides .reveal content when JS is confirmed
+  // running. Content stays visible by default — no blank "stuck loading" pages
+  // if this script (or an IntersectionObserver) ever fails to run.
+  document.documentElement.classList.add("js-ready");
+
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- Scroll reveal ---------- */
@@ -181,11 +186,22 @@
     });
   }
 
-  /* ---------- Confirm helper (for destructive actions) ---------- */
+  /* ---------- Confirm helper (for destructive actions & POST forms) ---------- */
   function initConfirmLinks() {
-    document.querySelectorAll("[data-confirm]").forEach(function (link) {
+    // Anchor links
+    document.querySelectorAll("a[data-confirm]").forEach(function (link) {
       link.addEventListener("click", function (e) {
         var msg = link.getAttribute("data-confirm") || "Are you sure you want to do this?";
+        if (!window.confirm(msg)) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+    });
+    // POST forms (e.g. sign-out) — block submission until confirmed
+    document.querySelectorAll("form[data-confirm]").forEach(function (form) {
+      form.addEventListener("submit", function (e) {
+        var msg = form.getAttribute("data-confirm") || "Are you sure you want to do this?";
         if (!window.confirm(msg)) {
           e.preventDefault();
           e.stopPropagation();
@@ -200,6 +216,38 @@
       form.addEventListener("submit", function () {
         var invalid = form.querySelector(".is-invalid");
         if (invalid) invalid.focus();
+      });
+    });
+  }
+
+  /* ---------- Duplicate-submit guard ----------
+     Disables the submit button on first submit so rapid double-clicks cannot
+     fire two requests (e.g. duplicate bookings). HTML5 native validation
+     blocks the submit event for invalid forms, so the guard only engages once
+     a form is actually valid and submitting — invalid submissions never look
+     stuck. Server-side guards remain authoritative.
+
+     Safety net: if the browser does not navigate away within REENABLE_MS
+     (e.g. the request failed before a response, so the page stayed put), the
+     button is re-enabled so the user can retry instead of being left with a
+     permanently disabled button. On a normal submit the page navigates and
+     this timer is discarded with it. Duplicate bookings are still impossible
+     server-side (create_booking enforces one active booking per event). */
+  function initSubmitGuard() {
+    var REENABLE_MS = 15000;
+    document.querySelectorAll("form[data-submit-guard]").forEach(function (form) {
+      form.addEventListener("submit", function () {
+        var btn = form.querySelector('button[type="submit"]');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+        btn.classList.add("is-loading");
+        // Re-enable if the page never navigated (failed/aborted request).
+        setTimeout(function () {
+          if (btn.disabled) {
+            btn.disabled = false;
+            btn.classList.remove("is-loading");
+          }
+        }, REENABLE_MS);
       });
     });
   }
@@ -226,6 +274,7 @@
     initSidebar();
     initConfirmLinks();
     initFormFocus();
+    initSubmitGuard();
     initActiveNav();
 
     // Expose a small API for inline scripts (e.g. form handlers)

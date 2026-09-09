@@ -213,3 +213,9 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+# Media policy: media/ and event_images/ are intentionally tracked so the
+# demo catalogue ships with its imagery out-of-the-box (seed_demo copies from
+# event_images/ into media/). Revisit before production (see media strategy
+# in the architecture checkpoint) — move uploads to object storage / Render
+# disk and stop tracking media/ at that point.
+media/

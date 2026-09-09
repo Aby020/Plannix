@@ -1,5 +1,5 @@
 {% extends "dashboard_base.html" %}
-{% load static humanize %}
+{% load static humanize plannix_filters %}
 
 {% block title %}Manage Users — Plannix{% endblock %}
 {% block page_title %}Manage Users{% endblock %}
@@ -31,12 +31,12 @@
                 <div class="d-flex align-items-center gap-3">
                   <span class="table-avatar d-inline-flex align-items-center justify-content-center text-uppercase"
                         style="border-radius:50%;font-weight:700;">
-                    {{ user.username|first }}
+                    {{ user|avatar_initial }}
                   </span>
                   <div class="min-w-0">
-                    <strong class="d-block text-truncate" style="color:var(--px-dark);">{{ user.username }}</strong>
+                    <strong class="d-block text-truncate" style="color:var(--px-dark);">{{ user|display_name }}</strong>
                     <small class="text-muted-px">
-                      {% if user.get_full_name %}{{ user.get_full_name }} · {% endif %}{{ user.email|default:"no email" }}
+                      @{{ user.username }} · {{ user.email|default:"no email" }}
                     </small>
                   </div>
                 </div>
@@ -53,7 +53,7 @@
               <td class="text-end">
                 <div class="d-inline-flex gap-2">
                   <form method="post" action="{% url 'toggle_user_active' user.id %}" class="d-inline"
-                        data-confirm="{% if user.is_active %}Deactivate{% else %}Activate{% endif %} {{ user.username }}?">
+                        data-confirm="{% if user.is_active %}Deactivate{% else %}Activate{% endif %} {{ user|display_name }}?">
                     {% csrf_token %}
                     <button class="btn btn-ghost btn-sm" type="submit" title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %}">
                       <i class="bi {% if user.is_active %}bi-person-x{% else %}bi-person-check{% endif %} me-1"></i>
@@ -61,7 +61,7 @@
                     </button>
                   </form>
                   <form method="post" action="{% url 'delete_user' user.id %}" class="d-inline"
-                        data-confirm="Delete {{ user.username }} and all their data? This cannot be undone.">
+                        data-confirm="Delete {{ user|display_name }} and all their data? This cannot be undone.">
                     {% csrf_token %}
                     <button class="btn btn-ghost btn-sm text-danger" type="submit" title="Delete"
                             style="border-color:rgba(239,68,68,.3);">

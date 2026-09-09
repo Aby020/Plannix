@@ -1,347 +1,199 @@
 {% extends "base.html" %}
 {% load static humanize plannix_filters %}
 
-{% block title %}Plannix — Premium Event Planning &amp; Management{% endblock %}
+{% block title %}Plannix — Find the perfect event package for your occasion{% endblock %}
 
 {% block content %}
 
-<!-- ============ Hero ============ -->
-<section class="px-hero">
+<!-- ============ Hero : discovery ============ -->
+<section class="px-hero" aria-label="Event package discovery">
   <div class="container px-container">
     <div class="px-hero-grid">
       <div class="px-hero-copy">
-        <span class="px-hero-badge"><i class="bi bi-stars"></i> Premium event planning platform</span>
-        <h1>Plan it. Live it. <span class="display-gradient">Remember it forever.</span></h1>
-        <p class="lead-px">Discover events you love, book in seconds, and manage every detail from one beautiful dashboard. Plannix handles the magic — you make the memories.</p>
+        <span class="px-hero-badge"><i class="bi bi-calendar-heart"></i> Event package discovery &amp; booking</span>
+        <h1>What are you planning?</h1>
+        <p class="lead-px">From birthdays and weddings to corporate events — discover packages, compare providers, and book the right services for your occasion.</p>
 
-        <form class="px-hero-search" method="post" action="{% url 'searching_events' %}">
+        <!-- Keyword discovery form (backend keyword search) -->
+        <form class="px-discovery-search" method="post" action="{% url 'searching_events' %}" role="search">
           {% csrf_token %}
-          <div class="input-group">
-            <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
-            <input class="form-control border-0" type="text" name="search_query" required
-                   placeholder="Search your event — wedding, birthday, corporate…"
-                   aria-label="Search events">
-            <button class="btn btn-brand" type="submit">Search</button>
-          </div>
+          <span class="search-icon" aria-hidden="true"><i class="bi bi-search"></i></span>
+          <label for="hero-search" class="visually-hidden">Search event packages</label>
+          <input type="text" id="hero-search" name="search_query" required
+                 placeholder="Search packages — wedding, birthday, corporate…"
+                 autocomplete="off">
+          <button class="search-btn" type="submit">Search Packages</button>
         </form>
 
-        <div class="px-hero-actions">
-          <a class="btn btn-brand btn-lg" href="{% url 'events' %}"><i class="bi bi-calendar-heart"></i>Browse Events</a>
-          <a class="btn btn-outline-light-px btn-lg" href="{% url 'about' %}">How it works</a>
+        <!-- Occasion quick links (backend category filter) -->
+        {% if categories %}
+        <div class="px-hero-actions px-hero-actions--wrap">
+          <div class="px-filter px-filter--hero">
+            {% for category in categories %}
+            <a class="filter-pill" href="{% url 'events' %}?category={{ category.slug }}">{{ category.name }}</a>
+            {% endfor %}
+            <a class="filter-pill" href="{% url 'events' %}">All packages</a>
+          </div>
         </div>
+        {% endif %}
 
+        <!-- Real stats, computed from the platform -->
         <div class="px-hero-stats">
           <div class="stat">
             <div class="stat-value" data-counter="{{ total_events }}">{{ total_events|intcomma }}</div>
-            <div class="stat-label">Events Listed</div>
+            <div class="stat-label">Live packages</div>
           </div>
           <div class="stat">
             <div class="stat-value" data-counter="{{ total_bookings }}">{{ total_bookings|intcomma }}</div>
-            <div class="stat-label">Bookings Made</div>
+            <div class="stat-label">Bookings made</div>
           </div>
           <div class="stat">
             <div class="stat-value" data-counter="{{ happy_customers }}">{{ happy_customers|intcomma }}</div>
-            <div class="stat-label">Happy Clients</div>
+            <div class="stat-label">People planning</div>
           </div>
         </div>
       </div>
 
       <div class="px-hero-visual reveal">
         <div class="px-hero-card">
-          <h3><i class="bi bi-check-circle-fill text-brand me-2"></i>Everything planned, in one place</h3>
-          <div class="list-item">
-            <span class="list-icon"><i class="bi bi-calendar-check"></i></span>
-            <div>
-              <strong>Live event catalogue</strong><br>
-              <small>Fresh events, updated in real time</small>
-            </div>
-          </div>
-          <div class="list-item">
-            <span class="list-icon"><i class="bi bi-lightning-charge"></i></span>
-            <div>
-              <strong>Instant booking</strong><br>
-              <small>Confirm in seconds, manage anytime</small>
-            </div>
-          </div>
-          <div class="list-item">
-            <span class="list-icon"><i class="bi bi-people"></i></span>
-            <div>
-              <strong>Role-based dashboards</strong><br>
-              <small>For customers, staff and admins</small>
-            </div>
-          </div>
-          <div class="list-item">
-            <span class="list-icon"><i class="bi bi-shield-check"></i></span>
-            <div>
-              <strong>Trusted vendors</strong><br>
-              <small>Quality partners, verified services</small>
-            </div>
+          <img src="{% static 'img/px-hero.jpg' %}" alt="A beautifully arranged celebration table" class="img-fluid rounded-px-lg"
+               style="aspect-ratio:4/5;object-fit:cover;width:100%;" loading="lazy">
+          <div class="pt-3">
+            <strong class="font-display text-white" style="font-size:1.05rem;">Your occasion, our packages.</strong><br>
+            <small style="color:rgba(255,255,255,.6);">Compare offerings from trusted providers, then book with confidence.</small>
           </div>
         </div>
         <div class="px-hero-float one">
           <span class="float-icon"><i class="bi bi-check-lg"></i></span>
-          Booking confirmed
+          Booking requested
         </div>
         <div class="px-hero-float two">
-          <span class="float-icon"><i class="bi bi-star-fill" style="background:var(--px-warning-bg);color:var(--px-warning);"></i></span>
-          4.9 · client rating
+          <span class="float-icon"><i class="bi bi-arrow-left-right" style="background:rgba(166,83,59,.12);color:var(--px-public-gold);"></i></span>
+          Compare packages
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ About ============ -->
-<section class="px-section">
+<!-- ============ Occasions : browse ============ -->
+<section class="px-public-section" aria-labelledby="occasions-title">
   <div class="container px-container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-6 reveal">
-        <div class="position-relative">
-          <img src="{% static 'img/about.jpg' %}" alt="A beautifully arranged event" class="img-fluid rounded-px-lg shadow-brand" style="aspect-ratio:4/3;object-fit:cover;width:100%;">
-          <div class="px-hero-float two" style="left:1rem;bottom:1rem;animation:none;">
-            <span class="float-icon"><i class="bi bi-calendar-heart"></i></span>
-            Since 2024 · {# real events live here #}{{ total_events }} events
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-6 reveal reveal-delay-1">
-        <span class="px-eyebrow">About Plannix</span>
-        <h2 class="px-section-title">Welcome to <span class="display-gradient">Plannix</span></h2>
-        <p class="px-section-sub">Plannix is your all-in-one event planning and management platform, built to make planning simple, fast and stress-free. From weddings to corporate summits, we connect you with trusted services to create unforgettable experiences.</p>
-        <p class="mt-3 text-muted-px">We believe every event deserves precision, creativity and flawless execution. Book, manage and enjoy your events with confidence — only with Plannix.</p>
-        <div class="row gy-2 gx-4 mt-4">
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Easy online booking &amp; scheduling</p>
-          </div>
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Event tracking &amp; management tools</p>
-          </div>
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Secure confirmations &amp; updates</p>
-          </div>
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Support throughout the event lifecycle</p>
-          </div>
-        </div>
-        <a class="btn btn-brand mt-4" href="{% url 'events' %}">Explore Events <i class="bi bi-arrow-right ms-1"></i></a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ Event Types ============ -->
-<section class="px-section" style="background:var(--px-white);">
-  <div class="container px-container">
-    <div class="text-center mb-5 reveal">
-      <span class="px-eyebrow">Event Categories</span>
-      <h2 class="px-section-title">Find your perfect event</h2>
-      <p class="px-section-sub mx-auto">From intimate celebrations to grand corporate affairs — explore every kind of event, planned to perfection.</p>
+    <div class="section-header text-center reveal">
+      <span class="px-eyebrow">Browse by occasion</span>
+      <h2 id="occasions-title" class="px-section-title">Find the right event for your occasion</h2>
+      <p class="px-section-sub mx-auto">Every occasion has a package to match. Pick yours to see curated offerings from providers.</p>
     </div>
 
-    {% if event_types %}
-      <div class="row g-4 reveal-stagger">
-        {% for etype in event_types %}
-        <div class="col-lg-3 col-sm-6">
-          <a href="{% url 'events' %}?type={{ etype|urlencode }}" class="d-block h-100 text-decoration-none">
-            <div class="px-feature">
-              <div class="px-feature-icon"><i class="bi bi-calendar2-heart"></i></div>
-              <h3 class="text-capitalize">{{ etype }}</h3>
-              <p>{{ type_counts|get_item:etype|default:0 }} event{{ type_counts|get_item:etype|default:0|pluralize }}</p>
-            </div>
-          </a>
-        </div>
+    {% if categories %}
+      <div class="px-occasion-grid reveal-stagger">
+        {% for category in categories %}
+        <a class="px-occasion-card" href="{% url 'events' %}?category={{ category.slug }}">
+          <img src="{% static occasion_images|get_item:category.slug %}" alt="{{ category.name }} event services" loading="lazy">
+          <span class="occasion-arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+          <div class="occasion-content">
+            <span class="occasion-name">{{ category.name }}</span>
+            <span class="occasion-count">{{ type_counts|get_item:category.name|default:0 }} live package{{ type_counts|get_item:category.name|default:0|pluralize }}</span>
+          </div>
+        </a>
         {% endfor %}
       </div>
     {% else %}
       <div class="px-empty px-card">
         <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
-        <h4>Events coming soon</h4>
-        <p>Our team is curating an amazing collection of events. Check back shortly!</p>
+        <h4>Occasions coming soon</h4>
+        <p>Our team is curating a collection of occasion packages. Check back shortly!</p>
       </div>
     {% endif %}
   </div>
 </section>
 
-<!-- ============ Process ============ -->
-<section class="px-section">
+<!-- ============ Featured packages ============ -->
+<section class="px-public-section" style="background:var(--px-white);" aria-labelledby="featured-title">
   <div class="container px-container">
-    <div class="text-center mb-5 reveal">
-      <span class="px-eyebrow">How it works</span>
-      <h2 class="px-section-title">Get planned in 3 easy steps</h2>
-    </div>
-    <div class="row g-4">
-      <div class="col-lg-4 reveal">
-        <div class="px-card px-card-hover p-4 text-center h-100">
-          <div class="px-feature-icon mx-auto" style="width:72px;height:72px;font-size:1.6rem;"><span>1</span></div>
-          <h3 class="mt-3">Choose an event</h3>
-          <p class="mb-0 text-muted-px">Browse our curated catalogue and pick the event that fits your moment.</p>
-        </div>
-      </div>
-      <div class="col-lg-4 reveal reveal-delay-1">
-        <div class="px-card px-card-hover p-4 text-center h-100">
-          <div class="px-feature-icon mx-auto" style="width:72px;height:72px;font-size:1.6rem;"><span>2</span></div>
-          <h3 class="mt-3">Book instantly</h3>
-          <p class="mb-0 text-muted-px">Fill in your details, pick a date, and confirm your booking in seconds.</p>
-        </div>
-      </div>
-      <div class="col-lg-4 reveal reveal-delay-2">
-        <div class="px-card px-card-hover p-4 text-center h-100">
-          <div class="px-feature-icon mx-auto" style="width:72px;height:72px;font-size:1.6rem;"><span>3</span></div>
-          <h3 class="mt-3">Enjoy the moment</h3>
-          <p class="mb-0 text-muted-px">Relax and enjoy your event — Plannix handles everything behind the scenes.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ Popular Events ============ -->
-<section class="px-section" style="background:var(--px-white);">
-  <div class="container px-container">
-    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-5 reveal">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4 reveal">
       <div>
-        <span class="px-eyebrow">Featured</span>
-        <h2 class="px-section-title mb-0">Popular events right now</h2>
+        <span class="px-eyebrow">Featured packages</span>
+        <h2 id="featured-title" class="px-section-title mb-0" style="font-size:clamp(1.5rem,2.8vw,2rem);">Popular packages right now</h2>
+        <p class="px-section-sub" style="max-width:520px;">A hand-picked selection of live packages our providers are offering.</p>
       </div>
-      <a class="btn btn-ghost" href="{% url 'events' %}">View all <i class="bi bi-arrow-right ms-1"></i></a>
+      <a class="btn btn-outline-brand" href="{% url 'events' %}">View all packages <i class="bi bi-arrow-right ms-1"></i></a>
     </div>
 
     {% if featured_events %}
       <div class="row g-4 reveal-stagger">
         {% for event in featured_events %}
-        <div class="col-lg-4 col-md-6">
-          <article class="px-card event-card h-100 d-flex flex-column">
-            <div class="event-media">
-              {% if event.event_img %}
-                <img src="{{ event.event_img.url }}" alt="{{ event.event_name }}" loading="lazy">
-              {% else %}
-                <img src="{% static 'img/gallery1.jpg' %}" alt="{{ event.event_name }}" loading="lazy">
-              {% endif %}
-              <span class="event-badge">{{ event.event_type }}</span>
-            </div>
-            <div class="event-body d-flex flex-column flex-grow-1">
-              <h3 class="event-title">{{ event.event_name }}</h3>
-              <p class="text-muted-px mb-1" style="font-size:.9rem;">{{ event.event_description|truncatechars:110 }}</p>
-              <div class="event-meta">
-                <span><i class="bi bi-geo-alt"></i>{{ event.location }}</span>
-                <span><i class="bi bi-people"></i>{{ event.package1 }}</span>
-              </div>
-              <div class="d-flex align-items-center justify-content-between mt-3 pt-3 border-top mt-auto">
-                <span class="event-price">₹ {{ event.event_price|intcomma }}</span>
-                <a class="btn btn-soft btn-sm" href="{% url 'readmore' event.id %}">View Details</a>
-              </div>
-            </div>
-          </article>
-        </div>
+          {% include "partials/event-package-card.html" %}
         {% endfor %}
       </div>
     {% else %}
       <div class="px-empty px-card">
         <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
-        <h4>No featured events yet</h4>
-        <p>Once events are listed they'll appear right here.</p>
-        {% if user_role == 'staff' or user_role == 'admin' %}
-          <a class="btn btn-brand" href="{% url 'manage_events' %}">Add an event</a>
+        <h4>No packages listed yet</h4>
+        <p>Once providers publish live packages they'll appear right here.</p>
+        {% if user_role == 'organizer' or user_role == 'admin' %}
+          <a class="btn btn-brand" href="{% url 'manage_events' %}">Add a package</a>
         {% endif %}
       </div>
     {% endif %}
   </div>
 </section>
 
-<!-- ============ Testimonials ============ -->
-<section class="px-section">
+<!-- ============ How it works ============ -->
+<section class="px-public-section" aria-labelledby="how-title">
   <div class="container px-container">
-    <div class="text-center mb-5 reveal">
-      <span class="px-eyebrow">Testimonials</span>
-      <h2 class="px-section-title">Our clients say it best</h2>
+    <div class="text-center section-header reveal">
+      <span class="px-eyebrow">How it works</span>
+      <h2 id="how-title" class="px-section-title">Plan your occasion in three steps</h2>
+      <p class="px-section-sub mx-auto">From inspiration to booking — a simple path to the right package.</p>
     </div>
     <div class="row g-4">
-      <div class="col-lg-3 col-md-6 reveal">
-        <div class="px-card p-4 h-100">
-          <div class="text-brand mb-2">★★★★★</div>
-          <p class="text-muted-px">Plannix made our event planning completely stress-free. From booking to execution, everything was smooth and well-organised.</p>
-          <div class="d-flex align-items-center gap-3 mt-3">
-            <span class="avatar avatar-lg" style="background:var(--px-gradient);">C</span>
-            <div>
-              <strong class="d-block" style="color:var(--px-dark);">Catharine</strong>
-              <small class="text-muted-px">Corporate Client</small>
-            </div>
-          </div>
+      <div class="col-md-4 reveal">
+        <div class="px-process-step">
+          <div class="step-number">1</div>
+          <h3>Pick your occasion</h3>
+          <p>Choose the celebration you're planning — wedding, birthday, corporate, or something else.</p>
         </div>
       </div>
-      <div class="col-lg-3 col-md-6 reveal reveal-delay-1">
-        <div class="px-card p-4 h-100">
-          <div class="text-brand mb-2">★★★★★</div>
-          <p class="text-muted-px">Excellent service and great coordination. The team ensured every detail was handled perfectly for our wedding. Truly impressed!</p>
-          <div class="d-flex align-items-center gap-3 mt-3">
-            <span class="avatar avatar-lg" style="background:linear-gradient(135deg,#10B981,#34D399);">M</span>
-            <div>
-              <strong class="d-block" style="color:var(--px-dark);">Micheal</strong>
-              <small class="text-muted-px">Wedding Client</small>
-            </div>
-          </div>
+      <div class="col-md-4 reveal reveal-delay-1">
+        <div class="px-process-step">
+          <div class="step-number">2</div>
+          <h3>Compare packages</h3>
+          <p>Browse offerings from providers, compare price, inclusions and capacity to find your match.</p>
         </div>
       </div>
-      <div class="col-lg-3 col-md-6 reveal reveal-delay-2">
-        <div class="px-card p-4 h-100">
-          <div class="text-brand mb-2">★★★★★</div>
-          <p class="text-muted-px">User-friendly platform and reliable vendors. Plannix saved us a lot of time and effort. Will definitely use it again.</p>
-          <div class="d-flex align-items-center gap-3 mt-3">
-            <span class="avatar avatar-lg" style="background:linear-gradient(135deg,#F59E0B,#FBBF24);">R</span>
-            <div>
-              <strong class="d-block" style="color:var(--px-dark);">Rohit K</strong>
-              <small class="text-muted-px">Event Organizer</small>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6 reveal reveal-delay-3">
-        <div class="px-card p-4 h-100">
-          <div class="text-brand mb-2">★★★★★</div>
-          <p class="text-muted-px">From start to finish, Plannix delivered a flawless experience. Booking was easy and support was always available.</p>
-          <div class="d-flex align-items-center gap-3 mt-3">
-            <span class="avatar avatar-lg" style="background:linear-gradient(135deg,#3B82F6,#60A5FA);">S</span>
-            <div>
-              <strong class="d-block" style="color:var(--px-dark);">Sneha M</strong>
-              <small class="text-muted-px">Birthday Client</small>
-            </div>
-          </div>
+      <div class="col-md-4 reveal reveal-delay-2">
+        <div class="px-process-step">
+          <div class="step-number">3</div>
+          <h3>Request your booking</h3>
+          <p>Send a booking request with your date and details. Providers confirm directly.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ CTA ============ -->
-<section class="px-section">
-  <div class="container px-container">
-    <div class="px-card overflow-hidden reveal">
-      <div class="row g-0 align-items-center">
-        <div class="col-lg-7 p-4 p-lg-5">
-          <span class="px-eyebrow">Ready when you are</span>
-          <h2 class="px-section-title mb-2">Your next great event starts here</h2>
-          <p class="text-muted-px mb-4">Join Plannix today and plan, book and manage your events — all in one place.</p>
-          <div class="d-flex flex-wrap gap-3">
-            {% if user.is_authenticated %}
-              <a class="btn btn-brand btn-lg" href="{% url 'dashboard' %}">Go to Dashboard</a>
-              <a class="btn btn-ghost btn-lg" href="{% url 'events' %}">Browse Events</a>
-            {% else %}
-              <a class="btn btn-brand btn-lg" href="{% url 'sign_up' %}">Create Free Account</a>
-              <a class="btn btn-ghost btn-lg" href="{% url 'events' %}">Browse Events</a>
-            {% endif %}
-          </div>
+<!-- ============ Closing CTA ============ -->
+<section class="px-public-cta" aria-labelledby="cta-title">
+  <div class="container px-container position-relative">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <span class="px-eyebrow" style="background:rgba(166,83,59,.15);color:var(--px-public-gold-light);">Ready to plan</span>
+        <h2 id="cta-title">Your next great occasion starts here</h2>
+        <p>Browse live packages, compare providers, and book the services your celebration deserves.</p>
+        <div class="d-flex flex-wrap gap-3">
+          {% if user.is_authenticated %}
+            <a class="btn btn-brand btn-lg" href="{% url 'dashboard' %}">Go to Dashboard</a>
+            <a class="btn btn-outline-light-px btn-lg" href="{% url 'events' %}">Browse Packages</a>
+          {% else %}
+            <a class="btn btn-brand btn-lg" href="{% url 'sign_up' %}">Create Free Account</a>
+            <a class="btn btn-outline-light-px btn-lg" href="{% url 'events' %}">Browse Packages</a>
+          {% endif %}
         </div>
-        <div class="col-lg-5 d-none d-lg-block" style="background:var(--px-gradient);min-height:280px;position:relative;overflow:hidden;">
-          <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.14) 1px,transparent 1px);background-size:22px 22px;"></div>
-          <div class="px-hero-float one" style="animation:none;top:3rem;right:2.5rem;">
-            <span class="float-icon"><i class="bi bi-check-lg"></i></span>
-            Booking confirmed
-          </div>
-          <div class="px-hero-float two" style="animation:none;bottom:3rem;left:2.5rem;">
-            <span class="float-icon"><i class="bi bi-star-fill" style="background:var(--px-warning-bg);color:var(--px-warning);"></i></span>
-            4.9 · client rating
-          </div>
-        </div>
+      </div>
+      <div class="col-lg-5 d-none d-lg-block">
+        <img src="{% static 'img/px-closing.jpg' %}" alt="A premium banquet setup with elegant tableware"
+             class="img-fluid rounded-px-lg" style="aspect-ratio:16/10;object-fit:cover;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);">
       </div>
     </div>
   </div>

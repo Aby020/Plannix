@@ -40,15 +40,15 @@
             {% for b in bookings %}
             <tr>
               <td>
-                <strong class="d-block" style="color:var(--px-dark);">{{ b.event_company_name }}</strong>
-                <small class="text-muted-px">{{ b.event_type }} · {{ b.event_location }}</small>
+                <strong class="d-block" style="color:var(--px-dark);">{{ b.event_title }}</strong>
+                <small class="text-muted-px">{% if b.event.category %}{{ b.event.category.name }}{% endif %} · {{ b.event_location }}</small>
               </td>
               <td>
                 <strong class="d-block" style="color:var(--px-dark);">{{ b.name }}</strong>
                 <small class="text-muted-px">{{ b.email }}</small>
               </td>
-              <td>{{ b.event_booking_date }}</td>
-              <td>₹ {{ b.event_price|intcomma }}</td>
+              <td>{{ b.event_date }}</td>
+              <td>₹ {{ b.price|intcomma }}</td>
               <td><span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span></td>
               <td class="text-end">
                 <div class="d-inline-flex align-items-center gap-2">

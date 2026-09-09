@@ -1,0 +1,110 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize plannix_filters %}
+
+{% block title %}Manage Organizations — Plannix{% endblock %}
+{% block page_title %}Manage Organizations{% endblock %}
+
+{% block content %}
+
+<!-- ─── Masthead ─── -->
+<div class="px-masthead reveal">
+  <span class="px-eyebrow">Management</span>
+  <h1>Organizations</h1>
+  <p class="px-lede">All marketplace organizations — their status, packages and bookings.</p>
+</div>
+
+<!-- ─── Filter pills ─── -->
+<div class="px-filter reveal mb-4">
+  <a class="filter-pill{% if not active_status %} active{% endif %}" href="{% url 'manage_organizations' %}">All</a>
+  {% for s in statuses %}
+    <a class="filter-pill{% if active_status == s %} active{% endif %}" href="{% url 'manage_organizations' %}?status={{ s }}">{{ s|title }}</a>
+  {% endfor %}
+</div>
+
+<!-- ─── Summary strip ─── -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="px-stat px-stat-sm reveal">
+      <span class="stat-icon indigo"><i class="bi bi-building"></i></span>
+      <div>
+        <div class="stat-num">{{ organizations|length }}</div>
+        <div class="stat-label">Organizations</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="px-stat px-stat-sm reveal reveal-delay-1">
+      <span class="stat-icon green"><i class="bi bi-calendar-event"></i></span>
+      <div>
+        <div class="stat-num">—</div>
+        <div class="stat-label">Total Packages</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Organizations ledger ─── -->
+{% if organizations %}
+  <div class="px-card reveal">
+    <div class="px-table border-0 rounded-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Organization</th>
+              <th>Owner</th>
+              <th>Packages</th>
+              <th>Bookings</th>
+              <th>Status</th>
+              <th>Submitted</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in organizations %}
+            {% with org=item.organization %}
+            <tr>
+              <td>
+                <strong style="color:var(--px-dark);">{{ org.name }}</strong>
+                {% if org.is_verified %}
+                  <i class="bi bi-patch-check-fill" style="color:var(--px-success);margin-left:.3rem;" title="Verified"></i>
+                {% endif %}
+                <br><small style="color:var(--px-text-light);">{{ org.contact_number }}</small>
+              </td>
+              <td>
+                <span style="color:var(--px-text);">{{ org.owner|display_name }}</span>
+                <br><small style="color:var(--px-text-light);">{{ org.owner.email }}</small>
+              </td>
+              <td class="text-center">{{ item.event_count }}</td>
+              <td class="text-center">{{ item.booking_count }}</td>
+              <td>
+                <span class="px-badge badge-{{ org.status }}">{{ org.get_status_display }}</span>
+              </td>
+              <td>
+                <small style="color:var(--px-text-light);">
+                  {% if org.submitted_at %}{{ org.submitted_at|date:"M d, Y" }}{% else %}—{% endif %}
+                </small>
+              </td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="px-card reveal">
+    <div class="px-empty py-4">
+      <div class="empty-icon"><i class="bi bi-building"></i></div>
+      <h4>No organizations found</h4>
+      {% if active_status %}
+        <p>No organizations with status "{{ active_status }}".</p>
+        <a class="btn btn-soft btn-sm" href="{% url 'manage_organizations' %}">Clear Filter</a>
+      {% else %}
+        <p>Organizations created by event organizers will appear here.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+{% endblock %}

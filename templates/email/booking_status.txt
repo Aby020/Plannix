@@ -1,0 +1,10 @@
+Dear {{ name }},
+
+Your booking reference {{ booking_reference }} for "{{ event_title }}" on
+{{ event_date }} is now {{ status|lower }}.
+
+Thank you for choosing Plannix.
+
+Best Regards,
+Plannix Team
+{{ site_url }}

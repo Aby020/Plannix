@@ -1,142 +1,145 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}About Us — Plannix{% endblock %}
+{% block title %}About Plannix — Event package discovery and booking{% endblock %}
 
 {% block content %}
 
-<section class="px-page-hero">
-  <div class="container px-container">
-    <span class="px-eyebrow" style="background:rgba(255,255,255,.12);color:#C7BFFD;">About Plannix</span>
-    <h1>We make planning feel effortless</h1>
-    <p>The people and the vision behind Plannix.</p>
-    <div class="px-breadcrumb">
-      <a href="{% url 'index' %}">Home</a>
-      <i class="bi bi-chevron-right"></i>
-      <span>About</span>
-    </div>
+<!-- ============ About hero ============ -->
+<section class="px-about-hero">
+  <div class="container px-container text-center">
+    <span class="px-eyebrow" style="background:rgba(166,83,59,.1);color:var(--px-public-gold);">About Plannix</span>
+    <h1 class="px-section-title" style="font-family:var(--px-public-serif);font-size:clamp(2rem,4vw,2.8rem);font-weight:600;color:var(--px-public-warm-white);letter-spacing:-.02em;">A clearer path from occasion to celebration</h1>
+    <p class="px-section-sub mx-auto" style="max-width:580px;">Plannix brings occasion planning, package discovery, and provider comparison into one place — so you can choose with confidence and book with clarity.</p>
   </div>
 </section>
 
-<!-- Mission -->
-<section class="px-section">
+<!-- ============ Editorial two-column ============ -->
+<section class="px-section" style="padding-bottom:5rem;">
   <div class="container px-container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-6 reveal">
-        <div class="position-relative">
-          <img src="{% static 'img/gallery6.jpg' %}" alt="Plannix event" class="img-fluid rounded-px-lg shadow-brand" style="aspect-ratio:4/3;object-fit:cover;width:100%;">
-          <div class="px-hero-float two" style="left:1rem;bottom:1rem;animation:none;">
-            <span class="float-icon"><i class="bi bi-heart-fill" style="background:var(--px-danger-bg);color:var(--px-danger);"></i></span>
-            Crafted for memorable moments
-          </div>
+    <div class="row align-items-start g-5">
+      <!-- Image column -->
+      <div class="col-lg-5 reveal">
+        <div class="px-about-image">
+          <img src="{% static 'img/about-banquet.jpg' %}" alt="An elegant banquet venue with crystal chandeliers, draped greenery, floral centerpieces and champagne flutes" loading="lazy">
         </div>
       </div>
-      <div class="col-lg-6 reveal reveal-delay-1">
-        <span class="px-eyebrow">Our Mission</span>
-        <h2 class="px-section-title">Welcome to <span class="display-gradient">Plannix</span></h2>
-        <p class="px-section-sub">Plannix is a modern event management and booking platform designed to simplify the way customers plan, organise and experience events. Whether it's a corporate conference, wedding, birthday celebration, product launch or a private gathering, Plannix connects you with the right event solutions through a seamless and reliable digital experience.</p>
-        <p class="mt-3 text-muted-px">We believe every event deserves precision, creativity and flawless execution. Plannix was created with the vision of making event booking effortless while maintaining the highest standards of quality and professionalism.</p>
-        <div class="row gy-2 gx-4 mt-4">
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Easy online booking &amp; scheduling</p>
-          </div>
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Event tracking &amp; management tools</p>
-          </div>
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Secure confirmations &amp; updates</p>
-          </div>
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Vendor &amp; service provider integration</p>
-          </div>
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>Support throughout the event lifecycle</p>
-          </div>
-          <div class="col-sm-6">
-            <p class="mb-2"><i class="bi bi-check-circle-fill text-brand me-2"></i>24/7 service</p>
-          </div>
+
+      <!-- Editorial column -->
+      <div class="col-lg-7 reveal">
+        <div class="px-about-content">
+          <span class="px-about-rule" aria-hidden="true"></span>
+          <h2 style="font-family:var(--px-public-serif);font-size:clamp(1.4rem,2.5vw,1.75rem);font-weight:600;color:var(--px-public-dark);letter-spacing:-.01em;">How Plannix works</h2>
+
+          <p>Every occasion deserves the right package. Plannix helps you find it — from first inspiration to confirmed booking.</p>
+
+          <p><strong>Start with your occasion.</strong> Whether you're planning a wedding, birthday, corporate gathering, or an intimate celebration, Plannix organises packages by occasion so you can explore relevant options without searching blind.</p>
+
+          <p><strong>Discover packages from providers.</strong> Browse curated offerings from event service providers — each package includes pricing, inclusions, capacity, and availability so you know exactly what you're comparing.</p>
+
+          <p><strong>Compare and choose with clarity.</strong> Side-by-side, you can evaluate what fits your requirements and your budget. When you've found the right match, send a booking request directly to the provider.</p>
+
+          <p>Plannix is built for people who want a considered choice — not a rushed scroll through endless listings.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Values -->
-<section class="px-section" style="background:var(--px-white);">
+<!-- ============ Values ============ -->
+<section class="px-public-section" style="background:var(--px-white);" aria-labelledby="values-title">
   <div class="container px-container">
-    <div class="text-center mb-5 reveal">
-      <span class="px-eyebrow">What we value</span>
-      <h2 class="px-section-title">Built on trust, delivered with care</h2>
+    <div class="text-center section-header reveal">
+      <span class="px-eyebrow">What we believe</span>
+      <h2 id="values-title" class="px-section-title" style="font-family:var(--px-public-serif);font-weight:600;">The principles behind Plannix</h2>
     </div>
-    <div class="row g-4 reveal-stagger">
-      <div class="col-lg-3 col-md-6">
-        <div class="px-feature">
-          <div class="px-feature-icon"><i class="bi bi-lightning-charge"></i></div>
-          <h3>Speed</h3>
-          <p>Booking an event should never feel like a chore. We keep everything fast and frictionless.</p>
+
+    <div class="px-values-grid">
+      <div class="px-value-card reveal">
+        <div class="value-icon">
+          <i class="bi bi-search-heart" aria-hidden="true"></i>
+        </div>
+        <h3>Clarity over noise</h3>
+        <p>Clear package details, honest pricing, and structured information — so you can make a decision you're confident about.</p>
+      </div>
+
+      <div class="px-value-card reveal">
+        <div class="value-icon">
+          <i class="bi bi-arrows-angle-contract" aria-hidden="true"></i>
+        </div>
+        <h3>Comparison by design</h3>
+        <p>Plannix is built around comparing packages — inclusions, capacity, price — so you find the offering that fits your occasion and your budget.</p>
+      </div>
+
+      <div class="px-value-card reveal">
+        <div class="value-icon">
+          <i class="bi bi-people" aria-hidden="true"></i>
+        </div>
+        <h3>Provider accountability</h3>
+        <p>Providers present their packages directly. Reviews, verified status, and transparent responses give you the confidence to book.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ How Plannix helps you plan ============ -->
+<section class="px-public-section" aria-labelledby="how-title">
+  <div class="container px-container">
+    <div class="text-center section-header reveal">
+      <span class="px-eyebrow">How we help</span>
+      <h2 id="how-title" class="px-section-title" style="font-family:var(--px-public-serif);font-weight:600;">How Plannix helps you plan</h2>
+      <p class="px-section-sub mx-auto" style="max-width:520px;">From settling on an occasion to a confirmed booking — a considered path to the right package.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      <div class="col-lg-3 col-sm-6 reveal">
+        <div class="px-value-card" style="height:100%;">
+          <div class="value-icon"><i class="bi bi-calendar-heart" aria-hidden="true"></i></div>
+          <h3>Choose your occasion</h3>
+          <p>Start with the celebration you're planning — a wedding, birthday, corporate gathering, or an intimate event.</p>
         </div>
       </div>
-      <div class="col-lg-3 col-md-6">
-        <div class="px-feature">
-          <div class="px-feature-icon"><i class="bi bi-shield-check"></i></div>
-          <h3>Reliability</h3>
-          <p>Verified vendors, secure details and clear confirmations — so you can plan with confidence.</p>
+
+      <div class="col-lg-3 col-sm-6 reveal reveal-delay-1">
+        <div class="px-value-card" style="height:100%;">
+          <div class="value-icon"><i class="bi bi-search" aria-hidden="true"></i></div>
+          <h3>Find packages that fit</h3>
+          <p>Discover curated packages from event providers, organised by occasion, so you see options that suit your celebration.</p>
         </div>
       </div>
-      <div class="col-lg-3 col-md-6">
-        <div class="px-feature">
-          <div class="px-feature-icon"><i class="bi bi-palette"></i></div>
-          <h3>Creativity</h3>
-          <p>Every event is unique. We celebrate the moments that make yours special.</p>
+
+      <div class="col-lg-3 col-sm-6 reveal reveal-delay-2">
+        <div class="px-value-card" style="height:100%;">
+          <div class="value-icon"><i class="bi bi-arrows-angle-contract" aria-hidden="true"></i></div>
+          <h3>Compare what's included</h3>
+          <p>Review price, inclusions, capacity and requirements side by side to find the offering that fits your budget.</p>
         </div>
       </div>
-      <div class="col-lg-3 col-md-6">
-        <div class="px-feature">
-          <div class="px-feature-icon"><i class="bi bi-headset"></i></div>
-          <h3>Support</h3>
-          <p>Real help throughout the event lifecycle — before, during and after your big day.</p>
+
+      <div class="col-lg-3 col-sm-6 reveal reveal-delay-3">
+        <div class="px-value-card" style="height:100%;">
+          <div class="value-icon"><i class="bi bi-check-lg" aria-hidden="true"></i></div>
+          <h3>Book with confidence</h3>
+          <p>Request a booking directly with the provider. You choose the match, they confirm the details.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- Team -->
-<section class="px-section">
-  <div class="container px-container">
-    <div class="text-center mb-5 reveal">
-      <span class="px-eyebrow">Our Team</span>
-      <h2 class="px-section-title">Meet the people behind the magic</h2>
-    </div>
-    <div class="row g-4 reveal-stagger">
-      <div class="col-lg-3 col-md-6">
-        <div class="px-card text-center p-4 h-100">
-          <img src="{% static 'img/team-1.jpg' %}" alt="Jacob — Event Manager" class="rounded-circle mx-auto mb-3" style="width:120px;height:120px;object-fit:cover;">
-          <h3 class="h5 mb-0">Jacob</h3>
-          <small class="text-muted-px">Event Manager</small>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6">
-        <div class="px-card text-center p-4 h-100">
-          <img src="{% static 'img/team-2.jpg' %}" alt="Maria — Event Planner" class="rounded-circle mx-auto mb-3" style="width:120px;height:120px;object-fit:cover;">
-          <h3 class="h5 mb-0">Maria</h3>
-          <small class="text-muted-px">Event Planner</small>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6">
-        <div class="px-card text-center p-4 h-100">
-          <img src="{% static 'img/team-3.jpg' %}" alt="Dennis — Decorator" class="rounded-circle mx-auto mb-3" style="width:120px;height:120px;object-fit:cover;">
-          <h3 class="h5 mb-0">Dennis</h3>
-          <small class="text-muted-px">Decorator</small>
-        </div>
-      </div>
-      <div class="col-lg-3 col-md-6">
-        <div class="px-card text-center p-4 h-100">
-          <img src="{% static 'img/team-4.jpg' %}" alt="Sofia — Event Controller" class="rounded-circle mx-auto mb-3" style="width:120px;height:120px;object-fit:cover;">
-          <h3 class="h5 mb-0">Sofia</h3>
-          <small class="text-muted-px">Event Controller</small>
-        </div>
-      </div>
+<!-- ============ CTA ============ -->
+<section class="px-public-cta" aria-labelledby="about-cta-title">
+  <div class="container px-container text-center">
+    <span class="px-eyebrow" style="background:rgba(166,83,59,.15);color:var(--px-public-gold-light);">Start planning</span>
+    <h2 id="about-cta-title" style="font-family:var(--px-public-serif);font-weight:600;">Ready to find the right package?</h2>
+    <p class="mx-auto" style="max-width:480px;">Browse live packages, compare offerings from trusted providers, and request a booking for your next occasion.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+      {% if user.is_authenticated %}
+        <a class="btn btn-brand btn-lg" href="{% url 'events' %}">Discover Packages</a>
+      {% else %}
+        <a class="btn btn-brand btn-lg" href="{% url 'sign_up' %}">Create Free Account</a>
+        <a class="btn btn-outline-light-px btn-lg" href="{% url 'events' %}">Browse Packages</a>
+      {% endif %}
     </div>
   </div>
 </section>

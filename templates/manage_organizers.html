@@ -1,0 +1,115 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize plannix_filters %}
+
+{% block title %}Manage Organizers — Plannix{% endblock %}
+{% block page_title %}Manage Organizers{% endblock %}
+
+{% block content %}
+
+<p class="text-muted-px mb-4">Promote attendees to organizers, or toggle organizer verification status.</p>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="px-card reveal">
+      <div class="p-4 pb-3">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-person-badge text-brand me-2"></i>Organizers ({{ organizers|length }})
+        </h2>
+      </div>
+      <div class="px-table border-0 rounded-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Verified</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for org in organizers %}
+              <tr>
+                <td>
+                  <strong class="d-block" style="color:var(--px-dark);">{{ org|display_name }}</strong>
+                  <small class="text-muted-px">{{ org.email }}</small>
+                </td>
+                <td>
+                  {% if org.organizer_profile.is_verified %}
+                    <span class="px-badge badge-success">Verified</span>
+                  {% else %}
+                    <span class="px-badge badge-warning">Unverified</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <form method="post" action="{% url 'manage_organizers' %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="toggle_verified">
+                    <input type="hidden" name="user_id" value="{{ org.id }}">
+                    <button class="btn btn-ghost btn-sm" type="submit">
+                      <i class="bi bi-shield-check me-1"></i>
+                      {% if org.organizer_profile.is_verified %}Unverify{% else %}Verify{% endif %}
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="3" class="text-center text-muted-px py-3">No organizers yet</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="px-card reveal reveal-delay-1">
+      <div class="p-4 pb-3">
+        <h2 class="h5 mb-0" style="font-family:var(--px-font-display);color:var(--px-dark);">
+          <i class="bi bi-people text-brand me-2"></i>Attendees ({{ pending_attendees|length }})
+        </h2>
+      </div>
+      <div class="px-table border-0 rounded-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for att in pending_attendees %}
+              <tr>
+                <td>
+                  <strong class="d-block" style="color:var(--px-dark);">{{ att|display_name }}</strong>
+                  <small class="text-muted-px">{{ att.email }}</small>
+                </td>
+                <td class="text-end">
+                  <form method="post" action="{% url 'manage_organizers' %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="promote">
+                    <input type="hidden" name="user_id" value="{{ att.id }}">
+                    <button class="btn btn-soft btn-sm" type="submit"
+                            data-confirm="Promote {{ att|display_name }} to organizer?">
+                      <i class="bi bi-arrow-up-circle me-1"></i>Promote
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="2" class="text-center text-muted-px py-3">No attendees to promote</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

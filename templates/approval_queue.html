@@ -1,0 +1,104 @@
+{% extends "dashboard_base.html" %}
+{% load static humanize plannix_filters %}
+
+{% block title %}Approval Queue — Plannix{% endblock %}
+{% block page_title %}Approval Queue{% endblock %}
+
+{% block content %}
+
+<!-- ─── Masthead ─── -->
+<div class="px-masthead reveal">
+  <span class="px-eyebrow">Review Desk</span>
+  <h1>Approval Queue</h1>
+  <p class="px-lede">Organizations awaiting your approval. Event packages no longer require review — an approved organization publishes them live directly.</p>
+</div>
+
+<!-- ─── Pending count strip ─── -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-4">
+    <div class="px-stat px-stat-sm reveal">
+      <span class="stat-icon amber"><i class="bi bi-building"></i></span>
+      <div>
+        <div class="stat-num">{{ pending_organizations|length }}</div>
+        <div class="stat-label">Pending Orgs</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-4">
+    <div class="px-stat px-stat-sm reveal reveal-delay-1">
+      <span class="stat-icon green"><i class="bi bi-inbox"></i></span>
+      <div>
+        <div class="stat-num">{{ total_pending }}</div>
+        <div class="stat-label">Total Pending</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-4">
+    <div class="px-stat px-stat-sm reveal reveal-delay-2">
+      <a class="btn btn-ghost btn-sm w-100" href="{% url 'manage_events' %}"><i class="bi bi-arrow-left me-1"></i>Manage Events</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SECTION 1 — Organizations awaiting approval
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div id="organizations">
+<div class="px-review-section-head reveal">
+  <h2>Organizations <span class="px-count">{{ pending_organizations|length }}</span></h2>
+  <div class="head-rule"></div>
+</div>
+
+{% if pending_organizations %}
+  {% for org in pending_organizations %}
+  <div class="px-card reveal mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-3 p-4">
+      <div class="org-seal" style="width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.25rem;background:rgba(166,83,59,.1);color:var(--px-primary-dark);flex-shrink:0;">
+        <i class="bi bi-building"></i>
+      </div>
+      <div class="flex-grow-1 min-w-0">
+        <strong class="d-block" style="color:var(--px-dark);font-family:var(--px-font-display);font-size:1.1rem;">{{ org.name }}</strong>
+        <small style="color:var(--px-text-light);">
+          Owner: {{ org.owner|display_name }} · {{ org.contact_number }}
+          {% if org.email %} · {{ org.email }}{% endif %}
+          {% if org.website %} · {{ org.website }}{% endif %}
+        </small>
+        {% if org.description %}
+        <p class="mb-0 mt-1" style="font-size:.88rem;color:var(--px-text-light);max-width:600px;">{{ org.description|truncatechars:160 }}</p>
+        {% endif %}
+        <small class="d-block mt-1" style="color:var(--px-text-light);">Submitted {{ org.submitted_at|date:"M d, Y H:i" }}</small>
+      </div>
+      <span class="px-badge badge-pending">Pending</span>
+    </div>
+
+    <div class="d-flex flex-wrap gap-3 px-4 pb-4">
+      <form method="post" action="{% url 'approve_organization' org.pk %}" class="d-inline-flex align-items-center gap-2">
+        {% csrf_token %}
+        <input type="text" class="form-control form-control-sm" name="notes" placeholder="Approval notes (optional)" style="width:220px;">
+        <button class="btn btn-soft btn-sm" type="submit" title="Approve organization">
+          <i class="bi bi-check2-circle me-1"></i>Approve
+        </button>
+      </form>
+      <form method="post" action="{% url 'reject_organization' org.pk %}" class="d-inline-flex align-items-center gap-2">
+        {% csrf_token %}
+        <input type="text" class="form-control form-control-sm" name="reason" required placeholder="Rejection reason" style="width:220px;">
+        <button class="btn btn-ghost btn-sm text-danger" type="submit" title="Reject organization"
+                style="border-color:rgba(158,74,60,.3);">
+          <i class="bi bi-x-circle me-1"></i>Reject
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="px-card reveal mb-3">
+    <div class="px-empty py-4">
+      <div class="empty-icon"><i class="bi bi-building"></i></div>
+      <h4>No pending organizations</h4>
+      <p>All organizations have been reviewed.</p>
+    </div>
+  </div>
+{% endif %}
+</div>
+
+{% endblock %}

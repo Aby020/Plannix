@@ -1,50 +1,57 @@
 {% extends "base.html" %}
 {% load static humanize %}
 
-{% block title %}Events — Plannix{% endblock %}
+{% block title %}Discover Event Packages — Plannix{% endblock %}
 
 {% block content %}
 
 <!-- ============ Page hero ============ -->
 <section class="px-page-hero">
   <div class="container px-container">
-    <span class="px-eyebrow" style="background:rgba(255,255,255,.12);color:#C7BFFD;">Event Catalogue</span>
-    <h1>Discover your next event</h1>
-    <p>Browse our curated packages, compare prices and book in seconds.</p>
+    <span class="px-eyebrow">Event package discovery</span>
+    <h1>Find the right event for your occasion</h1>
+    <p>Browse live packages from providers, filter by occasion, and book the services you need.</p>
     <div class="px-breadcrumb">
       <a href="{% url 'index' %}">Home</a>
       <i class="bi bi-chevron-right"></i>
-      <span>Events</span>
+      <span>Discover</span>
     </div>
   </div>
 </section>
 
 <!-- ============ Search + filter ============ -->
-<section class="px-section-sm">
+<section class="px-section-sm" style="padding-bottom:0;">
   <div class="container px-container">
     <div class="px-card p-4 mb-4 reveal">
-      <form method="post" action="{% url 'searching_events' %}" class="row g-3 align-items-center">
+      <form method="post" action="{% url 'searching_events' %}" class="row g-3 align-items-center" role="search">
         {% csrf_token %}
         <div class="col-lg-8">
-          <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-search"></i></span>
-            <input class="form-control" type="text" name="search_query" required
-                   placeholder="Search by event name, type, location or price…"
-                   aria-label="Search events" value="{{ active_type }}">
+          <label for="discover-search" class="visually-hidden">Search event packages</label>
+          <div class="px-discover-form">
+            <i class="bi bi-search text-muted-px" aria-hidden="true"></i>
+            <input type="text" id="discover-search" name="search_query" required
+                   placeholder="Search packages by name, occasion, location or price…">
+            <button class="form-btn" type="submit">Search</button>
           </div>
         </div>
         <div class="col-lg-4 d-grid">
-          <button class="btn btn-brand" type="submit"><i class="bi bi-search"></i> Search Events</button>
+          <p class="mb-0 text-muted-px small d-flex align-items-center justify-content-lg-end justify-content-start">
+            <i class="bi bi-filter me-2" aria-hidden="true"></i>
+            Filter by occasion below
+          </p>
         </div>
       </form>
     </div>
 
-    {% if types %}
-      <div class="px-filter mb-4 reveal">
-        <a href="{% url 'events' %}" class="filter-pill {% if not active_type %}active{% endif %}">All Events</a>
-        {% for t in types %}
-        <a href="{% url 'events' %}?type={{ t|urlencode }}" class="filter-pill {% if active_type == t %}active{% endif %}">
-          {{ t }}
+    {% if categories %}
+      <div class="px-filter-bar mb-4 reveal" role="group" aria-label="Filter packages by occasion">
+        <a href="{% url 'events' %}" class="px-filter-pill {% if not active_category %}active{% endif %}">
+          <i class="bi bi-grid" aria-hidden="true"></i> All occasions
+        </a>
+        {% for cat in categories %}
+        <a href="{% url 'events' %}?category={{ cat.slug|urlencode }}"
+           class="px-filter-pill {% if active_category == cat.slug %}active{% endif %}">
+          {{ cat.name }}
         </a>
         {% endfor %}
       </div>
@@ -52,52 +59,33 @@
   </div>
 </section>
 
-<!-- ============ Event grid ============ -->
+<!-- ============ Package grid ============ -->
 <section class="px-section" style="padding-top:1.5rem;">
   <div class="container px-container">
     {% if events %}
-      <div class="d-flex justify-content-between align-items-center mb-4 reveal">
-        <h2 class="px-section-title mb-0" style="font-size:1.4rem;">
-          {{ events|length }} event{{ events|length|pluralize }}
-          {% if active_type %}<span class="text-brand text-capitalize"> · {{ active_type }}</span>{% endif %}
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 reveal">
+        <h2 class="px-section-title mb-0" style="font-size:1.35rem;">
+          {{ events|length }} package{{ events|length|pluralize }}
+          {% if active_category_name %} <span style="color:var(--px-public-gold-dark);"> · {{ active_category_name }}</span>{% endif %}
         </h2>
-        <a class="btn btn-ghost btn-sm" href="{% url 'events' %}">Clear filters</a>
+        {% if active_category %}
+        <a class="btn btn-ghost btn-sm" href="{% url 'events' %}"><i class="bi bi-x-circle me-1"></i>Clear filter</a>
+        {% else %}
+        <span class="text-muted-px small">All packages are currently live and bookable</span>
+        {% endif %}
       </div>
 
       <div class="row g-4 reveal-stagger">
         {% for event in events %}
-        <div class="col-lg-4 col-md-6">
-          <article class="px-card event-card h-100 d-flex flex-column">
-            <div class="event-media">
-              {% if event.event_img %}
-                <img src="{{ event.event_img.url }}" alt="{{ event.event_name }}" loading="lazy">
-              {% else %}
-                <img src="{% static 'img/gallery1.jpg' %}" alt="{{ event.event_name }}" loading="lazy">
-              {% endif %}
-              <span class="event-badge">{{ event.event_type }}</span>
-            </div>
-            <div class="event-body d-flex flex-column flex-grow-1">
-              <h3 class="event-title">{{ event.event_name }}</h3>
-              <p class="text-muted-px mb-1" style="font-size:.9rem;">{{ event.event_description|truncatechars:120 }}</p>
-              <div class="event-meta">
-                <span><i class="bi bi-geo-alt"></i>{{ event.location }}</span>
-                <span><i class="bi bi-tag"></i>₹ {{ event.event_price|intcomma }}</span>
-              </div>
-              <div class="d-flex align-items-center justify-content-between mt-3 pt-3 border-top mt-auto">
-                <a class="btn btn-ghost btn-sm" href="{% url 'readmore' event.id %}"><i class="bi bi-eye me-1"></i>Details</a>
-                <a class="btn btn-brand btn-sm" href="{% url 'selected_event' event.id %}"><i class="bi bi-calendar-check me-1"></i>Book Now</a>
-              </div>
-            </div>
-          </article>
-        </div>
+          {% include "partials/event-package-card.html" %}
         {% endfor %}
       </div>
     {% else %}
       <div class="px-empty px-card reveal">
         <div class="empty-icon"><i class="bi bi-search"></i></div>
-        <h4>No events found{% if active_type %} for “{{ active_type }}”{% endif %}</h4>
-        <p>Try a different category or check back soon — we're adding new events regularly.</p>
-        <a class="btn btn-brand" href="{% url 'events' %}"><i class="bi bi-arrow-left me-1"></i>Browse all events</a>
+        <h4>No packages found{% if active_category_name %} for {{ active_category_name }}{% endif %}</h4>
+        <p>Try a different occasion or check back soon — providers are adding new packages regularly.</p>
+        <a class="btn btn-brand" href="{% url 'events' %}"><i class="bi bi-arrow-left me-1"></i>Browse all packages</a>
       </div>
     {% endif %}
   </div>

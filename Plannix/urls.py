@@ -9,10 +9,11 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from events.views import error_404, error_403, error_500
+from events.views import error_404, error_403, error_500, health_check
 
 urlpatterns = [
     path('core-admin/', admin.site.urls),
+    path('health/', health_check, name='health_check'),
     path('', include('themes.urls')),
     path('', include('events.urls')),
     path('', include('account_manager.urls')),

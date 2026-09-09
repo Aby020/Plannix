@@ -1,0 +1,173 @@
+{% extends "dashboard_base.html" %}
+{% load static %}
+
+{% block title %}My Organization — Plannix{% endblock %}
+{% block page_title %}My Organization{% endblock %}
+
+{% block content %}
+
+<!-- ─── Masthead ─── -->
+<div class="px-masthead reveal">
+  <span class="px-eyebrow">Organization</span>
+  <h1>My Organization</h1>
+  <p class="px-lede">Create and manage your marketplace business entity. Once approved, you can create and publish event packages live.</p>
+</div>
+
+<!-- ─── Status banner ─── -->
+{% if organization %}
+  {% if organization.is_approved %}
+  <div class="px-org-banner approved reveal mb-4">
+    <div class="org-seal"><i class="bi bi-patch-check-fill"></i></div>
+    <div class="org-body">
+      <h3>{{ organization.name }}</h3>
+      <p>Your organization is approved and verified. You can now create and publish event packages live.</p>
+    </div>
+  </div>
+
+  {% elif organization.status == 'pending' and organization.submitted_at %}
+  <div class="px-org-banner pending reveal mb-4">
+    <div class="org-seal"><i class="bi bi-hourglass-split"></i></div>
+    <div class="org-body">
+      <h3>{{ organization.name }}</h3>
+      <p>Submitted for review on {{ organization.submitted_at|date:"M d, Y" }}. An admin will review your organization shortly.</p>
+    </div>
+  </div>
+
+  {% elif organization.status == 'rejected' %}
+  <div class="px-org-banner rejected reveal mb-4">
+    <div class="org-seal"><i class="bi bi-exclamation-triangle"></i></div>
+    <div class="org-body">
+      <h3>{{ organization.name }}</h3>
+      {% if organization.rejection_reason %}
+        <p><strong>Reason:</strong> {{ organization.rejection_reason }}</p>
+      {% else %}
+        <p>Your organization application was not approved. Please review and update your details.</p>
+      {% endif %}
+      <p class="mb-0"><em>Update your details above, then submit for review again.</em></p>
+    </div>
+  </div>
+
+  {% elif organization.status == 'suspended' %}
+  <div class="px-org-banner rejected reveal mb-4">
+    <div class="org-seal"><i class="bi bi-pause-circle"></i></div>
+    <div class="org-body">
+      <h3>{{ organization.name }}</h3>
+      <p>Your organization is currently suspended. Contact the Plannix team to resume operations.</p>
+    </div>
+  </div>
+  {% endif %}
+{% endif %}
+
+<!-- ─── Organization details + form ─── -->
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="px-card reveal">
+      <div class="p-4 pb-3">
+        <h2 style="font-family:var(--px-font-display);font-weight:600;font-size:1.15rem;color:var(--px-dark);margin:0;">
+          <i class="bi bi-building me-2" style="color:var(--px-primary);"></i>Organization Details
+        </h2>
+      </div>
+      <form method="post" action="{% url 'my_organization' %}" class="p-4 pt-0">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label" for="org-name">Organization Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="org-name" name="name" required maxlength="200"
+                 value="{{ organization.name|default:'' }}" placeholder="e.g. Elegant Events Co.">
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label" for="org-contact">Contact Number <span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" id="org-contact" name="contact_number" required maxlength="15"
+                   value="{{ organization.contact_number|default:'' }}" placeholder="+91 98765 43210">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="org-email">Email</label>
+            <input type="email" class="form-control" id="org-email" name="email"
+                   value="{{ organization.email|default:'' }}" placeholder="hello@yourorg.com">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="org-website">Website</label>
+          <input type="url" class="form-control" id="org-website" name="website"
+                 value="{{ organization.website|default:'' }}" placeholder="https://yourorg.com">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="org-desc">Description <span class="text-danger">*</span></label>
+          <textarea class="form-control" id="org-desc" name="description" rows="4" required
+                    placeholder="Tell attendees about your organization, your expertise and what makes your events special.">{{ organization.description|default:'' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-brand">
+          <i class="bi bi-check-lg me-1"></i>Save Details
+        </button>
+      </form>
+
+      {% if organization and not organization.is_approved and organization.status != 'suspended' and not organization.submitted_at %}
+      <div class="px-4 pb-4">
+        <form method="post" action="{% url 'submit_organization' %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-soft">
+            <i class="bi bi-send me-1"></i>{% if organization.status == 'rejected' %}Re-submit for Review{% else %}Submit for Review{% endif %}
+          </button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Sidebar info -->
+  <div class="col-lg-4">
+    <div class="px-card reveal reveal-delay-1">
+      <div class="p-4 pb-3">
+        <h2 style="font-family:var(--px-font-display);font-weight:600;font-size:1.15rem;color:var(--px-dark);margin:0;">
+          <i class="bi bi-info-circle me-2" style="color:var(--px-primary);"></i>How It Works
+        </h2>
+      </div>
+      <div class="px-activity-log p-4 pt-0">
+        <div class="log-entry" style="border-top:none;">
+          <div class="log-dot"></div>
+          <div class="log-body">
+            <p><strong>Create your Organization</strong></p>
+            <div class="log-time">Fill in your business details — name, contact, description.</div>
+          </div>
+        </div>
+        <div class="log-entry">
+          <div class="log-dot"></div>
+          <div class="log-body">
+            <p><strong>Submit for Review</strong></p>
+            <div class="log-time">An admin will review your organization.</div>
+          </div>
+        </div>
+        <div class="log-entry">
+          <div class="log-dot"></div>
+          <div class="log-body">
+            <p><strong>Get Approved</strong></p>
+            <div class="log-time">Once approved, create event packages.</div>
+          </div>
+        </div>
+        <div class="log-entry">
+          <div class="log-dot"></div>
+          <div class="log-body">
+            <p><strong>Publish Packages</strong></p>
+            <div class="log-time">Once approved, the packages you create go live for attendees immediately.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if organization and organization.is_approved %}
+    <div class="px-card reveal reveal-delay-2 mt-3">
+      <div class="p-4">
+        <h2 style="font-family:var(--px-font-display);font-weight:600;font-size:1.15rem;color:var(--px-dark);margin:0;">
+          <i class="bi bi-calendar-event me-2" style="color:var(--px-primary);"></i>Your Packages
+        </h2>
+        <p class="mb-3" style="font-size:.88rem;color:var(--px-text-light);">Event packages under this organization.</p>
+        <a class="btn btn-soft btn-sm w-100" href="{% url 'manage_events' %}">
+          <i class="bi bi-list-task me-1"></i>View All Packages
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

@@ -1,8 +1,10 @@
 {% extends "dashboard_base.html" %}
-{% load static %}
+{% load static plannix_filters %}
 
 {% block title %}My Profile — Plannix{% endblock %}
 {% block page_title %}My Profile{% endblock %}
+
+{% block extra_css %}{% endblock %}
 
 {% block content %}
 
@@ -10,11 +12,11 @@
   <div class="col-lg-4">
     <div class="px-card p-4 text-center reveal">
       <span class="table-avatar d-inline-flex align-items-center justify-content-center text-uppercase"
-            style="width:88px;height:88px;border-radius:50%;font-size:2rem;font-weight:800;background:var(--px-gradient);color:#fff;">
-        {{ request.user.username|first }}
+            style="width:88px;height:88px;border-radius:50%;font-size:2rem;font-weight:800;background:var(--px-primary);color:#fff;">
+        {{ request.user|avatar_initial }}
       </span>
       <h2 class="h5 mt-3 mb-1" style="font-family:var(--px-font-display);color:var(--px-dark);">
-        {{ request.user.get_full_name|default:request.user.username }}
+        {{ request.user|display_name }}
       </h2>
       <p class="text-muted-px mb-0">@{{ request.user.username }}</p>
 

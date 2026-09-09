@@ -1,0 +1,32 @@
+{% load static humanize %}
+<div class="col-lg-4 col-md-6">
+  <article class="px-package-card">
+    <div class="package-media">
+      {% if event.featured_image %}
+        <img src="{{ event.featured_image.url }}" alt="{{ event.title }}" loading="lazy">
+      {% else %}
+        <img src="{% static 'img/px-event-fallback.jpg' %}" alt="{{ event.title }}" loading="lazy">
+      {% endif %}
+      <span class="package-badge">{% if event.category %}{{ event.category.name }}{% endif %}</span>
+    </div>
+
+    <div class="package-body">
+      <h3 class="package-title">{{ event.title }}</h3>
+      <p class="package-desc">{{ event.description|truncatechars:110 }}</p>
+      <div class="package-meta">
+        <span><i class="bi bi-geo-alt"></i>{{ event.location }}</span>
+        {% if event.capacity %}
+        <span><i class="bi bi-people"></i>Up to {{ event.capacity }} guests</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="package-footer">
+      <span class="package-price">₹ {{ event.price|intcomma }}</span>
+      <div class="package-actions">
+        <a class="btn-public-ghost" href="{% url 'readmore' event.id %}">Details</a>
+        <a class="btn-public-primary" href="{% url 'selected_event' event.id %}">Book</a>
+      </div>
+    </div>
+  </article>
+</div>

@@ -217,6 +217,31 @@ img { max-width: 100%; height: auto; }
   justify-content: center;
 }
 
+/* Submit-loading state: hides label, shows a spinner, blocks further clicks.
+   Engaged by main.js only once a form is actually submitting (native
+   validation prevents it from firing for invalid forms). */
+.btn.is-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+.btn.is-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 2px solid rgba(255, 255, 255, .45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: px-spin .7s linear infinite;
+}
+@keyframes px-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ---------- 5. Forms ---------- */
 .form-label {
   font-weight: 600;
@@ -701,6 +726,22 @@ img { max-width: 100%; height: auto; }
   color: var(--px-primary-light);
   padding-left: .35rem;
 }
+.px-footer .footer-links .footer-link-btn,
+.px-footer .footer-links form button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: .3rem 0;
+  text-align: left;
+  color: rgba(255, 255, 255, .65);
+  transition: color var(--px-transition), padding-left var(--px-transition);
+}
+.px-footer .footer-links .footer-link-btn:hover,
+.px-footer .footer-links form button:hover {
+  color: var(--px-primary-light);
+  padding-left: .35rem;
+}
 .px-footer .footer-social a {
   width: 38px;
   height: 38px;
@@ -1070,14 +1111,21 @@ img { max-width: 100%; height: auto; }
   to { opacity: 0; transform: translateX(40px); }
 }
 
-/* ---------- 16. Animations & reveal ---------- */
+/* ---------- 16. Animations & reveal ----------
+   Reveal elements are hidden ONLY when JS is confirmed running (html.js-ready,
+   added by main.js). Without JS — or if the script/observer fails — content
+   stays fully visible, so the page can never appear "stuck loading" blank. */
 .reveal {
+  opacity: 1;
+  transform: none;
+  transition: opacity .7s cubic-bezier(.4, 0, .2, 1), transform .7s cubic-bezier(.4, 0, .2, 1);
+}
+html.js-ready .reveal {
   opacity: 0;
   transform: translateY(28px);
-  transition: opacity .7s cubic-bezier(.4, 0, .2, 1), transform .7s cubic-bezier(.4, 0, .2, 1);
   will-change: opacity, transform;
 }
-.reveal.reveal-visible {
+html.js-ready .reveal.reveal-visible {
   opacity: 1;
   transform: none;
 }
@@ -1089,11 +1137,15 @@ img { max-width: 100%; height: auto; }
 
 /* Staggered children */
 .reveal-stagger > * {
-  opacity: 0;
-  transform: translateY(24px);
+  opacity: 1;
+  transform: none;
   transition: opacity .6s cubic-bezier(.4, 0, .2, 1), transform .6s cubic-bezier(.4, 0, .2, 1);
 }
-.reveal-stagger.reveal-visible > * { opacity: 1; transform: none; }
+html.js-ready .reveal-stagger > * {
+  opacity: 0;
+  transform: translateY(24px);
+}
+html.js-ready .reveal-stagger.reveal-visible > * { opacity: 1; transform: none; }
 .reveal-stagger.reveal-visible > *:nth-child(1) { transition-delay: 0s; }
 .reveal-stagger.reveal-visible > *:nth-child(2) { transition-delay: .06s; }
 .reveal-stagger.reveal-visible > *:nth-child(3) { transition-delay: .12s; }

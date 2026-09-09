@@ -19,6 +19,7 @@
           <thead>
             <tr>
               <th>Event</th>
+              <th>Reference</th>
               <th>Date</th>
               <th>Location</th>
               <th>Price</th>
@@ -30,17 +31,18 @@
             {% for b in bookings %}
             <tr>
               <td>
-                <strong class="d-block" style="color:var(--px-dark);">{{ b.event_company_name }}</strong>
-                <small class="text-muted-px">{{ b.event_type }}</small>
+                <strong class="d-block" style="color:var(--px-dark);">{{ b.event_title }}</strong>
+                <small class="text-muted-px">{% if b.event.category %}{{ b.event.category.name }}{% endif %}</small>
               </td>
-              <td>{{ b.event_booking_date }}</td>
+              <td><span class="small text-muted-px">{{ b.booking_reference }}</span></td>
+              <td>{{ b.event_date }}</td>
               <td>{{ b.event_location }}</td>
-              <td>₹ {{ b.event_price|intcomma }}</td>
+              <td>₹ {{ b.price|intcomma }}</td>
               <td><span class="px-badge badge-{{ b.status }}">{{ b.status|title }}</span></td>
               <td class="text-end">
                 {% if b.status != 'cancelled' %}
                   <form method="post" action="{% url 'cancel_booking' b.id %}" class="d-inline"
-                        data-confirm="Cancel your booking for {{ b.event_company_name }}?">
+                        data-confirm="Cancel your booking for {{ b.event_title }}?">
                     {% csrf_token %}
                     <button class="btn btn-ghost btn-sm text-danger" type="submit"
                             style="border-color:rgba(239,68,68,.3);">

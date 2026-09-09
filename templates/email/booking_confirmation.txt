@@ -1,0 +1,29 @@
+Dear {{ name }},
+
+Thank you for booking with Plannix. Your booking request has been received and
+is now being reviewed by the organizer.
+
+Here are your booking details:
+    Package / Event : {{ event_title }}
+    Provider         : {{ provider }}
+    Booking Reference: {{ booking_reference }}
+    Requested Date   : {{ event_date }}
+    Location         : {{ event_location }}
+    Booking Status   : {{ status }}
+    Package Price    : Rs. {{ price }}
+
+For payment details, please contact the event organizer directly.
+
+    Organizer Contact
+    Email: {{ organizer_email }}
+    Phone: {{ organizer_phone }}
+
+What happens next:
+    The organizer will review your request and confirm your booking. You will
+    be notified once it is confirmed.
+
+Please keep this email for your records and do not forward or share it with anyone.
+
+Best Regards,
+Plannix Team
+{{ site_url }}

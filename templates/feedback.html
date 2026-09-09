@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static plannix_filters %}
 
 {% block title %}Feedback — Plannix{% endblock %}
 
@@ -7,7 +7,7 @@
 
 <section class="px-page-hero">
   <div class="container px-container">
-    <span class="px-eyebrow" style="background:rgba(255,255,255,.12);color:#C7BFFD;">Feedback</span>
+    <span class="px-eyebrow" style="background:rgba(166,83,59,.15);color:var(--px-public-gold-light);">Feedback</span>
     <h1>We'd love to hear from you</h1>
     <p>Tell us what you think — your feedback shapes how Plannix grows.</p>
     <div class="px-breadcrumb">
@@ -35,7 +35,7 @@
                 <div class="input-group">
                   <span class="input-group-text"><i class="bi bi-person"></i></span>
                   <input type="text" class="form-control" id="fb_name" name="name" required
-                         value="{{ user.first_name|default:user.username }}" placeholder="Your name">
+                         value="{{ user|display_name }}" placeholder="Your name">
                 </div>
               </div>
               <div class="col-md-6">
@@ -70,29 +70,29 @@
       </div>
 
       <div class="col-lg-5 reveal reveal-delay-1">
-        <div class="px-card p-4 bg-soft-brand" style="border:1px solid rgba(109,94,247,.2);">
+        <div class="px-card p-4" style="background:var(--px-public-cream);border:1px solid rgba(166,83,59,.2);">
           <span class="px-eyebrow">Contact</span>
           <h2 class="px-section-title" style="font-size:1.4rem;">Reach us directly</h2>
           <div class="d-flex flex-column gap-3 mt-4">
             <div class="d-flex align-items-center gap-3">
-              <span class="px-feature-icon" style="width:44px;height:44px;font-size:1rem;margin:0;"><i class="bi bi-envelope"></i></span>
+              <span class="px-feature-icon" style="width:44px;height:44px;font-size:1rem;margin:0;background:rgba(166,83,59,.1);color:var(--px-public-gold-dark);box-shadow:none;"><i class="bi bi-envelope"></i></span>
               <div>
                 <small class="text-muted-px d-block">Email us</small>
-                <strong style="color:var(--px-dark);">hello@plannix.app</strong>
+                <strong style="color:var(--px-public-dark);">hello@plannix.app</strong>
               </div>
             </div>
             <div class="d-flex align-items-center gap-3">
-              <span class="px-feature-icon" style="width:44px;height:44px;font-size:1rem;margin:0;"><i class="bi bi-telephone"></i></span>
+              <span class="px-feature-icon" style="width:44px;height:44px;font-size:1rem;margin:0;background:rgba(166,83,59,.1);color:var(--px-public-gold-dark);box-shadow:none;"><i class="bi bi-telephone"></i></span>
               <div>
                 <small class="text-muted-px d-block">Call us</small>
-                <strong style="color:var(--px-dark);">+91 90000 00000</strong>
+                <strong style="color:var(--px-public-dark);">+91 90000 00000</strong>
               </div>
             </div>
             <div class="d-flex align-items-center gap-3">
-              <span class="px-feature-icon" style="width:44px;height:44px;font-size:1rem;margin:0;"><i class="bi bi-geo-alt"></i></span>
+              <span class="px-feature-icon" style="width:44px;height:44px;font-size:1rem;margin:0;background:rgba(166,83,59,.1);color:var(--px-public-gold-dark);box-shadow:none;"><i class="bi bi-geo-alt"></i></span>
               <div>
                 <small class="text-muted-px d-block">Visit us</small>
-                <strong style="color:var(--px-dark);">Kochi, Kerala, India</strong>
+                <strong style="color:var(--px-public-dark);">Kochi, Kerala, India</strong>
               </div>
             </div>
           </div>
