@@ -84,12 +84,6 @@ Whether it's a grand wedding, a corporate summit, or a sunset beach proposal, Pl
 
 ### 🏠 Home & Discovery
 
-**Home page** — hero, featured categories, and trust signals:
-
-<p align="center">
-  <img src="screenshots/01-home.png" width="100%" alt="Plannix home page">
-</p>
-
 **Discover packages** — browse the full catalogue with category filter:
 
 <p align="center">
