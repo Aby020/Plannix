@@ -4,6 +4,7 @@ Covers the public LIVE catalogue, transactional booking flow, role-based
 dashboards (admin / organizer / attendee), organizer ownership-scoped views,
 and admin lifecycle management.
 """
+import re
 from datetime import date, timedelta
 from io import StringIO
 from pathlib import Path
@@ -2489,4 +2490,101 @@ class UploadLiveImagesTests(TestCase):
         self.assertFalse(
             any('uploaded:' in line for line in out.getvalue().splitlines()
                 if line.startswith('  ')),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Storage configuration tests — Cloudinary / WhiteNoise STORAGES resolution
+# ---------------------------------------------------------------------------
+
+# Extracts the WhiteNoise + Cloudinary config block from settings.py for
+# isolated testing without triggering full Django settings import side effects.
+_SETTINGS_PATH = Path(__file__).resolve().parent.parent / 'Plannix' / 'settings.py'
+_SETTINGS_SECTION = re.search(
+    r'(# WhiteNoise storage backend.*?)(# E-mail configuration)',
+    _SETTINGS_PATH.read_text(encoding='utf-8'),
+    re.DOTALL,
+).group(1)
+
+
+class _MockEnv:
+    """Minimal mock for django-environ's ``env`` object.
+
+    Only ``env.bool`` and ``env()`` are exercised by the storage config block.
+    """
+
+    def __init__(self, overrides=None):
+        self._overrides = overrides or {}
+
+    def __call__(self, key, default=''):
+        return self._overrides.get(key, default)
+
+    def bool(self, key, default=False):
+        return self._overrides.get(key, default)
+
+
+def _run_storage_config(use_whitenoise=False, use_cloudinary=False):
+    """Execute the storage configuration section of settings.py in isolation."""
+    env = _MockEnv({
+        'USE_WHITENOISE': use_whitenoise,
+        'USE_CLOUDINARY': use_cloudinary,
+    })
+    ns = {
+        'env': env,
+        'INSTALLED_APPS': [],
+        'STORAGES': {
+            'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+        },
+    }
+    exec(_SETTINGS_SECTION, ns)  # noqa: S102
+    return ns.get('STORAGES', {})
+
+
+class StorageConfigurationTests(TestCase):
+    """Verify STORAGES['default'] resolves correctly for every env combination."""
+
+    def test_cloudinary_overrides_whitenoise_default(self):
+        """Both flags True — Cloudinary must win the 'default' storage slot."""
+        storages = _run_storage_config(
+            use_whitenoise=True, use_cloudinary=True,
+        )
+        self.assertEqual(
+            storages['default']['BACKEND'],
+            'cloudinary_storage.storage.MediaCloudinaryStorage',
+        )
+        self.assertEqual(
+            storages['staticfiles']['BACKEND'],
+            'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        )
+
+    def test_whitenoise_only_has_staticfiles(self):
+        """USE_WHITENOISE=True, USE_CLOUDINARY=False — no 'default' key set."""
+        storages = _run_storage_config(
+            use_whitenoise=True, use_cloudinary=False,
+        )
+        self.assertNotIn('default', storages)
+        self.assertEqual(
+            storages['staticfiles']['BACKEND'],
+            'whitenoise.storage.CompressedManifestStaticFilesStorage',
+        )
+
+    def test_cloudinary_only_sets_default(self):
+        """USE_CLOUDINARY=True, USE_WHITENOISE=False — default only."""
+        storages = _run_storage_config(
+            use_whitenoise=False, use_cloudinary=True,
+        )
+        self.assertEqual(
+            storages['default']['BACKEND'],
+            'cloudinary_storage.storage.MediaCloudinaryStorage',
+        )
+        self.assertNotIn('staticfiles', storages)
+
+    def test_neither_flag_keeps_django_default(self):
+        """Both flags False — STORAGES keeps the global Django default."""
+        storages = _run_storage_config(
+            use_whitenoise=False, use_cloudinary=False,
+        )
+        self.assertEqual(
+            storages['default']['BACKEND'],
+            'django.core.files.storage.FileSystemStorage',
         )

@@ -163,7 +163,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # production (requires the `whitenoise` package, only active with the flag).
 if env.bool('USE_WHITENOISE', default=False):
     STORAGES = {
-        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
         'staticfiles': {
             'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
         },
@@ -174,6 +173,8 @@ if env.bool('USE_WHITENOISE', default=False):
 # Cloudinary media storage — optional, enabled via .env for production.
 # Requires `cloudinary` and `django-cloudinary-storage` (not installed locally;
 # this block only activates when USE_CLOUDINARY=True and the keys are set).
+# Evaluated after WhiteNoise so STORAGES['default'] correctly overrides to
+# Cloudinary media storage when both flags are active.
 if env.bool('USE_CLOUDINARY', default=False):
     INSTALLED_APPS = INSTALLED_APPS + [
         'cloudinary_storage',
@@ -184,7 +185,7 @@ if env.bool('USE_CLOUDINARY', default=False):
         'API_KEY': env('CLOUDINARY_API_KEY', default=''),
         'API_SECRET': env('CLOUDINARY_API_SECRET', default=''),
     }
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    STORAGES['default'] = {'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage'}
 
 
 # E-mail configuration
