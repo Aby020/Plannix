@@ -4,6 +4,7 @@ Covers the public LIVE catalogue, transactional booking flow, role-based
 dashboards (admin / organizer / attendee), organizer ownership-scoped views,
 and admin lifecycle management.
 """
+import os
 import re
 from datetime import date, timedelta
 from io import StringIO
@@ -2588,3 +2589,84 @@ class StorageConfigurationTests(TestCase):
             storages['default']['BACKEND'],
             'django.core.files.storage.FileSystemStorage',
         )
+
+
+# ---------------------------------------------------------------------------
+# set_admin_password management command tests
+# ---------------------------------------------------------------------------
+
+class SetAdminPasswordTests(TestCase):
+    """Verify the set_admin_password management command."""
+
+    def _make_admin(self):
+        """Create the admin user with a random password."""
+        return User.objects.create_user(
+            username='admin',
+            email='admin@plannix.app',
+            password='old-random-password',
+            is_superuser=True,
+            is_staff=True,
+        )
+
+    def test_password_is_changed_when_env_set(self):
+        """Setting PLANNIX_ADMIN_PASSWORD updates the admin's password."""
+        self._make_admin()
+        out = StringIO()
+        with patch.dict(os.environ, {'PLANNIX_ADMIN_PASSWORD': 'new-secure-pass'}):
+            call_command('set_admin_password', stdout=out, stderr=StringIO())
+        admin = User.objects.get(username='admin')
+        self.assertTrue(admin.check_password('new-secure-pass'))
+        self.assertIn('updated', out.getvalue())
+
+    def test_plaintext_password_never_output(self):
+        """The command never prints the password in plaintext."""
+        self._make_admin()
+        out = StringIO()
+        with patch.dict(os.environ, {'PLANNIX_ADMIN_PASSWORD': 's3cret!pass'}):
+            call_command('set_admin_password', stdout=out, stderr=StringIO())
+        self.assertNotIn('s3cret!pass', out.getvalue())
+
+    def test_missing_env_var_makes_no_change(self):
+        """When PLANNIX_ADMIN_PASSWORD is unset the command is a no-op."""
+        admin = self._make_admin()
+        old_hash = admin.password
+        out = StringIO()
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop('PLANNIX_ADMIN_PASSWORD', None)
+            call_command('set_admin_password', stdout=out, stderr=StringIO())
+        admin.refresh_from_db()
+        self.assertEqual(admin.password, old_hash)
+        self.assertIn('skipping', out.getvalue())
+
+    def test_missing_admin_fails_clearly(self):
+        """If the admin user does not exist the command exits with error."""
+        err = StringIO()
+        with patch.dict(os.environ, {'PLANNIX_ADMIN_PASSWORD': 'unused'}):
+            with self.assertRaises(SystemExit) as ctx:
+                call_command(
+                    'set_admin_password',
+                    stdout=StringIO(),
+                    stderr=err,
+                )
+        self.assertEqual(ctx.exception.code, 1)
+        self.assertIn('does not exist', err.getvalue())
+
+    def test_idempotent_on_repeated_run(self):
+        """Running twice with the same password reports 'already up to date'."""
+        self._make_admin()
+        with patch.dict(os.environ, {'PLANNIX_ADMIN_PASSWORD': 'stable-pass'}):
+            out1 = StringIO()
+            call_command(
+                'set_admin_password',
+                stdout=out1,
+                stderr=StringIO(),
+            )
+            self.assertIn('updated', out1.getvalue())
+
+            out2 = StringIO()
+            call_command(
+                'set_admin_password',
+                stdout=out2,
+                stderr=StringIO(),
+            )
+            self.assertIn('already up to date', out2.getvalue())
