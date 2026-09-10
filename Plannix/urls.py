@@ -8,10 +8,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.views.static import serve as static_serve
 
 from events.views import error_404, error_403, error_500, health_check
 
 urlpatterns = [
+    path('favicon.ico', static_serve,
+         {'path': 'icon/favicon-32x32.png',
+          'document_root': settings.STATICFILES_DIRS[0]},
+         name='favicon'),
     path('core-admin/', admin.site.urls),
     path('health/', health_check, name='health_check'),
     path('', include('themes.urls')),
