@@ -87,6 +87,8 @@ class Command(BaseCommand):
             source_name = LIVE_IMAGE_MAP.get((event.title, cat_folder))
 
             if not source_name:
+                # A legitimate package with no seed-image mapping is a warning,
+                # not a deployment failure — skip it, keep counting, keep going.
                 self.stderr.write(
                     self.style.WARNING(
                         f'no-match: "{event.title}" '
@@ -94,7 +96,6 @@ class Command(BaseCommand):
                     )
                 )
                 no_match += 1
-                has_errors = True
                 continue
 
             source_path = event_image_dir / cat_folder / source_name

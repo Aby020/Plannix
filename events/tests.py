@@ -2496,6 +2496,23 @@ class UploadLiveImagesTests(TestCase):
                 if line.startswith('  ')),
         )
 
+    # ---- test 6: no seed-image mapping is a warning, not a deployment failure ----
+
+    def test_no_mapping_is_warning_not_failure(self):
+        event = self._make_event('Fully Custom Package', 'Wedding')
+        with override_settings(**self._overrides):
+            out = StringIO()
+            err = StringIO()
+            # A live package outside LIVE_IMAGE_MAP must NOT exit non-zero
+            # (the Render deployment must not fail for it).
+            call_command('upload_live_images', stdout=out, stderr=err)
+        event.refresh_from_db()
+        self.assertEqual(event.featured_image, '')
+        self.assertIn('no-match:', err.getvalue())
+        self.assertIn('no mapping: 1', out.getvalue())
+        # It is counted neither as uploaded nor as unchanged.
+        self.assertNotIn('Fully Custom Package', out.getvalue())
+
 
 # ---------------------------------------------------------------------------
 # Storage configuration tests — Cloudinary / WhiteNoise STORAGES resolution
