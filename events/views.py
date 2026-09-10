@@ -60,7 +60,12 @@ BOOKING_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled']
 def events(request):
     """Browse all LIVE event packages (public catalogue)."""
     category_slug = request.GET.get('category', '').strip()
-    queryset = Event.objects.filter(status='live', is_active=True).order_by('-created_at')
+    queryset = (
+        Event.objects
+        .filter(status='live', is_active=True)
+        .select_related('category')
+        .order_by('-created_at')
+    )
     if category_slug:
         queryset = queryset.filter(category__slug=category_slug)
     categories = EventCategory.objects.filter(is_active=True).order_by('sort_order', 'name')
@@ -119,6 +124,7 @@ def searching_events(request):
     results = (
         Event.objects.filter(status='live', is_active=True)
         .filter(q)
+        .select_related('category')
         .distinct()
         .order_by('-created_at')
     )

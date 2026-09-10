@@ -1,11 +1,11 @@
-{% load static humanize %}
+{% load static humanize plannix_filters %}
 <div class="col-lg-4 col-md-6">
   <article class="px-package-card">
     <div class="package-media">
       {% if event.featured_image %}
-        <img src="{{ event.featured_image.url }}" alt="{{ event.title }}" loading="lazy">
+        <img src="{{ event.featured_image.url|cloudinary_resize:800 }}" alt="{{ event.title }}" width="380" height="238" loading="lazy">
       {% else %}
-        <img src="{% static 'img/px-event-fallback.jpg' %}" alt="{{ event.title }}" loading="lazy">
+        <img src="{% static 'img/px-event-fallback.jpg' %}" alt="{{ event.title }}" width="380" height="238" loading="lazy">
       {% endif %}
       <span class="package-badge">{% if event.category %}{{ event.category.name }}{% endif %}</span>
     </div>

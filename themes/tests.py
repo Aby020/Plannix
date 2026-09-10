@@ -65,6 +65,40 @@ class TemplateFilterIdentityTests(TestCase):
         self.assertEqual(self._render('{{ user|avatar_initial }}', u), 'A')
 
 
+class CloudinaryResizeFilterTests(TestCase):
+    """Verify cloudinary_resize resizes Cloudinary URLs and passes through others."""
+
+    def _render(self, url, width):
+        t = Template('{% load plannix_filters %}{{ url|cloudinary_resize:width }}')
+        return t.render(Context({'url': url, 'width': width}))
+
+    def test_cloudinary_url_gets_transform(self):
+        url = 'https://res.cloudinary.com/demo/image/upload/v123/events/photo.jpg'
+        result = self._render(url, 800)
+        self.assertIn('/upload/w_800,q_auto,f_auto/', result)
+        self.assertTrue(result.endswith('photo.jpg'))
+
+    def test_non_cloudinary_url_unchanged(self):
+        url = 'https://example.com/media/events/photo.jpg'
+        self.assertEqual(self._render(url, 800), url)
+
+    def test_local_dev_url_unchanged(self):
+        url = '/media/events/photo.jpg'
+        self.assertEqual(self._render(url, 800), url)
+
+    def test_empty_string_returns_empty(self):
+        self.assertEqual(self._render('', 800), '')
+
+    def test_none_returns_empty(self):
+        from themes.templatetags.plannix_filters import cloudinary_resize
+        self.assertEqual(cloudinary_resize(None, 800), '')
+
+    def test_does_not_double_transform(self):
+        url = 'https://res.cloudinary.com/demo/image/upload/w_400,q_auto,f_auto/v123/photo.jpg'
+        result = self._render(url, 800)
+        self.assertEqual(result.count('/upload/'), 1)
+
+
 class IdentityRenderingTests(TestCase):
     """Integration: verify canonical identity renders in key templates."""
 

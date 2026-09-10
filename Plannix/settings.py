@@ -272,7 +272,7 @@ JAZZMIN_SETTINGS = {
     'site_brand': 'Plannix Admin',
     'site_logo': 'img/plannix-mark.png',
     'site_logo_classes': 'img-circle',
-    'site_icon': 'img/favicon-32x32.png',
+    'site_icon': 'icon/favicon-32x32.png',
     'welcome_sign': 'Welcome to the Plannix administration panel',
     'copyright': 'Plannix',
     'show_sidebar': True,

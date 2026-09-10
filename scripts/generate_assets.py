@@ -16,10 +16,12 @@ Outputs:
     static/icon/favicon.ico
     static/icon/site.webmanifest
 
-The design is a rounded gradient tile (indigo -> violet) containing a
-calendar + check glyph — a simple, modern "plan it" mark.
+The design is a rounded terracotta tile (the Plannix warm accent) holding a
+cream calendar sheet with a terracotta header band, two binding pins, and a
+dotted date grid with a highlighted "today" cell — a clean, modern
+calendar-style "plan it" mark that matches the cream/paper, charcoal/ink,
+restrained-terracotta editorial identity.
 """
-import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw
@@ -28,40 +30,57 @@ ROOT = Path(__file__).resolve().parent.parent
 STATIC_ICON = ROOT / 'static' / 'icon'
 STATIC_IMG = ROOT / 'static' / 'img'
 
-# Brand palette
-PRIMARY = (109, 94, 247)      # #6D5EF7 indigo
-SECONDARY = (155, 108, 246)   # #9B6CF6 violet
-WHITE = (255, 255, 255)
+# Brand palette — warm editorial identity (see static/css/public.css tokens).
+PRIMARY = (166, 83, 59)      # #A6533B terracotta
+SECONDARY = (143, 69, 48)    # #8F4530 deep terracotta
+CREAM = (253, 252, 250)      # #FDFCFA warm paper
+TERRACOTTA = PRIMARY
+
+# Rasters are rendered at this resolution, then downscaled with LANCZOS so the
+# small favicon sizes stay anti-aliased and crisp.
+RENDER_SIZE = 512
 
 SVG_MARK = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Plannix">
   <defs>
-    <linearGradient id="plannix-g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6D5EF7"/>
-      <stop offset="100%" stop-color="#9B6CF6"/>
+    <linearGradient id="plannix-g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#A6533B"/>
+      <stop offset="100%" stop-color="#8F4530"/>
     </linearGradient>
   </defs>
-  <rect x="2" y="2" width="44" height="44" rx="12.5" fill="url(#plannix-g)"/>
-  <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="10.5" y="13.5" width="27" height="4.5" rx="2.25" fill="#FFFFFF" stroke="none"/>
-    <path d="M19.5 23.5 25.5 30 36 18" stroke-width="3.6"/>
-  </g>
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#plannix-g)"/>
+  <rect x="10.5" y="10.5" width="27" height="27" rx="2.5" fill="#FDFCFA"/>
+  <path d="M10.5 13 a2.5 2.5 0 0 1 2.5 -2.5 h24.5 a2.5 2.5 0 0 1 2.5 2.5 v4 h-29.5 z" fill="#A6533B"/>
+  <circle cx="13.75" cy="13.75" r="1.4" fill="#FDFCFA" opacity="0.85"/>
+  <circle cx="34.25" cy="13.75" r="1.4" fill="#FDFCFA" opacity="0.85"/>
+  <circle cx="15.1" cy="23.2" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="22.1" cy="23.2" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="29.1" cy="23.2" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="15.1" cy="31.8" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="22.1" cy="31.8" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="29.1" cy="31.8" r="1.95" fill="#A6533B"/>
 </svg>
 '''
 
 SVG_LOGO = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 48" role="img" aria-label="Plannix">
   <defs>
-    <linearGradient id="plannix-g" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6D5EF7"/>
-      <stop offset="100%" stop-color="#9B6CF6"/>
+    <linearGradient id="plannix-g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#A6533B"/>
+      <stop offset="100%" stop-color="#8F4530"/>
     </linearGradient>
   </defs>
-  <rect x="2" y="2" width="44" height="44" rx="12.5" fill="url(#plannix-g)"/>
-  <g fill="none" stroke="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="10.5" y="13.5" width="27" height="4.5" rx="2.25" fill="#FFFFFF" stroke="none"/>
-    <path d="M19.5 23.5 25.5 30 36 18" stroke-width="3.6"/>
-  </g>
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#plannix-g)"/>
+  <rect x="10.5" y="10.5" width="27" height="27" rx="2.5" fill="#FDFCFA"/>
+  <path d="M10.5 13 a2.5 2.5 0 0 1 2.5 -2.5 h24.5 a2.5 2.5 0 0 1 2.5 2.5 v4 h-29.5 z" fill="#A6533B"/>
+  <circle cx="13.75" cy="13.75" r="1.4" fill="#FDFCFA" opacity="0.85"/>
+  <circle cx="34.25" cy="13.75" r="1.4" fill="#FDFCFA" opacity="0.85"/>
+  <circle cx="15.1" cy="23.2" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="22.1" cy="23.2" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="29.1" cy="23.2" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="15.1" cy="31.8" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="22.1" cy="31.8" r="1.45" fill="#A6533B" opacity="0.25"/>
+  <circle cx="29.1" cy="31.8" r="1.95" fill="#A6533B"/>
   <text x="58" y="32" font-family="Sora, 'Segoe UI', Arial, sans-serif" font-size="30"
-        font-weight="800" fill="#0B1020" letter-spacing="0.5">Plannix</text>
+        font-weight="800" fill="#24211E" letter-spacing="0.5">Plannix</text>
 </svg>
 '''
 
@@ -72,8 +91,8 @@ MANIFEST = {
         {"src": "/static/icon/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png"},
         {"src": "/static/icon/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png"},
     ],
-    "theme_color": "#6D5EF7",
-    "background_color": "#ffffff",
+    "theme_color": "#A6533B",
+    "background_color": "#FDFCFA",
     "display": "standalone",
     "start_url": "/",
 }
@@ -83,54 +102,76 @@ def _lerp(a, b, t):
     return tuple(round(a[i] + (b[i] - a[i]) * t) for i in range(3))
 
 
-def draw_mark(size: int) -> Image.Image:
-    """Draw the Plannix mark (gradient tile + calendar/check glyph)."""
-    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-
-    margin = max(2, round(size * 0.04))
-    tile = size - 2 * margin
-    radius = round(tile * 0.27)
-
-    # Diagonal gradient tile
-    steps = tile
-    for i in range(steps):
-        t = i / steps
-        color = _lerp(PRIMARY, SECONDARY, t) + (255,)
-        top = margin + i
-        height = 2 if i < steps - 1 else 1
-        draw.rounded_rectangle(
-            [margin, top, margin + tile, top + height],
-            radius=radius,
-            fill=color,
-        )
-
-    overlay = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    odraw = ImageDraw.Draw(overlay)
-
-    small = size < 48
+def _calendar(size: int) -> Image.Image:
+    """Cream calendar sheet + header band, pins and date grid (on the tile)."""
     s = size
+    layer = Image.new('RGBA', (s, s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
 
-    if small:
-        # Simple bold checkmark — readable at tiny sizes
-        lw = max(2, round(s * 0.13))
-        odraw.line([(s * 0.28, s * 0.52), (s * 0.45, s * 0.68), (s * 0.74, s * 0.34)],
-                   fill=WHITE, width=lw, joint='curve')
-    else:
-        # Calendar header bar
-        bar_y = round(s * 0.24)
-        bar_h = round(s * 0.10)
-        odraw.rounded_rectangle(
-            [round(s * 0.19), bar_y, round(s * 0.81), bar_y + bar_h],
-            radius=round(bar_h / 2), fill=WHITE,
-        )
-        # Checkmark inside the tile
-        lw = max(3, round(s * 0.075))
-        odraw.line([(s * 0.38, s * 0.50), (s * 0.48, s * 0.61), (s * 0.66, s * 0.40)],
-                   fill=WHITE, width=lw, joint='curve')
+    x0, x1 = round(s * 0.219), round(s * 0.781)
+    y0, y1 = round(s * 0.219), round(s * 0.781)
+    sheet_rx = round(s * 0.052)
 
-    img.alpha_composite(overlay)
-    return img
+    # Cream calendar sheet
+    d.rounded_rectangle([x0, y0, x1, y1], radius=sheet_rx, fill=CREAM)
+
+    # Terracotta header band — rounded top corners, square bottom
+    band_top = y0
+    band_bottom = round(s * 0.354)
+    d.rounded_rectangle([x0, band_top, x1, band_top + 2 * sheet_rx], radius=sheet_rx, fill=TERRACOTTA)
+    d.rectangle([x0, band_top + sheet_rx, x1, band_bottom], fill=TERRACOTTA)
+
+    # Two binding pins on the header band
+    pin_r = round(s * 0.029)
+    pin_cy = (band_top + band_bottom) // 2
+    for cx in (round(s * 0.286), round(s * 0.714)):
+        d.ellipse([cx - pin_r, pin_cy - pin_r, cx + pin_r, cx + pin_r], fill=CREAM)
+
+    # Date grid — five translucent dots, one solid accent ("today")
+    dot_r = round(s * 0.030)
+    today_r = round(s * 0.040)
+    cols = (round(s * 0.315), round(s * 0.460), round(s * 0.606))
+    rows = (round(s * 0.483), round(s * 0.6625))
+    for ci, cx in enumerate(cols):
+        for rj, cy in enumerate(rows):
+            if ci == 2 and rj == 1:
+                r, fill = today_r, TERRACOTTA + (255,)
+            else:
+                r, fill = dot_r, TERRACOTTA + (60,)
+            d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=fill)
+
+    return layer
+
+
+def render_mark(size: int) -> Image.Image:
+    """Draw the Plannix mark (rounded terracotta tile + calendar sheet)."""
+    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+
+    margin = round(size * 0.04)
+    tile_size = size - 2 * margin
+    tile_radius = round(tile_size * 0.27)
+
+    # Smooth vertical terracotta gradient clipped to the rounded tile.
+    mask = Image.new('L', (size, size), 0)
+    ImageDraw.Draw(mask).rounded_rectangle(
+        [margin, margin, size - margin, size - margin],
+        radius=tile_radius,
+        fill=255,
+    )
+    layer = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    for y in range(size):
+        d.line([(0, y), (size, y)], fill=_lerp(PRIMARY, SECONDARY, y / size) + (255,))
+    tile = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    tile.paste(layer, (0, 0), mask)
+
+    tile.alpha_composite(_calendar(size))
+    return tile
+
+
+def draw_mark(size: int) -> Image.Image:
+    """Return the mark rasterized at ``size`` (anti-aliased)."""
+    return render_mark(RENDER_SIZE).resize((size, size), Image.LANCZOS)
 
 
 def main():
@@ -146,10 +187,10 @@ def main():
     }
     for name, size in sizes.items():
         mark = draw_mark(size)
-        # Apple touch icons are shown on a solid background — add padding
+        # Apple touch icons sit on a solid (paper) background.
         if name == 'apple-touch-icon.png':
-            canvas = Image.new('RGBA', (size, size), PRIMARY + (255,))
             inset = round(size * 0.18)
+            canvas = Image.new('RGBA', (size, size), CREAM + (255,))
             mark_resized = mark.resize((size - 2 * inset, size - 2 * inset), Image.LANCZOS)
             canvas.alpha_composite(mark_resized, (inset, inset))
             canvas.convert('RGB').save(STATIC_ICON / name)
@@ -157,7 +198,7 @@ def main():
             mark.save(STATIC_ICON / name)
 
     # favicon.ico — multi-size ico
-    mark.save(STATIC_ICON / 'favicon.ico', sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64)])
+    draw_mark(64).save(STATIC_ICON / 'favicon.ico', sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64)])
 
     # Jazzmin admin logo (256px raster)
     draw_mark(256).save(STATIC_IMG / 'plannix-mark.png')

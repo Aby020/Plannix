@@ -16,6 +16,7 @@ from unittest.mock import MagicMock, patch
 from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core import mail
+from django.test.utils import CaptureQueriesContext
 from django.core.mail import EmailMessage
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -219,6 +220,16 @@ class PublicCatalogueTests(PlannixTestCase):
     def test_search_with_blank_term(self):
         response = self.client.get(reverse('searching_events'), {'q': ''})
         self.assertEqual(response.status_code, 200)
+
+    def test_discover_queryset_avoids_n_plus_one(self):
+        """The /events catalogue must use select_related to avoid N+1 queries."""
+        from django.db import connection
+        with CaptureQueriesContext(connection) as ctx:
+            response = self.client.get(reverse('events'))
+        self.assertEqual(response.status_code, 200)
+        # 2 queries: one for categories (pill bar), one for events (JOINed category).
+        # Before the fix this was 15 queries (13 category N+1s for 13 events).
+        self.assertLessEqual(len(ctx), 4)
 
     def test_about_page_renders(self):
         response = self.client.get(reverse('about'))
