@@ -105,11 +105,17 @@ def send_booking_confirmation(booking):
 
 
 def send_organizer_booking_notification(booking):
-    """Notify the organizer of a new booking request (permitted details only)."""
-    owner = booking.event.owner
-    if owner is None or not getattr(owner, 'email', ''):
+    """Notify the organizer of a new booking request (permitted details only).
+
+    The recipient is the organizer/organization email — the same business
+    contact the customer confirmation points the attendee to (prefer the
+    approved Organization's public email, fall back to the event owner's
+    email). Without a contact email the notification is skipped.
+    """
+    _, organizer_email, _ = organizer_contact(booking)
+    if not organizer_email:
         return
-    _send(owner.email, 'Plannix — New Booking Request', 'organizer_booking_notification', {
+    _send(organizer_email, 'Plannix — New Booking Request', 'organizer_booking_notification', {
         'customer_name': booking.name,
         'customer_email': booking.email,
         'customer_number': booking.number,

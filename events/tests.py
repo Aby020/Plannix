@@ -2035,6 +2035,80 @@ class BookingEmailTests(PlannixTestCase):
         self.assertEqual(customer.to, [self.user.email])
         self.assertEqual(organizer.to, [self.owner.email])
 
+    def test_customer_email_recipient_is_booking_customer(self):
+        """Customer confirmation goes to the booking customer's email."""
+        booking = self._book()
+        self.assertEqual(mail.outbox[0].to, [booking.email])
+        self.assertEqual(booking.email, self.user.email)
+
+    def test_customer_email_greets_customer_and_avoids_organizer_wording(self):
+        """The customer confirmation opens with the attendee's name — it must
+        never carry organizer-only wording like 'Dear Event Organizer'."""
+        self._book()
+        body = mail.outbox[0].body
+        self.assertTrue(body.startswith('Dear Test Attendee,'))
+        self.assertNotIn('Dear Event Organizer', body)
+        self.assertNotIn('Dear Provider', body)
+        self.assertNotIn('received a new booking request', body.lower())
+        self.assertNotIn('review and confirm this booking', body)
+
+    def test_organizer_email_is_organizer_facing(self):
+        """The organizer notification addresses the organizer and carries
+        organizer-only wording, not the customer-facing payment guidance."""
+        self._book()
+        body = mail.outbox[1].body
+        self.assertIn('received a new booking request', body.lower())
+        self.assertIn('Please sign in to review and confirm this booking.', body)
+        self.assertIn(self.user.email, body)
+        self.assertNotIn(
+            'For payment details, please contact the event organizer directly.',
+            body)
+
+    def test_organizer_notification_prefers_organization_email(self):
+        """When the event belongs to an approved Organization with a public
+        email, the notification is addressed to that organization email."""
+        org = self.make_org(self.owner, email='bookings@eventsco.example')
+        self.event.organization = org
+        self.event.save(update_fields=['organization'])
+        self._book()
+        self.assertEqual(len(mail.outbox), 2)
+        organizer = mail.outbox[1]
+        self.assertEqual(organizer.to, [org.email])
+        self.assertIn('New Booking Request', organizer.subject)
+
+    def test_customer_confirmation_still_goes_to_customer_with_organization(self):
+        """Linking an organization must never redirect the customer contract."""
+        org = self.make_org(self.owner, email='bookings@eventsco.example')
+        self.event.organization = org
+        self.event.save(update_fields=['organization'])
+        self._book()
+        self.assertEqual(mail.outbox[0].to, [self.user.email])
+        self.assertTrue(mail.outbox[0].body.startswith('Dear Test Attendee,'))
+
+    def test_organizer_email_still_sent_when_customer_confirmation_fails(self):
+        """The two booking emails are sent independently: a delivery failure in
+        the customer confirmation never blocks the organizer notification."""
+        from django.core.mail import send_mail as _real_send_mail
+        self.client.force_login(self.user)
+        calls = {'n': 0}
+
+        def flaky_send(subject, body, from_email, recipient_list, *args, **kwargs):
+            calls['n'] += 1
+            if calls['n'] == 1:
+                raise OSError('provider down for the customer confirmation')
+            return _real_send_mail(
+                subject, body, from_email, recipient_list, *args, **kwargs)
+
+        with patch('Plannix.emails.send_mail', side_effect=flaky_send):
+            booking = self._book()
+        # Both sends are attempted; the organizer notification still lands.
+        self.assertEqual(calls['n'], 2)
+        self.assertEqual(EventBooking.objects.filter(attendee=self.user).count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [self.owner.email])
+        self.assertIn('New Booking Request', mail.outbox[0].subject)
+        self.assertEqual(booking.status, 'pending')
+
     def test_customer_confirmation_content(self):
         booking = self._book()
         body = mail.outbox[0].body
