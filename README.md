@@ -1,530 +1,370 @@
-# ☑️ Plannix — Premium Event Planning & Booking Platform
+# Plannix — Event Planning & Management Platform
 
 <div align="center">
 
-A modern full-stack **Django** web application for discovering event packages, booking them online, and managing the entire lifecycle — from a customer's first browse to the admin's final confirmation — through secure authentication, role-based dashboards, and a polished, responsive interface.
+A Django-based event planning and discovery platform where attendees discover and book live events, organizers manage organizations and events, and admins control approval and publishing.
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-6.0-092E20?logo=django)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap)
-![SQLite](https://img.shields.io/badge/Database-SQLite-003B57?logo=sqlite)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
 ![License](https://img.shields.io/badge/License-CC0%201.0-lightgrey)
+
+**[Live Demo](https://plannix-0to5.onrender.com)**
 
 </div>
 
-## 🎬 Demo
+---
 
-<p align="center">
-  <img src="screenshots/01-home.png" alt="Plannix home page" width="100%">
-</p>
+## Features
+
+### Attendee
+
+- Browse and search live events by name, category, or keyword
+- Filter by occasion (wedding, birthday, corporate, etc.)
+- View event details with inclusions, capacity, and pricing
+- Request bookings for a selected date
+- Track booking status from a personal dashboard
+- Submit 1–5 star reviews
+
+### Event Organizer
+
+- Set up and manage an organization
+- Organization approval workflow (single marketplace gate)
+- Create and manage events with lifecycle states
+- Submit events for admin review
+- View and manage bookings for own events
+- Event Pulse health indicators (healthy, high_demand, low_traction, cancellation_warning)
+- Organizer dashboard with stats and quick actions
+
+### Admin
+
+- Organization approval/rejection
+- User and category management
+- Event review, approval, and go-live control
+- Booking management across the platform
+- Review moderation (pending / approved / hidden)
+- Platform statistics and admin dashboard
+- Organization approval queue
+
+### Platform
+
+- Full event lifecycle with audit logging (`EventAuditLog`)
+- Event Pulse health monitoring
+- Email notifications via Resend (HTTPS backend) in production, console locally
+- Cloudinary media storage in production
+- PostgreSQL (Neon) in production, SQLite locally
+- Razorpay advance-payment infrastructure (server-side 30% calculation, HMAC signature verification, webhook handling) — **currently dormant in the active customer booking flow**
+- Health endpoint at `/health/`
+- WhiteNoise static file serving in production
 
 ---
 
-## 📖 Overview
+## Tech Stack
 
-**Plannix** is a complete event-management platform built with Django 6 and Bootstrap 5. It brings together everything needed to run an event-planning business online:
-
-- **Customers** browse a curated catalogue of event packages, read full details, and book their event in a few clicks — then track and cancel bookings from their own dashboard.
-- **Staff** manage the catalogue and process bookings from a dedicated operational dashboard.
-- **Admins** get the full picture — revenue, booking health, user management, feedback moderation — plus a branded Django administration panel.
-
-The project demonstrates production-minded Django: role-based access control, session timeout handling, custom error pages, a seeded demo dataset, and a complete automated test suite (60+ tests) — all wrapped in a custom design system with its own tokens, components, and animations.
-
-Whether it's a grand wedding, a corporate summit, or a sunset beach proposal, Plannix provides a streamlined digital workflow for customers, staff, and administrators.
-
----
-
-## ✨ Key Features
-
-### 🔐 Authentication & Role-Based Access
-- Secure sign-up and sign-in with validation (duplicate usernames/emails, password mismatch, Django password validators)
-- Three roles — **Admin**, **Staff**, **Customer** — enforced at the view level via `login_required` and group checks
-- Session timeout after 30 minutes of inactivity, auto-expiry on browser close
-- Profile editing and password change with old-password verification
-
-### 🎉 Event Catalogue & Booking
-- Browse a 20-package catalogue across 5 categories — Birthday, Catering, Corporate, DJ, and Wedding
-- Search by keyword and filter by event type
-- Rich event detail pages with description, pricing, location, and package inclusions
-- Online booking form with server-side validation: no past dates, 10-digit mobile numbers, and conflict detection for already-booked dates
-- Instant booking confirmation page
-
-### 🖥️ Role-Based Dashboards
-- **Customer dashboard** — upcoming bookings, spend summary, recent activity
-- **Staff dashboard** — operational overview and catalogue management
-- **Admin dashboard** — revenue, booking counts, user counts, event breakdowns, recent bookings, latest feedback
-
-### 📊 Management Suite
-- **Events** — add, edit, delete event packages
-- **Bookings** — status filter, update status (pending → confirmed / completed / cancelled), delete
-- **Feedback** — review and moderate customer feedback
-- **Users** — activate/deactivate accounts, delete users (with self-protection guards)
-
-### 📧 Feedback & Communication
-- Public feedback form
-- Feedback moderation in the admin dashboard
-- Email wiring via environment variables (console backend in development)
-
-### 🔒 Security
-- Django authentication + session management
-- Deny-by-default authorization (decorators and group checks on every protected route)
-- Environment-variable configuration — no secrets in code
-- Custom 404 / 403 / 500 error pages
-- Clickjacking, XSS, and content-type protections configured
-
-### 🎨 User Experience
-- Custom design system: indigo → violet gradient, Inter + Sora typography, rounded glass cards
-- Scroll-reveal animations, hover lifts, and micro-interactions
-- Fully responsive — mobile sidebar with overlay, fluid grids, touch-friendly controls
-- Branded Jazzmin Django admin panel
+| Layer | Technology |
+|-------|-----------|
+| Language | Python 3.13 |
+| Framework | Django 6.0.1 |
+| Frontend | Bootstrap 5.3 (static CSS + CDN JS), server-rendered Django templates |
+| Production Database | PostgreSQL (Neon) |
+| Local Database | SQLite |
+| Media Storage | Cloudinary |
+| Static Files | WhiteNoise (compressed, cache-busted) |
+| Email | Resend HTTPS backend (production), console backend (local) |
+| Payments | Razorpay infrastructure (dormant) |
+| Admin Panel | Jazzmin-branded Django admin (`/core-admin/`) |
+| WSGI Server | Gunicorn (production) |
+| Hosting | Render |
 
 ---
 
-## 📸 Screenshots
+## Roles & Permissions
 
-### 🏠 Home & Discovery
+Plannix enforces three roles through Django Groups and view-level decorators:
 
-**Discover packages** — browse the full catalogue with category filter:
+| Role | Description |
+|------|-------------|
+| **Admin** | Full platform control — approval, moderation, user management, statistics |
+| **Event Organizer** | Manages an organization, creates events, handles bookings |
+| **Attendee** | Discovers events, requests bookings, submits reviews |
 
-<p align="center">
-  <img src="screenshots/04-discover-packages.png" width="100%" alt="Discover event packages">
-</p>
-
-**Package detail** — full event description, pricing, and inclusions:
-
-<p align="center">
-  <img src="screenshots/05-package-detail.png" width="100%" alt="Package detail page">
-</p>
+Roles are enforced via `@admin_required`, `@organizer_required`, and `@login_required` decorators. Unauthenticated users can browse public pages (home, discover, event details).
 
 ---
 
-### 🔐 Authentication
+## How Plannix Works
 
-Sign-in and sign-up with validation and a polished brand look:
+1. **Attendee discovers a live event** — browse the public catalogue, filter by occasion, or search by keyword.
+2. **Event organizers operate through an Organization** — every organizer belongs to an organization.
+3. **Organization approval is the marketplace gate** — an admin must approve the organization before its events go live.
+4. **Organizer creates events** — each event has a lifecycle, pricing, capacity, and inclusions.
+5. **Events move through lifecycle states** — `draft` → `under_review` → `approved` → `published` → `live`, and can later become `completed` or `cancelled`.
+6. **Only live events appear publicly** in the discover catalogue.
+7. **Attendee requests a booking** for a chosen date.
+8. **Booking receives a `PXN-xxxxxxxx` reference** — a unique tracking identifier.
+9. **Organizer accepts or cancels the request** from the organizer dashboard.
+10. **Attendee receives status updates by email** at each stage.
 
-<p align="center">
-  <img src="screenshots/02-sign-in.png" width="49%" alt="Sign in">
-  <img src="screenshots/03-register.png" width="49%" alt="Sign up">
-</p>
-
----
-
-### 🛒 Booking Flow
-
-From a few clicks on the booking form to instant confirmation.
-
-**The booking form**, pre-filled for a signed-in customer — no payment is taken at this step:
-
-<p align="center">
-  <img src="screenshots/06-booking-form.png" width="100%" alt="Event booking form">
-</p>
-
-**Booking confirmation** — instant feedback with organizer contact details:
-
-<p align="center">
-  <img src="screenshots/07-booking-confirmation.png" width="100%" alt="Booking confirmation">
-</p>
-
-**My Bookings** — customers track all their bookings in one place:
-
-<p align="center">
-  <img src="screenshots/08-my-bookings.png" width="100%" alt="My bookings">
-</p>
+> Plannix manages **dynamic events** with full lifecycle control — not a static catalogue.
 
 ---
 
-### 🖥️ Dashboards
+## Event Lifecycle
 
-Each role gets its own operational view.
-
-**Organizer dashboard** — revenue, pending bookings, and package stats:
-
-<p align="center">
-  <img src="screenshots/09-organizer-dashboard.png" width="100%" alt="Organizer dashboard">
-</p>
-
-**Admin dashboard** — revenue, bookings, users, and platform health at a glance:
-
-<p align="center">
-  <img src="screenshots/12-admin-dashboard.png" width="100%" alt="Admin dashboard">
-</p>
-
----
-
-### 🗂️ Management Suite
-
-Organizers manage packages; admins approve organizations and moderate the platform.
-
-**Manage packages** — organizers add, edit, and remove their event packages:
-
-<p align="center">
-  <img src="screenshots/10-manage-packages.png" width="100%" alt="Manage packages">
-</p>
-
-**Organization status** — organizers view their approved organization details:
-
-<p align="center">
-  <img src="screenshots/11-organization-status.png" width="100%" alt="Organization status">
-</p>
-
-**Admin approval queue** — admins review and approve pending organizer organizations:
-
-<p align="center">
-  <img src="screenshots/13-admin-approval-queue.png" width="100%" alt="Admin approval queue">
-</p>
-
----
-
-## 🧑‍🤝‍🧑 User Roles
-
-| Capability | Customer | Staff | Admin |
-|------------|:--------:|:-----:|:-----:|
-| Browse catalogue & search | ✅ | ✅ | ✅ |
-| Book an event | ✅ | ✅ | ✅ |
-| View / cancel own bookings | ✅ | ✅ | ✅ |
-| Edit own profile / password | ✅ | ✅ | ✅ |
-| Manage event packages | — | ✅ | ✅ |
-| Update booking statuses | — | ✅ | ✅ |
-| Moderate feedback | — | ✅ | ✅ |
-| Manage users (activate / delete) | — | — | ✅ |
-| Revenue & platform overview | — | — | ✅ |
-| Django admin panel | — | — | ✅ |
-
----
-
-## 🛠️ Technology Stack
-
-| Category | Technology |
-|----------|-----------|
-| **Backend** | Python 3.13, Django 6.0.1 |
-| **Frontend** | HTML5, CSS3, Bootstrap 5.3.3, Bootstrap Icons, vanilla JavaScript |
-| **Database** | SQLite3 |
-| **Authentication** | Django auth + group-based roles |
-| **Admin panel** | Django admin + Jazzmin (branded) |
-| **Email** | SMTP via environment variables (console backend in dev) |
-| **Sessions** | django-session-timeout (30 min inactivity expiry) |
-| **Media** | Pillow (image handling) |
-| **Config** | django-environ (`.env` file) |
-| **Quality** | 60+ Django tests, custom error handlers |
-
----
-
-## 🏗️ Architecture
-
-```text
-                        Client Browser
-                              │
-                              ▼
-                     Bootstrap 5 + Custom CSS
-                              │
-                              ▼
-                      Django URL Routing
-                              │
-            ┌─────────────────┼─────────────────┐
-            ▼                 ▼                 ▼
-   account_manager        events             themes
-   (sign-up, sign-in,   (catalogue, booking,  (home, about,
-    profile, password)   dashboards, manage)   feedback)
-            │                 │                 │
-            └─────────────────┼─────────────────┘
-                              ▼
-                        SQLite Database
-                              │
-                        (models: User, Group,
-                    Event_Company, Event_Booking,
-                          Feedback)
+```
+ ┌────────┐    ┌───────────────┐    ┌──────────┐    ┌───────────┐    ┌──────┐
+ │ draft  │───▶│ under_review  │───▶│ approved │───▶│ published │───▶│ live │
+ └────────┘    └───────────────┘    └──────────┘    └───────────┘    └──────┘
+                    │                    │                                 │
+                    ▼                    ▼                                 ▼
+              ┌──────────┐        ┌──────────┐                     ┌────────────┐
+              │ rejected │        │ cancelled│                     │ completed  │
+              └──────────┘        └──────────┘                     └────────────┘
+                    │
+                    ▼
+              ┌───────────┐
+              │ resubmit  │
+              └───────────┘
 ```
 
----
-
-## 📂 Project Structure
-
-```text
-Plannix/
-│
-├── Plannix/                 # Django project configuration
-│   ├── settings.py          # apps, middleware, auth, jazzmin, security
-│   ├── urls.py              # root routing + custom error handlers
-│   └── context_processors.py# shared site-wide context
-│
-├── account_manager/         # Authentication & profile management
-│   ├── urls.py              # sign-up / sign-in / sign-out / profile / change-password
-│   ├── views.py
-│   └── tests.py             # 21 auth tests
-│
-├── events/                  # Core business module
-│   ├── models.py            # Event_Company, Event_Booking
-│   ├── urls.py              # catalogue, booking, dashboards, management
-│   ├── views.py
-│   ├── tests.py             # 48 tests
-│   └── management/commands/
-│       └── seed_demo.py     # idempotent demo-data seeder
-│
-├── themes/                  # Public pages & feedback
-│   ├── models.py            # Feedback
-│   ├── urls.py              # index / about / feedback / success / privacy-policy
-│   └── views.py
-│
-├── templates/               # Django templates (public + dashboard)
-├── static/                  # CSS, JS, fonts & imagery
-│   └── css/style.css        # full design system
-├── media/                   # Uploaded event images
-├── event_images/            # Seed-source images by category
-├── screenshots/             # README screenshots
-├── scripts/                 # Tooling (screenshot capture, etc.)
-│
-├── manage.py
-├── requirements.txt
-├── README.md
-└── .env                     # local secrets — never committed
-```
+Transitions are controlled by the event service layer (`events/services.py`) and every transition is recorded in `EventAuditLog`.
 
 ---
 
-## 🚀 Getting Started
+## Booking Flow
 
-### Prerequisites
+1. **Live-event requirement** — only events with `status=live` accept bookings.
+2. **Selected event date** — attendee picks a specific date for the event.
+3. **Past-date validation** — bookings for past dates are rejected.
+4. **Capacity protection** — `select_for_update` row-level locking prevents overbooking.
+5. **Duplicate-booking guard** — one active booking per attendee per event.
+6. **Transactional creation** — booking is created atomically with capacity decrement.
+7. **PXN reference** — each booking gets a unique `PXN-xxxxxxxx` identifier.
+8. **Email notifications** — attendee and organizer receive confirmation emails.
+9. **Organizer confirmation** — organizer accepts or cancels the booking request.
 
-- **Python 3.12+** (developed on 3.13)
-- Git
+> For payment details, please contact the event organizer directly.
 
-### 1️⃣ Clone & enter the project
+---
 
-```bash
-git clone https://github.com/Aby020/Plannix.git
-cd Plannix
-```
+## Reviews & Event Pulse
 
-### 2️⃣ Create a virtual environment
+### Reviews
 
-**Windows**
+- 1–5 star rating system
+- Moderation states: `pending` → `approved` / `hidden`
+- Linked to completed or live events
 
-```powershell
-python -m venv venv
-venv\Scripts\activate
-```
+### Event Pulse
 
-**Linux / macOS**
+Event Pulse computes real-time health for each event based on bookings, reviews, and engagement:
 
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
+| Health State | Meaning |
+|-------------|---------|
+| `healthy` | Normal booking activity |
+| `high_demand` | Booking volume exceeds capacity threshold |
+| `low_traction` | Few or no bookings relative to event age |
+| `cancellation_warning` | High cancellation rate detected |
 
-### 3️⃣ Install dependencies
+---
 
-```bash
-pip install -r requirements.txt
-```
+## Security & Authentication
 
-### 4️⃣ Configure the environment
+- Custom registration and sign-in (no third-party auth)
+- Role-based access enforced via Django Groups and decorators
+- Sign-in throttling (rate limiting on login attempts)
+- Session fixation prevention
+- POST-only logout
+- All four Django password validators enabled
+- Password reset flow
+- 30-minute session timeout with activity-based renewal
+- `HttpOnly` and `SameSite=Lax` cookies
+- Production secure-cookie configuration (`SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`)
+- HSTS, SSL redirect, and security headers configurable via environment
+- Razorpay HMAC signature verification on payment webhooks
 
-Create a `.env` file in the project root. Copy the shape below and fill in your own values — **never commit real credentials**.
+---
 
-```env
-SECRET_KEY=your-long-random-secret-key
-DEBUG=True
-ALLOWED_HOSTS=127.0.0.1,localhost
+## Demo Data
 
-# SMTP — the app password stays in .env only
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=you@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
-SERVER_EMAIL=you@gmail.com
-```
-
-> In development the email backend is `console.EmailBackend`, so outbound mail is printed to the terminal — no SMTP account is required to try the app.
-
-### 5️⃣ Apply migrations
-
-```bash
-python manage.py migrate
-```
-
-### 6️⃣ (Optional) Seed demo data
-
-Populates the app with 3 roles, 6 users, 20 event packages (5 categories × 4 events), 10 bookings, and 5 feedback entries — everything you need to explore every role immediately.
+The `seed_demo` management command populates the platform with representative data:
 
 ```bash
 python manage.py seed_demo
 ```
 
-Demo accounts:
+This creates:
 
-| Role | Username | Password |
-|------|----------|----------|
-| Admin | `admin` | set via `PLANNIX_ADMIN_PASSWORD` (random & printed if unset) |
-| Staff | `staff1` | `staffpass123` |
-| Customer | `priya` / `arjun` / `meera` / `rahul` | `customer123` |
+- **Users** — admin, event organizers, and attendees with demo credentials
+- **Categories** — occasion types (wedding, birthday, corporate, etc.)
+- **Events** — across lifecycle states (draft, under review, approved, published, live, completed, cancelled, rejected)
+- **Organizations** — with approval states
+- **Bookings** — with various statuses (pending, confirmed, completed, cancelled)
+- **Reviews** — sample ratings
+- **Audit logs** — event lifecycle transition history
 
-### 7️⃣ Create a superuser (if you skipped seeding)
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.13
+- pip
+
+### Setup
 
 ```bash
-python manage.py createsuperuser
+# Clone the repository
+git clone https://github.com/Aby020/Plannix.git
+cd Plannix
+
+# Create and activate virtual environment
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment variables
+# Create a .env file with at minimum:
+#   SECRET_KEY=<your-secret-key>
+#   DEBUG=True
+
+# Run migrations
+python manage.py migrate
+
+# Seed demo data
+python manage.py seed_demo
+
+# Start the development server
+python manage.py runserver
+```
+
+The application runs at `http://127.0.0.1:8000` by default.
+
+---
+
+## Project Structure
+
+```
+Plannix/
+├── Plannix/                 # Project configuration
+│   ├── settings.py          # Django settings
+│   ├── urls.py              # Root URL routing
+│   ├── emails.py            # Email sending utilities
+│   ├── email_backends.py    # Resend HTTPS email backend
+│   └── wsgi.py              # WSGI entry point
+├── events/                  # Core event & booking app
+│   ├── models.py            # Event, EventBooking, Review, EventAuditLog
+│   ├── views.py             # All event, booking, and admin views
+│   ├── urls.py              # Event URL patterns
+│   ├── forms.py             # Event and booking forms
+│   ├── services.py          # Event lifecycle transitions (VALID_TRANSITIONS)
+│   ├── booking.py           # Booking creation with row-level locking
+│   ├── payments.py          # Razorpay payment infrastructure
+│   └── pulse.py             # Event Pulse health computation
+├── account_manager/         # Auth & organization management
+│   ├── models.py            # OrganizerProfile, Organization
+│   ├── views.py             # Registration, sign-in, dashboard views
+│   ├── decorators.py        # @admin_required, @organizer_required
+│   └── services.py          # Organization approval logic
+├── themes/                  # Themes & feedback app
+│   ├── models.py            # Theme, ThemeVariant, Feedback
+│   └── views.py             # Theme catalog views
+├── templates/               # Django HTML templates
+├── static/                  # CSS, JavaScript, images
+├── media/                   # User-uploaded media (local dev)
+├── screenshots/             # README screenshot gallery
+├── scripts/                 # Utility scripts
+└── manage.py                # Django management
 ```
 
 ---
 
-## 🧭 Running the App
+## Routes
 
-```bash
-python manage.py runserver 8009
-```
-
-Then open:
-
-| Destination | URL |
-|-------------|-----|
-| Public site | `http://127.0.0.1:8009/` |
-| Django admin | `http://127.0.0.1:8009/core-admin/` |
-
-### Route Map
-
-**Public**
-
-| Route | View | Notes |
-|-------|------|-------|
-| `/` | index | Home page |
-| `/events` | events | Catalogue with type filter |
-| `/readmore/<id>` | readmore | Event detail |
-| `/search?q=` | searching_events | Keyword search |
-| `/about` | about | About Plannix |
-| `/feedback` | feedback | Public feedback form |
-| `/privacy-policy` | privacy_policy | Policy page |
-
-**Authentication**
-
-| Route | View | Notes |
-|-------|------|-------|
-| `/sign-up` | sign_up | Registration |
-| `/sign-in` | sign_in | Login |
-| `/sign-out` | sign_out | Logout |
-| `/profile` | profile | Edit profile (login required) |
-| `/change-password` | change_password | Change password (login required) |
-
-**Booking**
-
-| Route | View | Notes |
-|-------|------|-------|
-| `/event-booking-form/<id>` | selected_event | Booking form (login required) |
-| `/event-booking-form` | event_booking | Submit booking |
-| `/success` | success | Confirmation page |
-
-**Dashboards & customer area**
-
-| Route | View | Notes |
-|-------|------|-------|
-| `/dashboard` | dashboard | Role-aware redirect |
-| `/customer-dashboard` | customer_dashboard | Customer view |
-| `/staff-dashboard` | staff_dashboard | Staff only |
-| `/admin-dashboard` | admin_dashboard | Admin only |
-| `/my-bookings` | my_bookings | Own bookings only |
-| `/cancel-booking/<id>` | cancel_booking | Cancel own pending booking |
-
-**Management**
-
-| Route | View | Access |
-|-------|------|-------|
-| `/manage/events` (+ add / edit / delete) | manage suite | Staff + Admin |
-| `/manage/bookings` (+ status / delete) | manage suite | Staff + Admin |
-| `/manage/feedback` (+ delete) | manage suite | Staff + Admin |
-| `/manage/users` (+ toggle / delete) | manage suite | Admin only |
-| `/core-admin/` | Django admin | Staff (superuser) |
+| Route | Description |
+|-------|-------------|
+| `/` | Home page — hero, categories, featured events |
+| `/events` | Discover catalogue — browse/search live events |
+| `/readmore/<id>` | Event detail page |
+| `/event-booking-form/<id>` | Booking request form |
+| `/sign-in` | Sign in |
+| `/sign-up` | Create account |
+| `/my-bookings` | Attendee booking dashboard |
+| `/organizer-dashboard` | Organizer workspace |
+| `/admin-dashboard` | Admin platform overview |
+| `/admin/approval-queue` | Organization approval queue |
+| `/admin/approve/<id>` | Approve organization |
+| `/admin/reject/<id>` | Reject organization |
+| `/admin/publish/<id>` | Publish event |
+| `/admin/go-live/<id>` | Set event live |
+| `/payments/<id>/initiate` | Razorpay payment initiation (dormant) |
+| `/payments/verify` | Razorpay signature verification (dormant) |
+| `/payments/webhook` | Razorpay webhook handler (dormant) |
+| `/health/` | Health check endpoint |
+| `/core-admin/` | Jazzmin-branded Django administration |
 
 ---
 
-## 🔧 Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `SECRET_KEY` | Django secret key (required) |
-| `DEBUG` | `True` in development, `False` in production |
-| `ALLOWED_HOSTS` | Comma-separated allowed hosts |
-| `EMAIL_HOST` | SMTP server address |
-| `EMAIL_PORT` | SMTP server port |
-| `EMAIL_USE_TLS` | Enable TLS for SMTP |
-| `EMAIL_HOST_USER` | SMTP account |
-| `EMAIL_HOST_PASSWORD` | SMTP app password |
-| `SERVER_EMAIL` | Sender address |
-
----
-
-## 🧪 Running the Tests
-
-The project ships with a comprehensive test suite covering authentication, the public catalogue, the booking flow (validation & conflicts), customer dashboards, staff management, admin management, and the custom error handlers.
-
-```bash
-python manage.py test
-```
-
-To run a single app:
-
-```bash
-python manage.py test account_manager
-python manage.py test events
-```
-
----
-
-## 🔮 Future Improvements
-
-Planned enhancements for future releases:
-
-- 💳 Online payment gateway integration
-- 📱 Real-time booking notifications (email/SMS)
-- 📅 Event calendar & availability view
-- ⭐ Customer ratings & reviews
-- 🗺️ Venue maps integration
-- 🤖 AI-based event recommendations
-- 🐳 Docker deployment
-- 🐘 PostgreSQL production database
-- 🌐 REST API (DRF) for mobile clients
-
----
-
-## 🛡️ Security Notes
-
-- Secrets are read from `.env` only; nothing is committed with real values.
-- `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, and `SECURE_SSL_REDIRECT` default to off for local development — flip them on behind TLS in production.
-- HSTS is pre-configured (1 year) — enable `SECURE_HSTS_PRELOAD` once you own the domain.
-- Authorization is deny-by-default: every protected view is guarded by `login_required` plus a role check; admin-only endpoints reject staff and customers.
-
----
-
-## 📄 License
-
-This project is released under the **CC0 1.0 Universal** public-domain dedication. See the **LICENSE** file for details.
-
----
-
-## 👨‍💻 Author
+## Screenshots
 
 <div align="center">
 
-### Abi Thomas
-
-**Backend Developer | Python & Django Developer**
-
-Passionate about building scalable backend systems, modern web applications, and developer-friendly software using Python and Django.
-
-<p>
-
-<a href="https://github.com/Aby020">
-<img src="https://img.shields.io/badge/GitHub-Aby020-181717?logo=github">
-</a>
-
-<a href="https://linkedin.com/in/abithomas-dev">
-<img src="https://img.shields.io/badge/LinkedIn-Abi%20Thomas-0A66C2?logo=linkedin">
-</a>
-
-</p>
+<table>
+<tr>
+<td align="center"><strong>Home</strong><br><img src="screenshots/home.png" alt="Home page with hero, categories, and featured events" width="400"></td>
+<td align="center"><strong>Sign In</strong><br><img src="screenshots/sign-in.png" alt="Sign in form" width="400"></td>
+</tr>
+<tr>
+<td align="center"><strong>Create Account</strong><br><img src="screenshots/register.png" alt="Registration with role selection" width="400"></td>
+<td align="center"><strong>Discover</strong><br><img src="screenshots/discover.png" alt="Event discover grid with filters" width="400"></td>
+</tr>
+<tr>
+<td align="center"><strong>Booking Confirmation</strong><br><img src="screenshots/booking-confirmation.png" alt="Booking receipt with PXN reference" width="400"></td>
+<td align="center"><strong>My Bookings</strong><br><img src="screenshots/my-bookings.png" alt="Attendee booking dashboard" width="400"></td>
+</tr>
+<tr>
+<td align="center"><strong>Organizer Dashboard</strong><br><img src="screenshots/organizer-dashboard.png" alt="Organizer workspace with event health" width="400"></td>
+<td align="center"><strong>Admin Dashboard</strong><br><img src="screenshots/admin-dashboard.png" alt="Admin platform overview" width="400"></td>
+</tr>
+<tr>
+<td colspan="2" align="center"><strong>Approval Queue</strong><br><img src="screenshots/approval-queue.png" alt="Organization approval queue" width="400"></td>
+</tr>
+</table>
 
 </div>
 
 ---
 
-## ⭐ Support
+## Deployment
 
-If you found this project helpful, please consider giving it a ⭐ on GitHub. Your support motivates continued development and improvement.
+**Production:** [https://plannix-0to5.onrender.com](https://plannix-0to5.onrender.com)
+
+| Service | Provider |
+|---------|----------|
+| Hosting | Render (Gunicorn) |
+| Database | PostgreSQL via Neon |
+| Media | Cloudinary |
+| Email | Resend (HTTPS backend) |
+| Static Files | WhiteNoise |
+
+Environment variables switch between local development and production services — no code changes required. Set `DATABASE_URL`, `USE_CLOUDINARY`, `USE_WHITENOISE`, `EMAIL_BACKEND`, and `RESEND_API_KEY` in your production environment.
+
+---
+
+## Roadmap
+
+- **Activate Razorpay advance-payment flow** — the infrastructure is implemented (server-side 30% calculation, signature verification, webhook handling) but currently dormant in the customer booking journey.
+- **Establish automated test baseline** — the current verified test count is 0.
+
+---
+
+## License
+
+This project is licensed under the [CC0 1.0 Universal](LICENSE) license.

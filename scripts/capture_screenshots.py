@@ -1,15 +1,26 @@
 """Capture the Plannix README screenshots using Playwright + the system Chrome.
 
-Requires:  pip install playwright
-Uses the installed Chrome (channel='chrome') so no browser download is needed.
-Output:    screenshots/*.png — the 01–14 numbered shots referenced in README.md.
+Targets exactly the nine README gallery views on the CURRENT application and
+produces compact 1280x800 page-level captures (no giant full-page images):
 
-Run from the project root with the dev server on 127.0.0.1:8009.
+    screenshots/home.png                  Home hero (public)
+    screenshots/sign-in.png               Sign in (public)
+    screenshots/register.png              Create account (public)
+    screenshots/discover.png              Discover grid (public, /events)
+    screenshots/booking-confirmation.png  Booking receipt (/success, attendee)
+    screenshots/my-bookings.png           My Bookings (attendee)
+    screenshots/organizer-dashboard.png   Organizer dashboard
+    screenshots/admin-dashboard.png       Admin dashboard
+    screenshots/approval-queue.png        Organization approval queue (admin)
 
-Demo accounts (from ``manage.py seed_demo``):
-    admin  / PLANNIX_ADMIN_PASSWORD
-    staff1 / staffpass123
-    priya  / customer123
+Requires:  pip install playwright, a system Chrome install, a running dev
+server on 127.0.0.1:8009, and the demo database seeded via
+``python manage.py seed_demo``.
+
+Demo accounts (created by ``manage.py seed_demo``):
+    admin      / PLANNIX_ADMIN_PASSWORD (pin it with set_admin_password)
+    organizer1 / organizer123
+    priya      / customer123
 """
 import os
 import sys
@@ -26,6 +37,8 @@ BASE_URL = os.environ.get('PLANNIX_BASE_URL', 'http://127.0.0.1:8009')
 OUT = BASE / 'screenshots'
 OUT.mkdir(exist_ok=True)
 
+VIEWPORT = {'width': 1280, 'height': 800}
+
 # Bring reveal-on-scroll content into view so it is visible in captures.
 FORCE_VISIBLE = """
 document.querySelectorAll('.reveal, .reveal-stagger, .reveal-stagger > *')
@@ -37,108 +50,103 @@ document.querySelectorAll('.reveal, .reveal-stagger, .reveal-stagger > *')
   });
 """
 
-# (filename, path, full_page, element_selector)
 PUBLIC_SHOTS = [
-    ('01-events-birthday', '/events?type=Birthday', False, None),
-    ('02-about-mission', '/about', False,
-     'section.px-section:has(.px-eyebrow:text("Our Mission"))'),
-    ('03-feedback-form', '/feedback', False, None),
-    ('04-about-page', '/about', True, None),
-    ('05-events-all', '/events', False, None),
-    ('06-login', '/sign-in', False, None),
-    ('07-register', '/sign-up', False, None),
-    ('09-booking-success', '/success', False, None),
+    ('home', '/'),
+    ('sign-in', '/sign-in'),
+    ('register', '/sign-up'),
+    ('discover', '/events'),
 ]
 
-# (filename, path, full_page, element_selector) per role — shot while signed in.
-ROLE_SHOTS = {
-    'customer': {
-        'credentials': ('priya', 'customer123'),
-        'shots': [
-            ('08-book-event', None, False, None),  # path resolved below
-            ('10-customer-dashboard', '/customer-dashboard', False, None),
-        ],
-    },
-    'staff': {
-        'credentials': ('staff1', 'staffpass123'),
-        'shots': [
-            ('11-staff-dashboard', '/staff-dashboard', False, None),
-        ],
-    },
-    'admin': {
-        'credentials': ('admin', os.environ.get('PLANNIX_ADMIN_PASSWORD', '')),
-        'shots': [
-            ('12-admin-dashboard', '/admin-dashboard', False, None),
-            ('13-manage-events', '/manage/events', False, None),
-            ('14-manage-feedback', '/manage/feedback', False, None),
-        ],
-    },
-}
 
-
-def booking_event_id():
-    """The seeded event the booking-form screenshot is pre-filled with."""
-    from events.models import Event_Company
-
-    pk = (
-        Event_Company.objects.filter(event_name='Royal Wedding')
-        .values_list('id', flat=True)
-        .first()
-    )
-    return pk or Event_Company.objects.order_by('id').values_list('id', flat=True).first()
-
-
-def capture(page, name, path, full_page, selector):
+def capture(page, name, path):
     page.goto(f'{BASE_URL}{path}', wait_until='networkidle')
-    page.wait_for_timeout(1200)  # let toasts/counters/reveals settle
+    page.wait_for_timeout(1000)  # let toasts/counters/reveals settle
     page.evaluate(FORCE_VISIBLE)
     page.wait_for_timeout(500)
-    target = OUT / f'{name}.png'
-    if selector:
-        page.locator(selector).screenshot(path=str(target))
-    else:
-        page.screenshot(path=str(target), full_page=full_page)
-    print(f'  saved {target.name}')
+    page.screenshot(path=str(OUT / f'{name}.png'))  # viewport-sized only
+    print(f'  saved {name}.png')
+
+
+def sign_in(page, username, password):
+    page.goto(f'{BASE_URL}/sign-in', wait_until='networkidle')
+    page.fill('input[name="username"]', username)
+    page.fill('input[name="password"]', password)
+    page.click('form button[type="submit"]')
+    page.wait_for_load_state('networkidle')
+    page.wait_for_timeout(700)
+    if page.url.split('?')[0].rstrip('/').endswith('/sign-in'):
+        raise RuntimeError(f'!! login failed for {username}')
+
+
+def attendee_booking_id():
+    """The attendee's most current live booking, for the confirmation receipt.
+
+    Picks a non-cancelled booking for the demo attendee ``priya`` so the
+    ``/success?booking=<id>`` receipt renders the booking panel.
+    """
+    from django.contrib.auth.models import User
+    from django.utils import timezone
+
+    priya = User.objects.get(username='priya')
+    booking = (
+        priya.bookings.exclude(status='cancelled')
+        .filter(event_date__gte=timezone.localdate())
+        .order_by('event_date', '-created_at')
+        .first()
+    )
+    if booking is None:
+        booking = priya.bookings.exclude(status='cancelled').first()
+    if booking is None:
+        raise SystemExit('No bookable demo booking found for priya — seed_demo first.')
+    return booking.pk
 
 
 def main():
     import django
 
     django.setup()
-    event_id = booking_event_id()
-    print(f'Booking-form event id: {event_id}')
+    booking_id = attendee_booking_id()
+    print(f'Booking-confirmation booking id: {booking_id}')
 
     with sync_playwright() as p:
         browser = p.chromium.launch(channel='chrome', headless=True)
-        ctx = browser.new_context(
-            viewport={'width': 1440, 'height': 900},
-            device_scale_factor=1,
-        )
-        page = ctx.new_page()
 
+        # --- Public pages ---
         print('Public pages…')
-        for name, path, full, selector in PUBLIC_SHOTS:
-            capture(page, name, path, full, selector)
+        ctx = browser.new_context(viewport=VIEWPORT, device_scale_factor=1)
+        page = ctx.new_page()
+        for name, path in PUBLIC_SHOTS:
+            capture(page, name, path)
+        ctx.close()
 
-        for role, cfg in ROLE_SHOTS.items():
-            username, password = cfg['credentials']
-            # Log out of any previous role's session first.
-            page.goto(f'{BASE_URL}/sign-out', wait_until='networkidle')
-            page.wait_for_timeout(400)
-            print(f'Signing in as {username}…')
-            page.goto(f'{BASE_URL}/sign-in', wait_until='networkidle')
-            page.fill('input[name="username"]', username)
-            page.fill('input[name="password"]', password)
-            page.click('form button[type="submit"]')
-            page.wait_for_load_state('networkidle')
-            page.wait_for_timeout(700)
-            if page.url.rstrip('/').endswith('/sign-in'):
-                print(f'  !! login failed for {username}')
-                continue
-            for name, path, full, selector in cfg['shots']:
-                if path is None:
-                    path = f'/event-booking-form/{event_id}'
-                capture(page, name, path, full, selector)
+        # --- Attendee (priya): booking receipt + My Bookings ---
+        print('Signing in as attendee (priya)…')
+        ctx = browser.new_context(viewport=VIEWPORT, device_scale_factor=1)
+        page = ctx.new_page()
+        sign_in(page, 'priya', 'customer123')
+        capture(page, 'booking-confirmation', f'/success?booking={booking_id}')
+        capture(page, 'my-bookings', '/my-bookings')
+        ctx.close()
+
+        # --- Organizer (organizer1) ---
+        print('Signing in as organizer (organizer1)…')
+        ctx = browser.new_context(viewport=VIEWPORT, device_scale_factor=1)
+        page = ctx.new_page()
+        sign_in(page, 'organizer1', 'organizer123')
+        capture(page, 'organizer-dashboard', '/organizer-dashboard')
+        ctx.close()
+
+        # --- Admin ---
+        admin_password = os.environ.get('PLANNIX_ADMIN_PASSWORD', '')
+        if not admin_password:
+            raise SystemExit('PLANNIX_ADMIN_PASSWORD is not set — cannot sign in as admin.')
+        print('Signing in as admin…')
+        ctx = browser.new_context(viewport=VIEWPORT, device_scale_factor=1)
+        page = ctx.new_page()
+        sign_in(page, 'admin', admin_password)
+        capture(page, 'admin-dashboard', '/admin-dashboard')
+        capture(page, 'approval-queue', '/admin/approval-queue')
+        ctx.close()
 
         browser.close()
     print('Done — screenshots are in screenshots/.')
