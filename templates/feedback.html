@@ -27,37 +27,41 @@
           <h2 class="px-section-title" style="font-size:1.5rem;">Share your feedback</h2>
           <p class="text-muted-px">We read every message. Drop a suggestion, a compliment or a concern below.</p>
 
-          <form method="post" action="{% url 'feedback' %}" class="mt-4">
+          <form method="post" action="{% url 'feedback' %}" class="mt-4" novalidate>
             {% csrf_token %}
             <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label" for="fb_name">Your name</label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="bi bi-person"></i></span>
-                  <input type="text" class="form-control" id="fb_name" name="name" required
-                         value="{{ user|display_name }}" placeholder="Your name">
+                  <input type="text" class="form-control{% if form.name.errors %} is-invalid{% endif %}" id="fb_name" name="name" required
+                         value="{{ form.name.value|default:default_name }}" placeholder="Your name">
                 </div>
+                {% for error in form.name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
               <div class="col-md-6">
                 <label class="form-label" for="fb_email">Your email</label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                  <input type="email" class="form-control" id="fb_email" name="email" required
-                         value="{{ user.email }}" placeholder="you@example.com">
+                  <input type="email" class="form-control{% if form.email.errors %} is-invalid{% endif %}" id="fb_email" name="email" required
+                         value="{{ form.email.value|default:default_email }}" placeholder="you@example.com">
                 </div>
+                {% for error in form.email.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
               <div class="col-12">
                 <label class="form-label" for="fb_number">Mobile number</label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                  <input type="tel" class="form-control" id="fb_number" name="number" required
-                         maxlength="10" pattern="[0-9]{10}" inputmode="numeric" placeholder="10-digit mobile number">
+                  <input type="tel" class="form-control{% if form.number.errors %} is-invalid{% endif %}" id="fb_number" name="number" required
+                         maxlength="10" pattern="[0-9]{10}" inputmode="numeric" value="{{ form.number.value|default:'' }}" placeholder="10-digit mobile number">
                 </div>
+                {% for error in form.number.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
               <div class="col-12">
                 <label class="form-label" for="fb_message">Your message</label>
-                <textarea class="form-control" id="fb_message" name="message" required
-                          rows="5" placeholder="How was your experience with Plannix?"></textarea>
+                <textarea class="form-control{% if form.message.errors %} is-invalid{% endif %}" id="fb_message" name="message" required
+                          rows="5" placeholder="How was your experience with Plannix?">{{ form.message.value|default:'' }}</textarea>
+                {% for error in form.message.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
               </div>
               <div class="col-12">
                 <button class="btn btn-brand btn-lg w-100" type="submit">

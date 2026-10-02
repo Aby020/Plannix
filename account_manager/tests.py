@@ -6,6 +6,8 @@ from django.core import mail
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from Plannix.throttle import clear_throttle_state
+
 from .models import Organization
 from .services import (
     approve_organization,
@@ -18,6 +20,10 @@ from .services import (
 class PlannixAuthTestCase(TestCase):
     def setUp(self):
         self.client = Client(SERVER_NAME='localhost')
+        # Rate-limit counters live in the cache, which TestCase does not roll
+        # back. Clear them so one test's attempts don't throttle the next —
+        # every test client shares REMOTE_ADDR, so they all share a key.
+        clear_throttle_state()
 
     def make_user(self, username='alice', **kwargs):
         return User.objects.create_user(
@@ -830,38 +836,102 @@ class SignOutMethodTests(PlannixAuthTestCase):
 # ---------------------------------------------------------------------------
 
 class LoginThrottlingTests(PlannixAuthTestCase):
-    def _attempt_login(self, client, username='alice', password='wrongpass'):
+    def _attempt_login(self, client, username='alice', password='wrongpass', **kw):
         return client.post(reverse('sign_in'), {
             'username': username, 'password': password,
-        }, follow=True)
+        }, **kw)
 
     @patch('account_manager.views._LOGIN_MAX_ATTEMPTS', 3)
     def test_throttle_after_max_attempts(self):
         self.make_user()
         for _ in range(3):
             self._attempt_login(self.client)
-        # 4th attempt should be throttled — even with correct password
+        # 4th attempt is throttled — even with the correct password.
         self.make_user(username='alice2')
         response = self.client.post(reverse('sign_in'), {
             'username': 'alice2', 'password': 'testpass123',
-        }, follow=True)
-        # Django messages are injected as JSON into a JS block in the template,
-        # where the apostrophe in "sign-in" is escaped as '.
-        self.assertContains(response, 'Too many sign')
-        self.assertContains(response, 'attempts. Please wait a few minutes')
+        })
+        self.assertEqual(response.status_code, 429)
+        self.assertContains(response, 'Too many requests', status_code=429)
+        # The throttle must also block a successful credential, not just failures.
+        self.assertFalse(
+            User.objects.get(username='alice2').last_login
+            and response.wsgi_request.user.is_authenticated,
+            'throttled request must not authenticate',
+        )
 
     @patch('account_manager.views._LOGIN_MAX_ATTEMPTS', 3)
     @patch('account_manager.views._LOGIN_WINDOW', 0)
     def test_throttle_resets_after_window(self):
-        """After the throttle window passes, login works again."""
+        """A window of 0 expires each counter immediately, so login works."""
         self.make_user()
         for _ in range(3):
             self._attempt_login(self.client)
-        # Window=0 means attempts expire immediately
         response = self.client.post(reverse('sign_in'), {
             'username': 'alice', 'password': 'testpass123',
         })
         self.assertRedirects(response, reverse('index'), fetch_redirect_response=False)
+
+    @patch('account_manager.views._LOGIN_MAX_ATTEMPTS', 3)
+    def test_successful_login_clears_the_counter(self):
+        """A legitimate user who mistypes a few times is not left throttled."""
+        for _ in range(2):
+            self._attempt_login(self.client)
+        self.make_user()
+        response = self.client.post(reverse('sign_in'), {
+            'username': 'alice', 'password': 'testpass123',
+        })
+        self.assertRedirects(response, reverse('index'), fetch_redirect_response=False)
+        clear_throttle_state()
+
+    @override_settings(TRUST_X_FORWARDED_FOR=False)
+    def test_spoofed_xff_does_not_reset_the_throttle(self):
+        """Regression: X-Forwarded-For is client-controlled, so it must be
+        ignored unless TRUST_X_FORWARDED_FOR is on — otherwise an attacker
+        mints a fresh bucket per request by varying the header."""
+        with patch('account_manager.views._LOGIN_MAX_ATTEMPTS', 3):
+            for i in range(3):
+                self._attempt_login(
+                    self.client, HTTP_X_FORWARDED_FOR=f'10.0.0.{i}')
+            # Same client, different spoofed header -> still throttled.
+            response = self._attempt_login(
+                self.client, HTTP_X_FORWARDED_FOR='10.0.0.99')
+        self.assertEqual(response.status_code, 429)
+
+    @override_settings(TRUST_X_FORWARDED_FOR=True)
+    def test_xff_is_honoured_behind_a_trusted_proxy(self):
+        with patch('account_manager.views._LOGIN_MAX_ATTEMPTS', 2):
+            for _ in range(2):
+                self._attempt_login(
+                    self.client, HTTP_X_FORWARDED_FOR='203.0.113.7')
+            # Same proxied client, same bucket -> throttled.
+            response = self._attempt_login(
+                self.client, HTTP_X_FORWARDED_FOR='203.0.113.7')
+            self.assertEqual(response.status_code, 429)
+            # A different proxied client gets its own bucket.
+            other = self._attempt_login(
+                self.client, HTTP_X_FORWARDED_FOR='203.0.113.8')
+        self.assertNotEqual(other.status_code, 429)
+
+
+# ---------------------------------------------------------------------------
+# Sign-up and feedback throttling
+# ---------------------------------------------------------------------------
+
+class SignUpThrottlingTests(PlannixAuthTestCase):
+    @patch('account_manager.views._SIGNUP_MAX_ATTEMPTS', 3)
+    def test_signup_throttled_after_max_attempts(self):
+        """Registration is rate-limited — blocks mass automated signups."""
+        def signup(i):
+            return self.client.post(reverse('sign_up'), {
+                'username': f'user{i}', 'email': f'user{i}@example.com',
+                'password': 'StrongPass!1234', 'confirm_password': 'StrongPass!1234',
+            })
+        for i in range(3):
+            signup(i)
+        response = signup(99)
+        self.assertEqual(response.status_code, 429)
+        self.assertFalse(User.objects.filter(username='user99').exists())
 
 
 # ---------------------------------------------------------------------------

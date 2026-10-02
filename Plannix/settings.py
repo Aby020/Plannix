@@ -29,7 +29,10 @@ environ.Env.read_env(overwrite=True)
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DEBUG', default=False)
+# Parse defensively: a malformed/typo'd value must never resolve to True.
+# Only an explicit truthy value enables debug; anything else (missing, empty,
+# "0", "false", garbage) keeps DEBUG off.
+DEBUG = env('DEBUG', default='False').strip().lower() in ('true', '1', 'yes', 'on')
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['127.0.0.1', 'localhost'])
 
@@ -159,6 +162,21 @@ MEDIA_URL = 'media/'
 
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Upload caps. MAX_UPLOAD_SIZE is the per-file limit enforced in forms
+# (events/forms.py); the two DATA/FILE_UPLOAD settings are the global Django
+# ceilings that bound the whole request body before per-field validation runs,
+# so a single oversized POST cannot exhaust memory or disk.
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024              # 5 MB per uploaded file
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024 # 10 MB total request body (non-file fields)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB before a file spills to disk
+
+# Whether HTTP_X_FORWARDED_FOR may be trusted for rate-limit IP attribution.
+# Off by default: the header is client-controlled, so trusting it blind lets an
+# attacker mint a fresh rate-limit bucket per request by spoofing it. Enable only
+# when the app genuinely sits behind a reverse proxy (Render, nginx) that sets
+# this header itself — never when clients can connect directly.
+TRUST_X_FORWARDED_FOR = env.bool('TRUST_X_FORWARDED_FOR', default=False)
+
 # WhiteNoise storage backend for compressed, cache-busted static files in
 # production (requires the `whitenoise` package, only active with the flag).
 if env.bool('USE_WHITENOISE', default=False):
@@ -233,11 +251,13 @@ SESSION_COOKIE_HTTPONLY = True   # JavaScript cannot access session cookie
 SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF cross-site protection
 CSRF_COOKIE_HTTPONLY = True      # JavaScript cannot access CSRF cookie
 
-# HTTPS settings — enabled via .env behind TLS in production, off by default
-# so local development over HTTP keeps working unchanged.
-SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=False)
-CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=False)
-SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=False)
+# HTTPS settings — secure by default in production (DEBUG=False), relaxable
+# via .env for local HTTP development. The default is derived from DEBUG so a
+# production deploy that forgets to set them still gets HTTPS-only cookies and
+# an HTTPS redirect instead of silently serving the session in cleartext.
+SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', default=not DEBUG)
+CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', default=not DEBUG)
+SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=not DEBUG)
 
 # HSTS settings
 SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=0)

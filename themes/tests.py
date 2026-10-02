@@ -1,4 +1,6 @@
 """Test suite for the Plannix themes module (feedback flow + identity filters)."""
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
 from django.core import mail
 from django.template import Context, Template
@@ -6,6 +8,8 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from account_manager.identity import avatar_initial, display_name
+
+from Plannix.throttle import clear_throttle_state
 
 from .models import Feedback
 
@@ -194,6 +198,9 @@ class FeedbackTests(TestCase):
 
     def setUp(self):
         self.client = Client(SERVER_NAME='localhost')
+        # The feedback endpoint is rate-limited; TestCase does not roll the
+        # cache back, so clear counters between tests.
+        clear_throttle_state()
 
     def post_feedback(self, follow=False, **overrides):
         payload = {
@@ -215,15 +222,38 @@ class FeedbackTests(TestCase):
         self.assertEqual(Feedback.objects.count(), 1)
 
     def test_feedback_missing_fields_does_not_create_row(self):
-        # Missing name, email and message -> error, no row created.
-        response = self.post_feedback(
-            name='', email='', message='', follow=True)
-        self.assertContains(response, 'name, email and message')
+        # Missing name, email and message -> per-field errors, no row created.
+        # Each message appears twice: once in the toast queue and once inline
+        # under the field, so three fields render six instances.
+        response = self.post_feedback(name='', email='', message='')
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, 'This field is required', count=6, status_code=400)
         self.assertEqual(Feedback.objects.count(), 0)
 
     def test_feedback_missing_message_only(self):
-        response = self.post_feedback(message='', follow=True)
-        self.assertContains(response, 'name, email and message')
+        response = self.post_feedback(message='')
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, 'This field is required', status_code=400)
+        self.assertEqual(Feedback.objects.count(), 0)
+
+    def test_feedback_rejects_overlong_name(self):
+        """An over-length name must return a form error, not reach the DB —
+        on PostgreSQL an over-length value raises DataError (HTTP 500)."""
+        response = self.post_feedback(name='A' * 5000)
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, 'at most 25 characters', status_code=400)
+        self.assertEqual(Feedback.objects.count(), 0)
+
+    def test_feedback_rejects_invalid_email(self):
+        response = self.post_feedback(email='not-an-email')
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, 'Enter a valid email address', status_code=400)
+        self.assertEqual(Feedback.objects.count(), 0)
+
+    def test_feedback_rejects_malformed_number(self):
+        response = self.post_feedback(number='12345')
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, 'valid 10-digit mobile number', status_code=400)
         self.assertEqual(Feedback.objects.count(), 0)
 
     def test_feedback_persists_proper_fields(self):
@@ -243,3 +273,12 @@ class FeedbackTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, ['jane@example.com'])
         self.assertIn('Thank You for Your Feedback', mail.outbox[0].subject)
+
+    def test_feedback_is_rate_limited(self):
+        """The public, unauthenticated feedback endpoint is throttled."""
+        with patch('themes.views._FEEDBACK_MAX_ATTEMPTS', 3):
+            for _ in range(3):
+                self.post_feedback()
+            response = self.post_feedback()
+        self.assertEqual(response.status_code, 429)
+        self.assertEqual(Feedback.objects.count(), 3)

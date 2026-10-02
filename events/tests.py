@@ -26,6 +26,8 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from Plannix.throttle import clear_throttle_state
+
 from themes.models import Feedback
 
 from .models import (
@@ -87,6 +89,9 @@ def make_image_file(name='event.png'):
 class PlannixTestCase(TestCase):
     def setUp(self):
         self.client = Client(SERVER_NAME='localhost')
+        # Rate-limit counters live in the cache, which TestCase does not roll
+        # back. Clear them so one test's attempts don't throttle the next.
+        clear_throttle_state()
         self.attendee_group, _ = Group.objects.get_or_create(name='Attendee')
         self.organizer_group, _ = Group.objects.get_or_create(name='EventOrganizer')
         self.admin_group, _ = Group.objects.get_or_create(name='Admin')
@@ -635,15 +640,31 @@ class OrganizerManagementTests(PlannixTestCase):
         self.assertEqual(other_booking.status, 'confirmed')
 
     def test_manage_feedback_renders(self):
-        self.client.force_login(self.organizer)
+        # Feedback rows carry the submitter's PII and have no owner to scope
+        # by, so the view is admin-only.
+        admin = self.make_user(username='admin1', group='Admin')
+        self.client.force_login(admin)
         response = self.client.get(reverse('manage_feedback'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Amazing service!')
 
-    def test_delete_feedback(self):
+    def test_organizer_blocked_from_manage_feedback(self):
         self.client.force_login(self.organizer)
+        response = self.client.get(reverse('manage_feedback'))
+        self.assertRedirects(response, reverse('dashboard'), fetch_redirect_response=False)
+
+    def test_delete_feedback(self):
+        admin = self.make_user(username='admin1', group='Admin')
+        self.client.force_login(admin)
         self.client.post(reverse('delete_feedback', args=[self.feedback.pk]))
         self.assertFalse(Feedback.objects.filter(pk=self.feedback.pk).exists())
+
+    def test_organizer_cannot_delete_feedback(self):
+        """Regression: an organizer must not be able to wipe the site's
+        feedback inbox by iterating primary keys."""
+        self.client.force_login(self.organizer)
+        self.client.post(reverse('delete_feedback', args=[self.feedback.pk]))
+        self.assertTrue(Feedback.objects.filter(pk=self.feedback.pk).exists())
 
 
 # ---------------------------------------------------------------------------

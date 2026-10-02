@@ -1,5 +1,3 @@
-import time
-
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -12,6 +10,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from Plannix.emails import send_registration_notice
+from Plannix.throttle import clear_throttle, client_ip, rate_limited
 
 from .decorators import admin_required, organizer_required, unauthenticated_user
 from .models import Organization
@@ -21,28 +20,14 @@ from .services import (
     submit_organization as submit_org_svc,
 )
 
-# ---------------------------------------------------------------------------
-# Simple in-memory login throttle (per-IP, no external dependencies)
-# ---------------------------------------------------------------------------
-_LOGIN_ATTEMPTS: dict[str, list[float]] = {}
+# Rate-limit budgets. LOGIN_* are module-level so tests can patch them.
 _LOGIN_MAX_ATTEMPTS = 10
-_LOGIN_WINDOW = 300  # 5 minutes
+_LOGIN_WINDOW = 300    # 5 minutes
+_SIGNUP_MAX_ATTEMPTS = 5
+_SIGNUP_WINDOW = 300  # 5 minutes
 
 
-def _is_login_throttled(ip: str) -> bool:
-    """Return True if this IP has exceeded the login attempt limit."""
-    now = time.time()
-    attempts = _LOGIN_ATTEMPTS.get(ip, [])
-    attempts = [t for t in attempts if now - t < _LOGIN_WINDOW]
-    _LOGIN_ATTEMPTS[ip] = attempts
-    return len(attempts) >= _LOGIN_MAX_ATTEMPTS
-
-
-def _record_login_attempt(ip: str) -> None:
-    """Record a failed login attempt for the given IP."""
-    _LOGIN_ATTEMPTS.setdefault(ip, []).append(time.time())
-
-
+@rate_limited('signup', lambda: _SIGNUP_MAX_ATTEMPTS, lambda: _SIGNUP_WINDOW)
 @unauthenticated_user
 def sign_up(request):
     if request.method == 'POST':
@@ -120,19 +105,17 @@ def sign_up(request):
     return render(request, 'sign-up.html')
 
 
+@rate_limited('signin', lambda: _LOGIN_MAX_ATTEMPTS, lambda: _LOGIN_WINDOW)
 @unauthenticated_user
 def sign_in(request):
     if request.method == 'POST':
-        client_ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR', '')
-
-        if _is_login_throttled(client_ip):
-            messages.error(request, 'Too many sign-in attempts. Please wait a few minutes and try again.')
-            return redirect('sign_in')
-
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
         user_auth = authenticate(request, username=username, password=password)
         if user_auth is not None:
+            # Successful sign-in clears the failure counter so a legitimate
+            # user who mistyped a few times is not left throttled afterwards.
+            clear_throttle('signin', client_ip(request))
             # Session fixation prevention: rotate the session key on login
             request.session.cycle_key()
             login(request, user_auth)
@@ -144,8 +127,6 @@ def sign_in(request):
             if next_url and url_has_allowed_host_and_scheme(next_url, request.get_host()):
                 return redirect(next_url)
             return redirect('index')
-        # Record failed attempt for throttling
-        _record_login_attempt(client_ip)
         messages.error(request, 'Invalid username or password.')
         return redirect('sign_in')
     return render(request, 'sign-in.html')

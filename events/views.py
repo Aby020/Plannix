@@ -166,13 +166,24 @@ def event_booking(request):
         return redirect('events')
 
     name = request.POST.get('name', '').strip()
-    email = request.POST.get('email', '').strip()
     number = request.POST.get('number', '').strip()
     event_location = request.POST.get('event_location', '').strip()
     event_date_str = request.POST.get('date', '').strip()
 
+    # The confirmation email is addressed from the authenticated session, never
+    # from a client-supplied value. Booking is already @login_required, so
+    # request.user.email is the verified owner of this booking; taking it from
+    # the form would let anyone send Plannix mail to an arbitrary third party
+    # and write an unverified address into someone else's booking record.
+    email = (request.user.email or '').strip()
+
     # Validate required fields
     if not all([name, email, number, event_date_str]):
+        if not email:
+            return booking_error(
+                'Your account needs an email address before you can book. '
+                'Please update your profile and try again.'
+            )
         return booking_error('Please complete all the required fields.')
 
     if len(number) != 10 or not number.isdigit():
@@ -637,15 +648,23 @@ def delete_booking(request, pk):
 # ---------------------------------------------------------------------------
 
 @login_required(login_url='sign_in')
-@organizer_required
+@admin_required
 def manage_feedback(request):
+    """List all submitted feedback.
+
+    Admin-only: the rows carry the submitter's name, email and phone number,
+    and there is no per-owner tenant boundary to scope them by, so an
+    organizer-scoped view would leak every submitter's PII.
+    """
     feedback = Feedback.objects.all().order_by('-created_at')
     return render(request, 'manage_feedback.html', {'feedback_list': feedback})
 
 
 @login_required(login_url='sign_in')
-@organizer_required
+@admin_required
 def delete_feedback(request, pk):
+    """Delete a feedback entry — admin-only, so a guessed pk is not reachable
+    by an ordinary organizer."""
     feedback = get_object_or_404(Feedback, pk=pk)
     if request.method == 'POST':
         feedback.delete()

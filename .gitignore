@@ -219,3 +219,6 @@ __marimo__/
 # in the architecture checkpoint) — move uploads to object storage / Render
 # disk and stop tracking media/ at that point.
 media/
+
+# Local launcher shims — machine-specific, never committed.
+cc.bat
